@@ -4,7 +4,7 @@ from scipy.stats import poisson
 import pandas as pd
 
 # 1. Configuração Starline Ultra
-st.set_page_config(page_title="STARLINE", layout="wide")
+st.set_page_config(page_title="STARCRUZ", layout="wide")
 
 # 2. CSS Elite (Fundo Branco, Design Advisor)
 st.markdown("""
@@ -35,17 +35,17 @@ def reset_ultra():
     for key in list(st.session_state.keys()):
         del st.session_state[key]
 
-st.markdown("<h2 style='color:#1E293B; font-weight:800; margin-bottom:0;'>🏛️ STARLINE // By Cruz <span style='color:#059669; font-size:14px;'>V1.ULTRA</span></h2>", unsafe_allow_html=True)
+st.markdown("<h2 style='color:#1E293B; font-weight:800; margin-bottom:0;'>🏛️ STARCRUZ <span style='color:#059669; font-size:14px;'>V1.ULTRA</span></h2>", unsafe_allow_html=True)
 st.markdown("---")
 
 col_in, col_out = st.columns([1.1, 2], gap="large")
 
 with col_in:
-    ctx = st.selectbox("ESTRATÉGIA", ["Liga (Regular)", "Champions/Taça (Playoff)"], key="ctx")
+    ctx = st.selectbox("MODELO", ["Liga", "Champions/Taça (Playoff)"], key="ctx")
     
     c1, c2 = st.columns(2)
-    h_n = c1.text_input("HOME", value="LEIPZIG", key="h_n").upper()
-    a_n = c2.text_input("AWAY", value="HOFFENHEIM", key="a_n").upper()
+    h_n = c1.text_input("HOME", value="", key="h_n").upper()
+    a_n = c2.text_input("AWAY", value="", key="a_n").upper()
     
     st.write("**STATS GF/GA**")
     s1, s2, s3, s4 = st.columns(4)
@@ -62,7 +62,7 @@ with col_in:
     m_u15, m_u25, m_u35, m_haa = g3[0].number_input("-1.5", ), g3[1].number_input("-2.5", ), g3[2].number_input("-3.5", ), g3[3].number_input("DNB-A", )
 
     btn_run = st.button("🚀 EXECUTAR")
-    st.button("🗑️ RESET ENGINE", on_click=reset_ultra)
+    st.button("🗑️ CLEAR", on_click=reset_ultra)
 
 if btn_run:
     try:
