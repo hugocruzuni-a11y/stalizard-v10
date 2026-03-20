@@ -6,7 +6,7 @@ import pandas as pd
 # 1. Configuração Starline
 st.set_page_config(page_title="STARLINE PRO", layout="wide")
 
-# 2. CSS Estável e Limpo
+# 2. CSS Estável
 st.markdown("""
     <style>
     .stApp { background-color: #FFFFFF; color: #1E293B; }
@@ -23,11 +23,10 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Função para resetar os campos
+# FUNÇÃO DE RESET CORRIGIDA (Sem erro de no-op)
 def reset_data():
     for key in st.session_state.keys():
         del st.session_state[key]
-    st.rerun()
 
 st.title("🏛️ STARLINE // OMNI-QUANT")
 
@@ -37,13 +36,12 @@ col_in, col_out = st.columns([1.2, 2], gap="large")
 with col_in:
     st.subheader("📋 DADOS DE ENTRADA")
     
-    # Contexto e Equipas
     ctx = st.selectbox("CONTEXTO", ["Liga (Regular)", "Champions/Taça (Playoff)"], key="ctx")
+    
     c_h, c_a = st.columns(2)
     h_name = c_h.text_input("HOME TEAM", value="LEIPZIG", key="h_n").upper()
     a_name = c_a.text_input("AWAY TEAM", value="HOFFENHEIM", key="a_n").upper()
     
-    # Stats
     st.write("**ESTATÍSTICAS (ÚLTIMOS 5 JOGOS)**")
     s1, s2, s3, s4 = st.columns(4)
     v_h_gf = s1.number_input("H-GF", value=8.0, key="hgf")
@@ -51,7 +49,6 @@ with col_in:
     v_a_gf = s3.number_input("A-GF", value=12.0, key="agf")
     v_a_ga = s4.number_input("A-GA", value=10.0, key="aga")
     
-    # Odds
     st.write("**LIVE ODDS**")
     o_c1, o_c2, o_c3, o_c4 = st.columns(4)
     m_o1 = o_c1.number_input("1", value=1.88, key="o1")
@@ -60,18 +57,12 @@ with col_in:
     m_ob = o_c4.number_input("BTTS", value=1.32, key="ob")
     
     o_c5, o_c6, o_c7, o_c8 = st.columns(4)
-    m_o15 = o_c5.number_input("+1.5", value=1.10, key="o15")
-    m_o25 = o_c6.number_input("+2.5", value=1.33, key="o25")
-    m_o35 = o_c7.number_input("+3.5", value=1.78, key="o35")
-    m_hah = o_c8.number_input("DNB-H", value=1.33, key="hah")
+    m_o15, m_o25, m_o35, m_hah = o_c5.number_input("+1.5", value=1.10, key="o15"), o_c6.number_input("+2.5", value=1.33, key="o25"), o_c7.number_input("+3.5", value=1.78, key="o35"), o_c8.number_input("DNB-H", value=1.33, key="hah")
 
     o_c9, o_c10, o_c11, o_c12 = st.columns(4)
-    m_u15 = o_c9.number_input("-1.5", value=4.55, key="u15")
-    m_u25 = o_c10.number_input("-2.5", value=2.65, key="u25")
-    m_u35 = o_c11.number_input("-3.5", value=1.75, key="u35")
-    m_haa = o_c12.number_input("DNB-A", value=1.85, key="haa")
+    m_u15, m_u25, m_u35, m_haa = o_c9.number_input("-1.5", value=4.55, key="u15"), o_c10.number_input("-2.5", value=2.65, key="u25"), o_c11.number_input("-3.5", value=1.75, key="u35"), o_c12.number_input("DNB-A", value=1.85, key="haa")
 
-    # Botões de Ação
+    # Botões
     c_btn1, c_btn2 = st.columns(2)
     with c_btn1:
         st.markdown('<div class="btn-run">', unsafe_allow_html=True)
@@ -79,10 +70,11 @@ with col_in:
         st.markdown('</div>', unsafe_allow_html=True)
     with c_btn2:
         st.markdown('<div class="btn-clear">', unsafe_allow_html=True)
+        # O botão CLEAR agora apenas limpa o estado, o Streamlit recarrega sozinho
         st.button("🗑️ CLEAR", on_click=reset_data)
         st.markdown('</div>', unsafe_allow_html=True)
 
-# --- MOTOR DE CÁLCULO ---
+# --- RESULTADOS ---
 if btn_run:
     try:
         adj = 0.67 if "Champions" in ctx else 1.0
