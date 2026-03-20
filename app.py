@@ -6,7 +6,7 @@ import pandas as pd
 # 1. Configuração Starline
 st.set_page_config(page_title="STARLINE PRO", layout="wide")
 
-# 2. CSS Estável (Branco, Profissional, Sem Erros)
+# 2. CSS Estável (Branco, Profissional)
 st.markdown("""
     <style>
     .stApp { background-color: #FFFFFF; color: #1E293B; }
@@ -53,18 +53,16 @@ with col_in:
 
 if btn_run:
     try:
-        # Fator Champions (Penalização no ataque fora)
+        # Fator Playoff
         adj = 0.67 if "Champions" in ctx_choice else 1.0
         
-        # MATEMÁTICA STARLINE (Ajustada para ser 100% fiel aos dados inseridos)
-        # Força de ataque = GF / 5 | Força de defesa = GA / 5
+        # Matemática Poisson Neutra
         lh = ((v_h_gf/5) * (v_a_ga/5))**0.5
         la = ((v_a_gf * adj / 5) * (v_h_ga/5))**0.5
         
-        # Simulação
-        sh, sa = np.random.poisson(lh, 100000), np.random.poisson(la, 100000)
-        stot = sh + sa
-        ph, px, pa = np.mean(sh > sa), np.mean(sh == sa), np.mean(sh < sa)
+        sim_h, sim_a = np.random.poisson(lh, 100000), np.random.poisson(la, 100000)
+        stot = sim_h + sim_a
+        ph, px, pa = np.mean(sim_h > sim_a), np.mean(sim_h == sim_a), np.mean(sim_h < sim_a)
         norm = ph + px + pa
         ph, px, pa = ph/norm, px/norm, pa/norm
 
@@ -74,9 +72,10 @@ if btn_run:
             
             st.subheader(f"📊 REPORT: {h_name} v {a_name}")
             
+            # Mercados V15 PRO (100% Blindados)
             mkts = [
                 (f"1X2: {h_name}", ph, m_o1), ("1X2: DRAW", px, m_ox), (f"1X2: {a_name}", pa, m_o2),
-                ("BTTS: YES", np.mean((sh>0)&(sa>0)), m_obtts), 
+                ("BTTS: YES", np.mean((sim_h>0)&(sim_a>0)), m_obtts), 
                 (f"DNB: {h_name}", ph/(ph+pa), m_ha0h), (f"DNB: {a_name}", pa/(ph+pa), m_ha0a),
                 ("OVER 1.5", np.mean(stot>1.5), m_o15), ("UNDER 1.5", np.mean(stot<1.5), m_u15),
                 ("OVER 2.5", np.mean(stot>2.5), m_o25), ("UNDER 2.5", np.mean(stot<2.5), m_u25),
@@ -84,25 +83,34 @@ if btn_run:
             ]
 
             data_list = []
-            for name, prob, bookie in mkts:
-                edge = (prob * bookie) - 1
-                stk = max(0, (edge/(bookie-1)*5)) if bookie > 1 else 0
+            ev_scores = [] # Lista separada para guardar as Edges
+            
+            for n, p, b in mkts:
+                edge = (p * b) - 1
+                stk = max(0, (edge/(b-1)*5)) if b > 1 else 0
                 
-                # Cores de Fundo (Sistema Estável)
-                bg = "rgba(255, 255, 255, 0)"
-                if edge > 0.08: bg = "rgba(0, 255, 149, 0.2)"
-                elif edge > 0: bg = "rgba(255, 165, 0, 0.2)"
+                # Definir a cor teórica (mas sem colocar no DataFrame final)
+                bg_color = "rgba(255, 255, 255, 0)"
+                if edge > 0.08: bg_color = "rgba(0, 255, 149, 0.2)" # Verde
+                elif edge > 0: bg_color = "rgba(255, 165, 0, 0.2)"  # Laranja
+                ev_scores.append(bg_color)
                 
                 data_list.append({
-                    "MERCADO": name, "PROB": f"{prob:.1%}", "JUSTA": f"{1/prob:.2f}", 
-                    "CASA": f"{bookie:.2f}", "EDGE": f"{edge:+.1%}", "STAKE": f"{stk:.1f}%",
-                    "color_ref": bg
+                    "MERCADO": n, "PROB": f"{p:.1%}", "JUSTA": f"{1/p:.2f}", 
+                    "CASA": f"{b:.2f}", "EDGE": f"{edge:+.1%}", "STAKE": f"{stk:.1f}%"
                 })
 
+            # DataFrame LIMPO (Sem color_ref)
             df = pd.DataFrame(data_list)
             
-            # Renderização da Tabela com Estilo
-            st.table(df.style.apply(lambda x: [f'background-color: {x.color_ref}'] * len(x), axis=1).hide(subset=["color_ref"], axis=1))
+            # --- NOVA TÉCNICA DE COR (Estilo Dinâmico por Índice) ---
+            def apply_dynamic_bg(row):
+                # O índice do DataFrame corresponde à posição na lista 'ev_scores'
+                color = ev_scores[row.name] 
+                return [f'background-color: {color}'] * len(row)
+
+            # Renderização da Tabela com Estilo (Heatmap Ativado, Zero Erros)
+            st.table(df.style.apply(apply_dynamic_bg, axis=1))
 
             st.markdown("---")
             st.write("**TOP 5 PLACARES EXATOS:**")
@@ -113,4 +121,5 @@ if btn_run:
             for j in range(4, -1, -1):
                 with scs[4-j]: st.metric(f"{idx[0][j]} - {idx[1][j]}", f"{mtx[idx[0][j], idx[1][j]]:.1%}")
 
-    except Exception as e: st.error(f"Erro Crítico: {e}")
+    except Exception as e:
+        st.error(f"ENGINE ERROR V24.1: {e}")
