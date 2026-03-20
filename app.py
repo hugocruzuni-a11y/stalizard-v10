@@ -1,27 +1,19 @@
-iimport streamlit as st
+import streamlit as st
 import numpy as np
 from scipy.stats import poisson
 import pandas as pd
 
-# 1. Configuração de Página Starline
+# 1. Configuração Starline
 st.set_page_config(page_title="STARLINE PRO", layout="wide")
 
-# 2. Design Profissional (Fundo Branco e Tabelas Limpas)
+# 2. CSS Estável (Branco, Profissional, Sem Erros)
 st.markdown("""
     <style>
-    .stApp { background-color: #FFFFFF; color: #1E293B; font-family: 'Inter', sans-serif; }
+    .stApp { background-color: #FFFFFF; color: #1E293B; }
     div.stButton > button {
-        background: #1E293B !important;
-        color: white !important;
-        font-weight: bold;
-        width: 100%;
-        border-radius: 4px;
-        height: 3.5em;
-        margin-top: 10px;
-        border: none;
+        background: #1E293B !important; color: white !important;
+        font-weight: bold; width: 100%; border-radius: 4px; height: 3.5em; border: none;
     }
-    /* Estilo para ocultar índices da tabela e limpar bordas */
-    .stTable { background-color: white; border-radius: 8px; }
     .ctx-alert {
         padding: 15px; background-color: #FFFBEB; border-left: 5px solid #F59E0B;
         color: #92400E; font-weight: bold; margin-bottom: 20px; border-radius: 4px;
@@ -31,7 +23,7 @@ st.markdown("""
 
 st.title("🏛️ STARLINE // OMNI-QUANT")
 
-# --- ÁREA DE INPUT ---
+# --- LAYOUT ---
 col_in, col_out = st.columns([1.2, 2], gap="large")
 
 with col_in:
@@ -42,11 +34,12 @@ with col_in:
     h_name = c_h.text_input("HOME TEAM", "LEIPZIG").upper()
     a_name = c_a.text_input("AWAY TEAM", "HOFFENHEIM").upper()
     
-    st.write("**GF / GA STATS (5-GAME AVG)**")
+    st.write("**ESTATÍSTICAS (ÚLTIMOS 5 JOGOS)**")
     s1, s2, s3, s4 = st.columns(4)
-    v_h_gf, v_h_ga, v_a_gf, v_a_ga = s1.number_input("H-GF", value=8.0), s2.number_input("H-GA", value=12.0), s3.number_input("A-GF", value=12.0), s4.number_input("A-GA", value=10.0)
+    v_h_gf, v_h_ga = s1.number_input("H-GF", value=8.0), s2.number_input("H-GA", value=12.0)
+    v_a_gf, v_a_ga = s3.number_input("A-GF", value=12.0), s4.number_input("A-GA", value=10.0)
     
-    st.write("**LIVE MARKET ODDS**")
+    st.write("**LIVE ODDS**")
     o_c1, o_c2, o_c3, o_c4 = st.columns(4)
     m_o1, m_ox, m_o2, m_obtts = o_c1.number_input("1", value=1.88), o_c2.number_input("X", value=4.00), o_c3.number_input("2", value=3.35), o_c4.number_input("BTTS", value=1.32)
     
@@ -56,45 +49,38 @@ with col_in:
     o_c9, o_c10, o_c11, o_c12 = st.columns(4)
     m_u15, m_u25, m_u35, m_ha0a = o_c9.number_input("-1.5", value=4.55), o_c10.number_input("-2.5", value=2.65), o_c11.number_input("-3.5", value=1.75), o_c12.number_input("DNB-A", value=1.85)
 
-    btn_run = st.button("⚡ ANALISAR AGORA")
+    btn_run = st.button("⚡ GERAR RELATÓRIO STARLINE")
 
-# --- LÓGICA E PROCESSAMENTO ---
 if btn_run:
     try:
-        # Fator Champions (Penalização de 33% no ataque fora em jogos eliminatórios)
+        # Fator Champions (Penalização no ataque fora)
         adj = 0.67 if "Champions" in ctx_choice else 1.0
         
-        # Matemática Poisson (Calibrada)
-        lh = ((float(v_h_gf)/5)*(float(v_a_ga)/5))**0.5 * 1.12
-        la = ((float(v_a_gf) * adj / 5)*(float(v_h_ga)/5))**0.5 * 0.90
+        # MATEMÁTICA STARLINE (Ajustada para ser 100% fiel aos dados inseridos)
+        # Força de ataque = GF / 5 | Força de defesa = GA / 5
+        lh = ((v_h_gf/5) * (v_a_ga/5))**0.5
+        la = ((v_a_gf * adj / 5) * (v_h_ga/5))**0.5
         
-        sim_h, sim_a = np.random.poisson(lh, 100000), np.random.poisson(la, 100000)
-        stot = sim_h + sim_a
-        
-        ph, px, pa = np.mean(sim_h > sim_a), np.mean(sim_h == sim_a), np.mean(sim_h < sim_a)
+        # Simulação
+        sh, sa = np.random.poisson(lh, 100000), np.random.poisson(la, 100000)
+        stot = sh + sa
+        ph, px, pa = np.mean(sh > sa), np.mean(sh == sa), np.mean(sh < sa)
         norm = ph + px + pa
         ph, px, pa = ph/norm, px/norm, pa/norm
 
         with col_out:
             if adj < 1.0:
-                st.markdown(f'<div class="ctx-alert">⚠️ FATOR PLAYOFF: Ataque do {a_name} reduzido para contexto de Champions/Taça.</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="ctx-alert">⚠️ MODO CHAMPIONS: Ataque do {a_name} reduzido em 33%.</div>', unsafe_allow_html=True)
             
             st.subheader(f"📊 REPORT: {h_name} v {a_name}")
             
-            # LISTA INTEGRAL DE MERCADOS (12)
             mkts = [
-                (f"1X2: {h_name}", ph, m_o1), 
-                ("1X2: DRAW", px, m_ox), 
-                (f"1X2: {a_name}", pa, m_o2),
-                ("BTTS: YES", np.mean((sim_h>0)&(sim_a>0)), m_obtts), 
-                (f"DNB: {h_name}", ph/(ph+pa), m_ha0h), 
-                (f"DNB: {a_name}", pa/(ph+pa), m_ha0a),
-                ("OVER 1.5", np.mean(stot>1.5), m_o15), 
-                ("UNDER 1.5", np.mean(stot<1.5), m_u15),
-                ("OVER 2.5", np.mean(stot>2.5), m_o25), 
-                ("UNDER 2.5", np.mean(stot<2.5), m_u25),
-                ("OVER 3.5", np.mean(stot>3.5), m_o35), 
-                ("UNDER 3.5", np.mean(stot<3.5), m_u35)
+                (f"1X2: {h_name}", ph, m_o1), ("1X2: DRAW", px, m_ox), (f"1X2: {a_name}", pa, m_o2),
+                ("BTTS: YES", np.mean((sh>0)&(sa>0)), m_obtts), 
+                (f"DNB: {h_name}", ph/(ph+pa), m_ha0h), (f"DNB: {a_name}", pa/(ph+pa), m_ha0a),
+                ("OVER 1.5", np.mean(stot>1.5), m_o15), ("UNDER 1.5", np.mean(stot<1.5), m_u15),
+                ("OVER 2.5", np.mean(stot>2.5), m_o25), ("UNDER 2.5", np.mean(stot<2.5), m_u25),
+                ("OVER 3.5", np.mean(stot>3.5), m_o35), ("UNDER 3.5", np.mean(stot<3.5), m_u35)
             ]
 
             data_list = []
@@ -102,36 +88,29 @@ if btn_run:
                 edge = (prob * bookie) - 1
                 stk = max(0, (edge/(bookie-1)*5)) if bookie > 1 else 0
                 
-                # Definir cor técnica
-                bg_c = "none"
-                if edge > 0.08: bg_c = "rgba(0, 255, 149, 0.2)" # Verde
-                elif edge > 0: bg_c = "rgba(255, 165, 0, 0.2)"  # Laranja
+                # Cores de Fundo (Sistema Estável)
+                bg = "rgba(255, 255, 255, 0)"
+                if edge > 0.08: bg = "rgba(0, 255, 149, 0.2)"
+                elif edge > 0: bg = "rgba(255, 165, 0, 0.2)"
                 
                 data_list.append({
-                    "MERCADO": name, "PROB %": f"{prob:.1%}", "JUSTA": f"{1/prob:.2f}", 
+                    "MERCADO": name, "PROB": f"{prob:.1%}", "JUSTA": f"{1/prob:.2f}", 
                     "CASA": f"{bookie:.2f}", "EDGE": f"{edge:+.1%}", "STAKE": f"{stk:.1f}%",
-                    "c_ref": bg_c
+                    "color_ref": bg
                 })
 
-            # DataFrame e Estilização
             df = pd.DataFrame(data_list)
             
-            def apply_bg(row):
-                return [f'background-color: {row["c_ref"]}'] * len(row)
-
-            # Renderização Final (Escondendo a coluna de cor e o índice)
-            st.table(df.style.apply(apply_bg, axis=1).hide(subset=["c_ref"], axis=1))
+            # Renderização da Tabela com Estilo
+            st.table(df.style.apply(lambda x: [f'background-color: {x.color_ref}'] * len(x), axis=1).hide(subset=["color_ref"], axis=1))
 
             st.markdown("---")
             st.write("**TOP 5 PLACARES EXATOS:**")
             hp, ap = poisson.pmf(range(6), lh), poisson.pmf(range(6), la)
             mtx = np.outer(hp, ap)
             idx = np.unravel_index(np.argsort(mtx.ravel())[-5:], mtx.shape)
-            
-            sc_cols = st.columns(5)
+            scs = st.columns(5)
             for j in range(4, -1, -1):
-                with sc_cols[4-j]:
-                    st.metric(f"{idx[0][j]} - {idx[1][j]}", f"{mtx[idx[0][j], idx[1][j]]:.1%}")
+                with scs[4-j]: st.metric(f"{idx[0][j]} - {idx[1][j]}", f"{mtx[idx[0][j], idx[1][j]]:.1%}")
 
-    except Exception as e:
-        st.error(f"Erro no processamento: {e}")
+    except Exception as e: st.error(f"Erro Crítico: {e}")
