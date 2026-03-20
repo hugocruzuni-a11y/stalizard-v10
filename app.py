@@ -3,185 +3,153 @@ import numpy as np
 from scipy.stats import poisson
 import pandas as pd
 
-# 1. Configuração Starline PRO
+# 1. Configuração Starline Elite
 st.set_page_config(page_title="STARLINE PRO", layout="wide")
 
-# 2. CSS Avançado e Sofisticado (Fundo Branco, Design Moderno e Botões Coloridos)
+# 2. CSS Profissional (Zero Overlap, Fundo Branco, Botões Coloridos)
 st.markdown("""
     <style>
-    /* Importar fonte moderna 'Inter' */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-
-    /* Definições Globais */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap');
     .stApp { background-color: #FFFFFF; color: #1E293B; font-family: 'Inter', sans-serif; }
     
-    /* Organização em Cards com Sombras Suaves */
-    div[data-testid="stVerticalBlock"] > div { background-color: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); margin-bottom: 20px; }
-    
-    /* Inputs Estilizados */
-    .stNumberInput input, .stTextInput input, .stSelectbox div[data-baseweb="select"] {
-        background-color: #F8FAFC !important; border: 1px solid #E2E8F0 !important; border-radius: 8px !important; color: #1E293B !important; font-size: 16px !important; transition: all 0.2s;
+    /* Blocos de Input com Sombra Suave */
+    div[data-testid="stVerticalBlock"] > div { 
+        background-color: white; border-radius: 12px; padding: 20px; 
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); margin-bottom: 15px; 
     }
-    .stNumberInput input:focus, .stTextInput input:focus { border-color: #38BDF8 !important; box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1) !important; }
     
-    /* Títulos e Tipografia */
-    h1, h2, h3 { color: #0F172A !important; letter-spacing: -0.5px; }
-    .stNumberInput label, .stTextInput label, .stSelectbox label {
-        font-size: 0.75rem !important; font-weight: 700 !important; color: #64748B !important; text-transform: uppercase; letter-spacing: 0.5px;
-    }
-
-    /* --- ESTILIZAÇÃO DOS BOTÕES (COM CORES) --- */
+    /* Inputs Standard (Sem margens negativas) */
+    .stNumberInput, .stTextInput, .stSelectbox { margin-bottom: 15px !important; }
     
-    /* Wrapper para controlar as cores individualmente */
-    .stButton > button { width: 100%; border-radius: 8px; height: 3.5em; border: none; font-weight: 700; font-size: 16px; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
-
-    /* Botão ANALISAR (Verde Sport/Neon) */
+    /* Botões de Ação */
+    .stButton > button { width: 100%; border-radius: 8px; height: 3.5em; border: none; font-weight: 700; text-transform: uppercase; }
+    
+    /* ANALISAR: Verde Neon Sport */
     div[data-testid="stFormSubmitButton"] > button {
-        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
         color: white !important;
-        box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
     }
-    div[data-testid="stFormSubmitButton"] > button:hover { transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3); }
-
-    /* Botão CLEAR (Vermelho/Laranja Suave) */
-    div.stButton > button:nth-of-type(1) { /* Corrigido para o botão CLEAR */
-        background: linear-gradient(135deg, #F87171 0%, #EF4444 100%);
+    
+    /* CLEAR: Laranja/Vermelho Suave */
+    .btn-clear > div > button {
+        background: linear-gradient(135deg, #F87171 0%, #EF4444 100%) !important;
         color: white !important;
-        box-shadow: 0 4px 6px -1px rgba(248, 113, 113, 0.2);
     }
-    div.stButton > button:nth-of-type(1):hover { transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(248, 113, 113, 0.3); }
 
-    /* Alerta Champions */
     .ctx-alert {
         padding: 15px; background-color: #FFFBEB; border-left: 5px solid #F59E0B;
-        color: #92400E; font-weight: bold; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        color: #92400E; font-weight: bold; margin-bottom: 25px; border-radius: 8px;
     }
-
-    /* Tabela Bloomberg Style */
-    .stTable { background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    thead tr th { background-color: #F1F5F9 !important; border-bottom: 2px solid #E2E8F0 !important; color: #1E293B !important; font-weight: 800 !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# Função para resetar os campos (Corrigida e Segura)
-def reset_data():
-    # Mantemos apenas o contexto e os nomes das equipas, limpamos o resto
-    for key in ['hgf', 'hga', 'agf', 'aga', 'o1', 'ox', 'o2', 'ob', 'o15', 'o25', 'o35', 'hah', 'u15', 'u25', 'u35', 'haa']:
-        if key in st.session_state:
-            del st.session_state[key]
+# Função de Reset (Sem rerun conforme instrução)
+def reset_starline():
+    for key in st.session_state.keys():
+        del st.session_state[key]
 
 st.title("🏛️ STARLINE // OMNI-QUANT")
-st.markdown("---")
+st.caption("Engine Version 26.0 • Pure Math • Elite Interface")
 
-# --- COLUNAS DE TRABALHO ---
+# --- WORKSPACE ---
 col_in, col_out = st.columns([1.2, 2], gap="large")
 
 with col_in:
-    # 1. Configuração Inicial (Formulário)
-    with st.form("starline_form", clear_on_submit=False):
-        st.subheader("🛠️ Configuração Inicial")
-        comp_type = st.selectbox("Contexto da Partida", ["Liga (Regular)", "Champions/Taça (Playoff)"], key="ctx")
+    with st.form("main_form"):
+        st.subheader("📋 Dados Estratégicos")
+        v_ctx = st.selectbox("Contexto", ["Liga (Regular)", "Champions/Taça (Playoff)"], key="f_ctx")
         
         c_h, c_a = st.columns(2)
-        h_name = c_h.text_input("Equipa Casa", value="LEIPZIG", key="h_n").upper()
-        a_name = c_a.text_input("Equipa Fora", value="HOFFENHEIM", key="a_n").upper()
+        v_h_name = c_h.text_input("Home Team", value="LEIPZIG", key="f_hn").upper()
+        v_a_name = c_a.text_input("Away Team", value="HOFFENHEIM", key="f_an").upper()
         
-        # 2. Estatísticas
-        st.markdown("### ⚽ Médias (GF / GA STATS)")
-        cg1, cg2, cg3, cg4 = st.columns(4)
-        v_h_gf = cg1.number_input("H-GF", value=8.0, key="hgf")
-        v_h_ga = cg2.number_input("H-GA", value=12.0, key="hga")
-        v_a_gf = cg3.number_input("A-GF", value=12.0, key="agf")
-        v_a_ga = cg4.number_input("A-GA", value=10.0, key="aga")
+        st.markdown("**GF / GA (Últimos 5 Jogos)**")
+        s1, s2, s3, s4 = st.columns(4)
+        v_h_gf = s1.number_input("H-GF", value=8.0, key="f_hgf")
+        v_h_ga = s2.number_input("H-GA", value=12.0, key="f_hga")
+        v_a_gf = s3.number_input("A-GF", value=12.0, key="f_agf")
+        v_a_ga = s4.number_input("A-GA", value=10.0, key="f_aga")
         
-        # 3. Odds
-        st.markdown("### 💹 Odds Reais (Market)")
-        oc1, oc2, oc3, oc4 = st.columns(4)
-        m_o1, m_ox, m_o2, m_obtts = oc1.number_input("1", value=1.88, key="o1"), oc2.number_input("X", value=4.00, key="ox"), oc3.number_input("2", value=3.35, key="o2"), oc4.number_input("BTTS", value=1.32, key="ob")
+        st.markdown("**Odds de Mercado**")
+        o1, ox, o2, ob = st.columns(4)
+        m_o1, m_ox, m_o2, m_ob = o1.number_input("1", 1.88), ox.number_input("X", 4.00), o2.number_input("2", 3.35), ob.number_input("BTTS", 1.32)
         
-        oc5, oc6, oc7, oc8 = st.columns(4)
-        m_o15, m_o25, m_o35, m_hah = oc5.number_input("+1.5", value=1.10, key="o15"), oc6.number_input("+2.5", value=1.33, key="o25"), oc7.number_input("+3.5", value=1.78, key="o35"), oc8.number_input("DNB-H", value=1.33, key="hah")
+        o15, o25, o35, h_h = st.columns(4)
+        m_o15, m_o25, m_o35, m_hah = o15.number_input("+1.5", 1.10), o25.number_input("+2.5", 1.33), o35.number_input("+3.5", 1.78), h_h.number_input("DNB-H", 1.33)
 
-        oc9, oc10, oc11, oc12 = st.columns(4)
-        m_u15, m_u25, m_u35, m_haa = oc9.number_input("-1.5", value=4.55, key="u15"), oc10.number_input("-2.5", value=2.65, key="u25"), oc11.number_input("-3.5", value=1.75, key="u35"), oc12.number_input("DNB-A", value=1.85, key="haa")
+        u15, u25, u35, h_a = st.columns(4)
+        m_u15, m_u25, m_u35, m_haa = u15.number_input("-1.5", 4.55), u25.number_input("-2.5", 2.65), u35.number_input("-3.5", 1.75), h_a.number_input("DNB-A", 1.85)
 
-        # Botão de Ação Colorido (Verde Neon/Sport)
-        btn_run = st.form_submit_button("⚡ GERAR ANÁLISE QUANTITATIVA")
+        run_analysis = st.form_submit_button("⚡ Analisar Agora")
 
-    # Botão CLEAR Colorido (Vermelho/Laranja Suave)
-    st.button("🗑️ CLEAR DATA", on_click=reset_data)
+    st.markdown('<div class="btn-clear">', unsafe_allow_html=True)
+    st.button("🗑️ Clear Data", on_click=reset_starline)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# --- RESULTADOS PREMIUM (MANTÉM IGUAL) ---
-if btn_run:
+# --- PROCESSAMENTO STARLINE ---
+if run_analysis:
     try:
-        # Recuperação da Lógica Fator Champions
-        calc_a_gf = float(v_a_gf)
-        if comp_type == "Champions/Taça (Playoff)":
-            calc_a_gf = v_a_gf * 0.67
-            st.warning("⚡ **Fator Playoff Ativado:** Ajuste de agressividade para equipa visitante aplicado.")
-
-        # Lambdas (Matemática Pura V15/V20)
-        l_h = ((v_h_gf/5)*(v_a_ga/5))**0.5 * 1.12
-        l_a = ((calc_a_gf/5)*(v_h_ga/5))**0.5 * 0.90
+        # 1. Matemática Pura (Regra 1)
+        v_adj = 0.67 if "Champions" in v_ctx else 1.0
+        
+        # Lambdas dependem apenas dos dados / 5
+        l_h = ((v_h_gf / 5) * (v_a_ga / 5))**0.5
+        l_a = ((v_a_gf * v_adj / 5) * (v_h_ga / 5))**0.5
         
         sim_h, sim_a = np.random.poisson(l_h, 100000), np.random.poisson(l_a, 100000)
-        s_tot = sim_h + sim_a
+        stot = sim_h + sim_a
         
-        p_h = np.mean(sim_h > sim_a)
-        p_x = np.mean(sim_h == sim_a)
-        p_a = np.mean(sim_h < sim_a)
-        norm = p_h + p_x + p_a
-        p_h, p_x, p_a = p_h/norm, p_x/norm, p_a/norm
+        ph, px, pa = np.mean(sim_h > sim_a), np.mean(sim_h == sim_a), np.mean(sim_h < sim_a)
+        n = ph + px + pa
+        ph, px, pa = ph/n, px/n, pa/n
 
         with col_out:
-            st.subheader(f"📊 Relatório Quântico: {h_name} vs {a_name}")
+            if v_adj < 1.0:
+                st.markdown(f'<div class="ctx-alert">⚠️ FATOR PLAYOFF ATIVO: Ataque do {v_a_name} penalizado em 33%.</div>', unsafe_allow_html=True)
             
-            # Mercados V18
+            st.subheader(f"📊 Relatório: {v_h_name} v {v_a_name}")
+            
             mkts = [
-                (f"1X2: {h_name}", p_h, m_o1), ("1X2: DRAW", p_x, m_ox), (f"1X2: {a_name}", p_a, m_o2),
-                ("BTTS: YES", np.mean((sim_h>0)&(sim_a>0)), m_obtts), 
-                (f"DNB: {h_name}", p_h/(p_h+p_a), m_hah), (f"DNB: {a_name}", p_a/(p_h+p_a), m_haa),
-                ("OVER 1.5", np.mean(s_tot>1.5), m_o15), ("UNDER 1.5", np.mean(s_tot<1.5), m_u15),
-                ("OVER 2.5", np.mean(s_tot>2.5), m_o25), ("UNDER 2.5", np.mean(s_tot<2.5), m_u25),
-                ("OVER 3.5", np.mean(s_tot>3.5), m_o35), ("UNDER 3.5", np.mean(s_tot<3.5), m_u35)
+                (f"1X2: {v_h_name}", ph, m_o1), ("1X2: DRAW", px, m_ox), (f"1X2: {v_a_name}", pa, m_o2),
+                ("BTTS: YES", np.mean((sim_h>0)&(sim_a>0)), m_ob),
+                (f"DNB: {v_h_name}", ph/(ph+pa), m_hah), (f"DNB: {v_a_name}", pa/(ph+pa), m_haa),
+                ("OVER 1.5", np.mean(stot>1.5), m_o15), ("UNDER 1.5", np.mean(stot<1.5), m_u15),
+                ("OVER 2.5", np.mean(stot>2.5), m_o25), ("UNDER 2.5", np.mean(stot<2.5), m_u25),
+                ("OVER 3.5", np.mean(stot>3.5), m_o35), ("UNDER 3.5", np.mean(stot<3.5), m_u35)
             ]
 
-            final_data = []
+            final_rows, ev_styles = [], []
             for name, prob, bookie in mkts:
                 edge = (prob * bookie) - 1
                 stake = max(0, (edge/(bookie-1)*5)) if bookie > 1 else 0
                 
-                # Indicador de Valor Prestige
-                if edge > 0.08: status = "💎 ALTO VALOR"
-                elif edge > 0: status = "✅ POSITIVO"
-                else: status = "❌ SEM VALOR"
+                # Regra 3: Técnica de Cor por Índice (Blindada)
+                bg = "rgba(255, 255, 255, 0)"
+                if edge > 0.08: bg = "rgba(0, 255, 149, 0.2)"
+                elif edge > 0: bg = "rgba(255, 165, 0, 0.2)"
+                ev_styles.append(bg)
                 
-                final_data.append({
-                    "ANÁLISE": status, "MERCADO": name, "PROB %": f"{p:.1%}", 
-                    "ODD": f"{bookie:.2f}", "EDGE %": f"{edge:+.1%}", "STAKE %": f"{stake:.1f}%", "val": edge
+                final_rows.append({
+                    "MERCADO": name, "PROB": f"{prob:.1%}", "JUSTA": f"{1/prob:.2f}", 
+                    "CASA": f"{bookie:.2f}", "EDGE": f"{edge:+.1%}", "STAKE": f"{stake:.1f}%"
                 })
 
-            df_final = pd.DataFrame(final_data)
+            df_res = pd.DataFrame(final_rows)
             
-            # Função de Destaque Neon (Heatmap Ativado)
-            def highlight_value(row):
-                color = 'white'
-                if row['val'] > 0.08: color = '#00FF95' # Verde Neon
-                elif row['val'] > 0: color = '#FFA500' # Laranja Ouro
-                return [f'color: {color}'] * len(row)
+            # Aplicação de estilo sem colunas técnicas (Regra 3)
+            def elite_heatmap(row):
+                color = ev_styles[row.name]
+                return [f'background-color: {color}; font-weight: bold' if color != "rgba(255, 255, 255, 0)" else ''] * len(row)
 
-            st.table(df_final.drop(columns=['val']).style.apply(highlight_value, axis=1))
+            st.table(df_res.style.apply(elite_heatmap, axis=1))
 
             st.markdown("---")
-            st.subheader("🎯 Probabilidade de Placares Exatos")
+            st.write("**TOP PLACARES EXATOS**")
             hp, ap = poisson.pmf(range(6), l_h), poisson.pmf(range(6), l_a)
             mtx = np.outer(hp, ap)
             idx = np.unravel_index(np.argsort(mtx.ravel())[-5:], mtx.shape)
-            
-            sc_cols = st.columns(5)
-            for i in range(4, -1, -1):
-                with sc_cols[4-i]:
-                    st.metric(f"{idx[0][i]} - {idx[1][i]}", f"{mtx[idx[0][i], idx[1][i]]:.1%}")
-    
-    except Exception as e:
-        st.error(f"Erro no processamento PRO: {e}")
+            scs = st.columns(5)
+            for j in range(4, -1, -1):
+                with scs[4-j]: st.metric(f"{idx[0][j]}-{idx[1][j]}", f"{mtx[idx[0][j], idx[1][j]]:.1%}")
+
+    except Exception as e: st.error(f"ENGINE ERROR: {e}")
