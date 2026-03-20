@@ -3,17 +3,16 @@ import numpy as np
 from scipy.stats import poisson
 import pandas as pd
 
-# --- CONFIGURAÇÃO DE ELITE ---
-st.set_page_config(page_title="STALIZARD V12.1 PRO", layout="wide")
+# 1. Configuração de Elite
+st.set_page_config(page_title="STALIZARD V12.2 PRO", layout="wide")
 
-# --- CSS CUSTOMIZADO (ULTRA-MODERNO) ---
+# 2. Design Neon
 st.markdown("""
     <style>
     .main { background-color: #050505; color: #FFFFFF; font-family: 'Inter', sans-serif; }
     [data-testid="stAppViewContainer"] { background-color: #000000; }
     .stNumberInput input { background-color: #111 !important; color: #00F2FF !important; border: 1px solid #333 !important; border-radius: 5px; }
     .stTextInput input { background-color: #111 !important; color: #FFF !important; border: 1px solid #333 !important; }
-    
     div.stButton > button {
         background: linear-gradient(90deg, #00F2FF, #0072FF) !important;
         color: black !important;
@@ -27,10 +26,9 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🏛️ STALIZARD // OMNI-QUANT ELITE V12.1")
+st.title("🏛️ STALIZARD // OMNI-QUANT V12.2")
 st.markdown("---")
 
-# --- LAYOUT EM COLUNAS ---
 col_left, col_right = st.columns([1.3, 2], gap="large")
 
 with col_left:
@@ -57,46 +55,48 @@ with col_left:
 
     run_btn = st.button("⚡ CALCULAR OPORTUNIDADES")
 
-# --- LÓGICA DE CÁLCULO ---
 if run_btn:
     try:
-        # Matemática calibrada
+        # Matemática (Variáveis renomeadas para evitar conflito com o Pandas 'pd')
         lh = ((float(h_gf)/5)*(float(a_ga)/5))**0.5 * 1.12
         la = ((float(a_gf)/5)*(float(h_ga)/5))**0.5 * 0.90
         sim_h, sim_a = np.random.poisson(lh, 100000), np.random.poisson(la, 100000)
         tot = sim_h + sim_a
-        pv, pe, pd = np.mean(sim_h > sim_a), np.mean(sim_h == sim_a), np.mean(sim_h < sim_a)
-        nt = pv + pe + pd
-        pv, pe, pd = pv/nt, pe/nt, pd/nt
+        
+        prob_h = np.mean(sim_h > sim_a)
+        prob_x = np.mean(sim_h == sim_a)
+        prob_a = np.mean(sim_h < sim_a)
+        nt = prob_h + prob_x + prob_a
+        prob_h, prob_x, prob_a = prob_h/nt, prob_x/nt, prob_a/nt
 
         with col_right:
             st.markdown(f"#### ⚖️ BALANCE: {h_n} vs {a_n}")
             p_c1, p_c2, p_c3 = st.columns(3)
-            p_c1.metric("HOME", f"{pv:.1%}")
-            p_c2.metric("DRAW", f"{pe:.1%}")
-            p_c3.metric("AWAY", f"{pd:.1%}")
-            st.progress(pv)
+            p_c1.metric("HOME", f"{prob_h:.1%}")
+            p_c2.metric("DRAW", f"{prob_x:.1%}")
+            p_c3.metric("AWAY", f"{prob_a:.1%}")
+            st.progress(prob_h)
 
             mkts_data = [
-                (f"1X2: {h_n}", pv, o1), ("1X2: EMPATE", pe, ox), (f"1X2: {a_n}", pd, o2),
+                (f"1X2: {h_n}", prob_h, o1), ("1X2: EMPATE", prob_x, ox), (f"1X2: {a_n}", prob_a, o2),
                 ("BTTS: SIM", np.mean((sim_h>0)&(sim_a>0)), obtts), 
-                (f"DNB: {h_n}", pv/(pv+pd), o_ha0h), (f"DNB: {a_n}", pd/(pv+pd), o_ha0a),
+                (f"DNB: {h_n}", prob_h/(prob_h+prob_a), o_ha0h), (f"DNB: {a_n}", prob_a/(prob_h+prob_a), o_ha0a),
                 ("OVER 1.5", np.mean(tot>1.5), o_o15), ("UNDER 1.5", np.mean(tot<1.5), o_u15),
                 ("OVER 2.5", np.mean(tot>2.5), o_o25), ("UNDER 2.5", np.mean(tot<2.5), o_u25),
                 ("OVER 3.5", np.mean(tot>3.5), o_o35), ("UNDER 3.5", np.mean(tot<3.5), o_u35)
             ]
 
             results_list = []
-            for name, prob, bookie in mkts_data:
-                fair = 1/prob if prob > 0 else 0
-                edge = (prob * bookie) - 1 if bookie > 0 else -1
-                stk = max(0, (edge/(bookie-1)*4)) if bookie > 1 else 0
+            for name, prob_val, bookie in mkts_data:
+                fair_val = 1/prob_val if prob_val > 0 else 0
+                edge_val = (prob_val * bookie) - 1 if bookie > 0 else -1
+                stk_val = max(0, (edge_val/(bookie-1)*4)) if bookie > 1 else 0
                 results_list.append({
-                    "MARKET": name, "PROB": f"{prob:.1%}", "FAIR": f"{fair:.2f}", 
-                    "BOOKIE": f"{bookie:.2f}", "EDGE": f"{edge:+.1%}", "STAKE": f"{stk:.1f}%", "val": edge
+                    "MARKET": name, "PROB": f"{prob_val:.1%}", "FAIR": f"{fair_val:.2f}", 
+                    "BOOKIE": f"{bookie:.2f}", "EDGE": f"{edge_val:+.1%}", "STAKE": f"{stk_val:.1f}%", "val": edge_val
                 })
 
-            # Criar DataFrame de forma segura
+            # AGORA O 'pd' REFERE-SE APENAS AO PANDAS
             df_final = pd.DataFrame(results_list)
             
             def style_rows(row):
@@ -107,7 +107,7 @@ if run_btn:
             st.table(df_final.drop(columns=['val']).style.apply(style_rows, axis=1))
 
             st.markdown("---")
-            st.markdown("### 🎯 TOP SCORES")
+            st.subheader("🎯 TOP SCORES")
             hp, ap = poisson.pmf(range(6), lh), poisson.pmf(range(6), la)
             mtx = np.outer(hp, ap)
             idx = np.unravel_index(np.argsort(mtx.ravel())[-5:], mtx.shape)
