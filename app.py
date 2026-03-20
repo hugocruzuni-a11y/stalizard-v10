@@ -1,4 +1,4 @@
-iimport streamlit as st
+import streamlit as st
 import numpy as np
 from scipy.stats import poisson
 import pandas as pd
