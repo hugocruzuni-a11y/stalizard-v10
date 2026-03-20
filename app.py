@@ -82,8 +82,8 @@ with col_in:
     u15, u25 = st.columns(2); m_u15, m_u25 = u15.number_input("UNDER 1.5", 4.55), u25.number_input("UNDER 2.5", 2.65)
     u35, haa = st.columns(2); m_u35, m_haa = u35.number_input("UNDER 3.5", 1.75), haa.number_input("DNB AWAY", 1.85)
 
-    btn_run = st.button("🚀 EXECUTAR 1.000.000 SIMULAÇÕES")
-    st.button("🗑️ RESET ENGINE", on_click=reset_ultra)
+    btn_run = st.button("🚀 EXECUTAR")
+    st.button("🗑️ RESET", on_click=reset_ultra)
 
 # --- ENGINE ULTRA 1M ---
 if btn_run:
