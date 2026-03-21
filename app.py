@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 
 # 1. Advanced Institutional Configuration
 st.set_page_config(
-    page_title="STARLINE V129 - HIGHLIGHT", 
+    page_title="STARLINE V130 - ORACLE INSIGHT", 
     layout="wide", 
     initial_sidebar_state="expanded"
 )
@@ -56,6 +56,7 @@ st.markdown("""
     .intel-card {
         background: rgba(255, 255, 255, 0.02); border-radius: 12px; padding: 20px;
         border: 1px solid rgba(255, 255, 255, 0.05); font-weight: 300; font-size: 0.9rem;
+        margin-bottom: 10px;
     }
 
     label { font-size: 0.62rem !important; font-weight: 600 !important; color: #64748B !important; text-transform: uppercase; letter-spacing: 1.2px; }
@@ -76,7 +77,7 @@ def reset():
 
 # --- SIDEBAR COCKPIT ---
 with st.sidebar:
-    st.markdown("<h2 style='color:#00FF88; font-size:22px; font-weight:700;'>🏛️ ORACLE V129</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:#00FF88; font-size:22px; font-weight:700;'>🏛️ ORACLE V130</h2>", unsafe_allow_html=True)
     
     st.markdown("<p style='color:#475569; font-size:0.65rem; font-weight:700;'>01 // CONTEXT</p>", unsafe_allow_html=True)
     comp_type = st.selectbox("MATCH TYPE", ["LEAGUE / REGULAR", "CHAMPIONS / ELIMINATION"])
@@ -125,11 +126,10 @@ with st.sidebar:
 
 # --- RESULTS INTERFACE ---
 if not run:
-    st.markdown("<div style='text-align:center; padding-top:150px; opacity:0.1;'><h1>ORACLE V129</h1><p>SOVEREIGN HIGHLIGHT BUILD</p></div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align:center; padding-top:150px; opacity:0.1;'><h1>ORACLE V130</h1><p>THE INSIGHT BUILD</p></div>", unsafe_allow_html=True)
 else:
     # --- MATH ENGINE ---
     lh = max(0.01, (hgf/5 * aga/5)**0.5); la = max(0.01, (agf/5 * hga/5)**0.5)
-    
     if comp_type == "CHAMPIONS / ELIMINATION" and leg_type == "2nd Leg":
         diff = h_score_1st - a_score_1st
         if diff < 0: lh *= (1 + abs(diff) * 0.12)
@@ -139,7 +139,7 @@ else:
     ph, px, pa = np.mean(sim_h > sim_a), np.mean(sim_h == sim_a), np.mean(sim_h < sim_a)
     norm = ph+px+pa; ph, px, pa = ph/norm, px/norm, pa/norm
 
-    st.markdown(f"<h1 style='letter-spacing:-3px; font-size:55px; margin:0; font-weight:700;'>{h_n} <span style='color:#00FF88;'>vs</span> {a_n}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h1 style='letter-spacing:-3px; font-size:55px; margin:0; font-weight:700;'>{h_n} <span style='color:#00FF88; font-weight:300;'>vs</span> {a_n}</h1>", unsafe_allow_html=True)
     
     col_res, col_risk = st.columns([1.1, 0.9])
     
@@ -160,18 +160,37 @@ else:
         st.markdown(f"""<div class="advisor-seal"><h1 class="advisor-title">{best[0]}</h1><p class="advisor-subtitle">ALPHA EDGE: {best[3]:+.1%} | PROB: {best[1]:.1%}</p></div>""", unsafe_allow_html=True)
 
     with col_risk:
-        risk_color = "#00FF88" if kelly_fraction > 0.03 else "#FFD700" if kelly_fraction > 0.01 else "#FF4D4D"
+        risk_color = "#00FF88" if kelly_fraction > 0.03 else "#FF8C00" if kelly_fraction > 0.01 else "#FF4D4D"
         st.markdown(f"""<div class="risk-card"><b style="color:{risk_color}; letter-spacing:1px; font-size:0.65rem;">🛡️ QUANTUM ALLOCATION</b><h2 style="margin:5px 0; font-size:2rem; font-weight:700;">{kelly_fraction:.1%}</h2><p style="color:#64748B; font-size:0.75rem; margin:0;">STAKE ADVISED (HALF-KELLY)</p></div>""", unsafe_allow_html=True)
 
-    # --- MATRIX COM SOMBREAMENTO INTELIGENTE ---
+    # --- 🧠 AI INSIGHTS & TACTICS ---
+    c_ins1, c_ins2 = st.columns(2)
+    with c_ins1:
+        st.markdown(f"""<div class="intel-card"><b style="color:#00FF88;">🧠 AI TACTICAL ANALYSIS</b><br>
+        <span style="color:#CBD5E1; line-height:1.6;">
+        Trend: <b>{"OPEN GAME" if (lh+la) > 2.5 else "TIGHT DEFENSIVE BATTLE"}</b><br>
+        Volatility Index: <b>{((lh*la)**0.5):.2f}</b><br>
+        Tactical Prediction: {h_n if lh > la else a_n} likely to dominate positional play.
+        </span></div>""", unsafe_allow_html=True)
+    with c_ins2:
+        hp, ap = poisson.pmf(range(5), lh), poisson.pmf(range(5), la)
+        mtx = np.outer(hp, ap); mtx /= mtx.sum()
+        idx = np.unravel_index(np.argsort(mtx.ravel())[-3:], mtx.shape)
+        st.markdown(f"""<div class="intel-card"><b style="color:#00FF88;">🎯 TOP SCORE PROBABILITIES</b><br>
+        <span style="color:#CBD5E1; font-weight:600;">
+        1. {idx[0][2]}-{idx[1][2]} ({mtx[idx[0][2], idx[1][2]]:.1%})<br>
+        2. {idx[0][1]}-{idx[1][1]} ({mtx[idx[0][1], idx[1][1]]:.1%})<br>
+        3. {idx[0][0]}-{idx[1][0]} ({mtx[idx[0][0], idx[1][0]]:.1%})
+        </span></div>""", unsafe_allow_html=True)
+
+    # --- MATRIX SOMBREAMENTO ATÓMICO ---
     df = pd.DataFrame(mkts, columns=["Market", "Prob", "Odd"])
     df["Fair"] = 1/df["Prob"]; df["Edge"] = (df["Prob"] * df["Odd"]) - 1
     
-    # Lógica de Cores por Linha
     def get_row_color(edge):
-        if edge > 0.10: return 'rgba(0, 255, 136, 0.15)' # Verde (Forte Valor)
-        elif edge > 0.05: return 'rgba(255, 165, 0, 0.15)' # Laranja (Atenção/Valor Médio)
-        return 'rgba(255, 255, 255, 0.01)' # Neutro
+        if edge > 0.10: return 'rgba(0, 255, 136, 0.15)' # Verde Néon
+        elif edge > 0.05: return 'rgba(255, 140, 0, 0.2)' # Laranja Atómico
+        return 'rgba(255, 255, 255, 0.01)' 
 
     row_colors = [get_row_color(e) for e in df["Edge"]]
 
@@ -179,7 +198,7 @@ else:
         header=dict(values=['<b>MARKET</b>', '<b>PROB (%)</b>', '<b>FAIR</b>', '<b>BOOKIE</b>', '<b>EDGE</b>'],
                     fill_color='#0A0A0A', align='center', font=dict(color='#475569', size=11), height=45),
         cells=dict(values=[df.Market, df.Prob.map('{:.1%}'.format), df.Fair.map('{:.2f}'.format), df.Odd.map('{:.2f}'.format), df.Edge.map('{:+.1%}'.format)],
-                   fill_color=[row_colors], # CORES RECUPERADAS
+                   fill_color=[row_colors], 
                    align='center', font=dict(color='white', size=13), height=40)
     )])
     fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), paper_bgcolor='rgba(0,0,0,0)', height=(len(mkts)*42+60))
@@ -187,11 +206,9 @@ else:
 
     # ANALYTICS
     st.markdown("---")
-    c1, c2 = st.columns([1.3, 0.7])
-    with c1:
-        xr = list(range(7))
-        fig_p = go.Figure()
-        fig_p.add_trace(go.Scatter(x=xr, y=[poisson.pmf(i, lh) for i in xr], name=h_n, fill='tozeroy', line_color='#00FF88', line_width=4))
-        fig_p.add_trace(go.Scatter(x=xr, y=[poisson.pmf(i, la) for i in xr], name=a_n, fill='tozeroy', line_color='#3B82F6', line_width=4))
-        fig_p.update_layout(title="POISSON DENSITY", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", height=300)
-        st.plotly_chart(fig_p, use_container_width=True)
+    xr = list(range(7))
+    fig_p = go.Figure()
+    fig_p.add_trace(go.Scatter(x=xr, y=[poisson.pmf(i, lh) for i in xr], name=h_n, fill='tozeroy', line_color='#00FF88', line_width=4))
+    fig_p.add_trace(go.Scatter(x=xr, y=[poisson.pmf(i, la) for i in xr], name=a_n, fill='tozeroy', line_color='#3B82F6', line_width=4))
+    fig_p.update_layout(title="POISSON PROBABILITY DISTRIBUTION", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", height=350)
+    st.plotly_chart(fig_p, use_container_width=True)
