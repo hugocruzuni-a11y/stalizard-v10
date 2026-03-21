@@ -6,12 +6,12 @@ import plotly.graph_objects as go
 
 # 1. Advanced Institutional Configuration
 st.set_page_config(
-    page_title="STARLINE V128 - INFINITE SOVEREIGN", 
+    page_title="STARLINE V129 - HIGHLIGHT", 
     layout="wide", 
     initial_sidebar_state="expanded"
 )
 
-# 2. Sovereign Elite CSS (Luxury Glass & Inter Typo)
+# 2. Sovereign Elite CSS
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600;700&family=JetBrains+Mono:wght@300;400&display=swap');
@@ -27,7 +27,6 @@ st.markdown("""
         border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
     }
     
-    /* INPUTS: PRETO ELEGANTE (SEM NEGRITO) */
     [data-testid="stSidebar"] .stNumberInput input, 
     [data-testid="stSidebar"] .stTextInput input,
     [data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] {
@@ -77,7 +76,7 @@ def reset():
 
 # --- SIDEBAR COCKPIT ---
 with st.sidebar:
-    st.markdown("<h2 style='color:#00FF88; font-size:22px; font-weight:700;'>🏛️ ORACLE V128</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:#00FF88; font-size:22px; font-weight:700;'>🏛️ ORACLE V129</h2>", unsafe_allow_html=True)
     
     st.markdown("<p style='color:#475569; font-size:0.65rem; font-weight:700;'>01 // CONTEXT</p>", unsafe_allow_html=True)
     comp_type = st.selectbox("MATCH TYPE", ["LEAGUE / REGULAR", "CHAMPIONS / ELIMINATION"])
@@ -89,7 +88,6 @@ with st.sidebar:
         leg_type = st.radio("LEG SELECTION", ["1st Leg", "2nd Leg"])
         if leg_type == "2nd Leg":
             c1, c2 = st.columns(2)
-            # GOLOS SEM LIMITES (APENAS INTEIROS)
             h_score_1st = c1.number_input("H-1st Leg", value=0, step=1, format="%d")
             a_score_1st = c2.number_input("A-1st Leg", value=0, step=1, format="%d")
 
@@ -99,9 +97,8 @@ with st.sidebar:
     a_n = st.text_input("AWAY TEAM", "REAL SOCIEDAD").upper()
     
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#475569; font-size:0.65rem; font-weight:700;'>03 // PERFORMANCE (TOTAL GOALS)</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#475569; font-size:0.65rem; font-weight:700;'>03 // PERFORMANCE</p>", unsafe_allow_html=True)
     col_gf, col_ga = st.columns(2)
-    # GOLOS SEM LIMITES (APENAS INTEIROS)
     hgf = col_gf.number_input("H-GF", value=9, step=1, format="%d")
     hga = col_gf.number_input("H-GA", value=7, step=1, format="%d")
     agf = col_ga.number_input("A-GF", value=12, step=1, format="%d")
@@ -110,20 +107,17 @@ with st.sidebar:
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("<p style='color:#475569; font-size:0.65rem; font-weight:700;'>04 // MARKET QUOTES</p>", unsafe_allow_html=True)
     c1, cx, c2 = st.columns(3)
-    # ODDS SEM LIMITES
-    m1 = c1.number_input("1", value=1.90)
-    mx = cx.number_input("X", value=4.00)
-    m2 = c2.number_input("2", value=3.35)
+    m1 = c1.number_input("1", value=1.90); mx = cx.number_input("X", value=4.00); m2 = c2.number_input("2", value=3.35)
     
     st.write("OVER / UNDER LADDER")
-    o05_i = st.number_input("O0.5", value=1.05); o15_i = st.number_input("O1.5", value=1.16)
-    o25_i = st.number_input("O2.5", value=1.33); o35_i = st.number_input("O3.5", value=1.78)
-    u05_i = st.number_input("U0.5", value=9.50); u15_i = st.number_input("U1.5", value=4.50)
-    u25_i = st.number_input("U2.5", value=2.65); u35_i = st.number_input("U3.5", value=1.60)
+    o05_i = st.number_input("O0.5", 1.05); o15_i = st.number_input("O1.5", 1.16)
+    o25_i = st.number_input("O2.5", 1.33); o35_i = st.number_input("O3.5", 1.78)
+    u05_i = st.number_input("U0.5", 9.50); u15_i = st.number_input("U1.5", 4.50)
+    u25_i = st.number_input("U2.5", 2.65); u35_i = st.number_input("U3.5", 1.60)
     
     st.write("SPECIALS")
-    m_ob = st.number_input("BTTS (YES)", value=1.32)
-    ah_h = st.number_input("AH 0.0 (H)", value=1.33); ah_a = st.number_input("AH 0.0 (A)", value=1.85)
+    m_ob = st.number_input("BTTS (YES)", 1.32)
+    ah_h = st.number_input("AH 0.0 (H)", 1.33); ah_a = st.number_input("AH 0.0 (A)", 1.85)
     
     st.markdown("<br>", unsafe_allow_html=True)
     run = st.button("🚀 EXECUTE ALPHA SCAN")
@@ -131,11 +125,10 @@ with st.sidebar:
 
 # --- RESULTS INTERFACE ---
 if not run:
-    st.markdown("<div style='text-align:center; padding-top:150px; opacity:0.1;'><h1>ORACLE V128</h1><p>INFINITE SOVEREIGN BUILD</p></div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align:center; padding-top:150px; opacity:0.1;'><h1>ORACLE V129</h1><p>SOVEREIGN HIGHLIGHT BUILD</p></div>", unsafe_allow_html=True)
 else:
     # --- MATH ENGINE ---
-    lh = max(0.01, (hgf/5 * aga/5)**0.5)
-    la = max(0.01, (agf/5 * hga/5)**0.5)
+    lh = max(0.01, (hgf/5 * aga/5)**0.5); la = max(0.01, (agf/5 * hga/5)**0.5)
     
     if comp_type == "CHAMPIONS / ELIMINATION" and leg_type == "2nd Leg":
         diff = h_score_1st - a_score_1st
@@ -147,7 +140,6 @@ else:
     norm = ph+px+pa; ph, px, pa = ph/norm, px/norm, pa/norm
 
     st.markdown(f"<h1 style='letter-spacing:-3px; font-size:55px; margin:0; font-weight:700;'>{h_n} <span style='color:#00FF88;'>vs</span> {a_n}</h1>", unsafe_allow_html=True)
-    st.caption(f"CONTEXT: {comp_type} // {leg_type}")
     
     col_res, col_risk = st.columns([1.1, 0.9])
     
@@ -162,7 +154,6 @@ else:
     ]
     best = sorted([(n, p, b, (p*b)-1) for n, p, b in mkts], key=lambda x: x[3], reverse=True)[0]
 
-    # Half-Kelly Calculation
     kelly_fraction = max(0, (best[3] / (best[2] - 1)) * 0.5) if best[2] > 1 else 0
 
     with col_res:
@@ -170,27 +161,28 @@ else:
 
     with col_risk:
         risk_color = "#00FF88" if kelly_fraction > 0.03 else "#FFD700" if kelly_fraction > 0.01 else "#FF4D4D"
-        st.markdown(f"""
-            <div class="risk-card">
-                <b style="color:{risk_color}; letter-spacing:1px; font-size:0.65rem;">🛡️ QUANTUM ALLOCATION</b>
-                <h2 style="margin:5px 0; font-size:2rem; font-weight:700;">{kelly_fraction:.1%}</h2>
-                <p style="color:#64748B; font-size:0.75rem; margin:0;">STAKE ADVISED (HALF-KELLY)</p>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f"""<div class="risk-card"><b style="color:{risk_color}; letter-spacing:1px; font-size:0.65rem;">🛡️ QUANTUM ALLOCATION</b><h2 style="margin:5px 0; font-size:2rem; font-weight:700;">{kelly_fraction:.1%}</h2><p style="color:#64748B; font-size:0.75rem; margin:0;">STAKE ADVISED (HALF-KELLY)</p></div>""", unsafe_allow_html=True)
 
-    # MATRIX
+    # --- MATRIX COM SOMBREAMENTO INTELIGENTE ---
     df = pd.DataFrame(mkts, columns=["Market", "Prob", "Odd"])
     df["Fair"] = 1/df["Prob"]; df["Edge"] = (df["Prob"] * df["Odd"]) - 1
-    dynamic_height = (len(mkts) * 42) + 60
+    
+    # Lógica de Cores por Linha
+    def get_row_color(edge):
+        if edge > 0.10: return 'rgba(0, 255, 136, 0.15)' # Verde (Forte Valor)
+        elif edge > 0.05: return 'rgba(255, 165, 0, 0.15)' # Laranja (Atenção/Valor Médio)
+        return 'rgba(255, 255, 255, 0.01)' # Neutro
+
+    row_colors = [get_row_color(e) for e in df["Edge"]]
 
     fig = go.Figure(data=[go.Table(
         header=dict(values=['<b>MARKET</b>', '<b>PROB (%)</b>', '<b>FAIR</b>', '<b>BOOKIE</b>', '<b>EDGE</b>'],
-                    fill_color='#0A0A0A', align='center', font=dict(color='#475569', size=11, family='Inter'), height=45),
+                    fill_color='#0A0A0A', align='center', font=dict(color='#475569', size=11), height=45),
         cells=dict(values=[df.Market, df.Prob.map('{:.1%}'.format), df.Fair.map('{:.2f}'.format), df.Odd.map('{:.2f}'.format), df.Edge.map('{:+.1%}'.format)],
-                   fill_color=[['rgba(0, 255, 136, 0.12)' if e > 0.1 else 'rgba(255,255,255,0.01)' for e in df.Edge]],
-                   align='center', font=dict(color='white', size=13, family='Inter'), height=40)
+                   fill_color=[row_colors], # CORES RECUPERADAS
+                   align='center', font=dict(color='white', size=13), height=40)
     )])
-    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), paper_bgcolor='rgba(0,0,0,0)', height=dynamic_height)
+    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), paper_bgcolor='rgba(0,0,0,0)', height=(len(mkts)*42+60))
     st.plotly_chart(fig, use_container_width=True)
 
     # ANALYTICS
@@ -203,10 +195,3 @@ else:
         fig_p.add_trace(go.Scatter(x=xr, y=[poisson.pmf(i, la) for i in xr], name=a_n, fill='tozeroy', line_color='#3B82F6', line_width=4))
         fig_p.update_layout(title="POISSON DENSITY", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", height=300)
         st.plotly_chart(fig_p, use_container_width=True)
-    with c2:
-        hp, ap = poisson.pmf(range(5), lh), poisson.pmf(range(5), la)
-        mtx = np.outer(hp, ap); mtx /= mtx.sum()
-        idx = np.unravel_index(np.argsort(mtx.ravel())[-3:], mtx.shape)
-        st.write("**TOP PROBABLE SCORES**")
-        for j in range(2, -1, -1):
-            st.metric(f"SCORE {idx[0][j]}-{idx[1][j]}", f"{mtx[idx[0][j], idx[1][j]]:.1%}")
