@@ -6,238 +6,232 @@ import plotly.graph_objects as go
 import requests
 from datetime import date
 
-# --- 1. CONFIGURAÇÃO INSTITUCIONAL ---
+# --- 1. CONFIGURAÇÃO DE DESIGN ---
 st.set_page_config(
-    page_title="STARLINE V140 PRO - SYNDICATE BUILD", 
+    page_title="STARLINE V140 PRO - QUANT TERMINAL", 
     layout="wide", 
     initial_sidebar_state="expanded"
 )
 
+# CSS Customizado para Tooltips e Labels de Luxo
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    
     .stApp { background: radial-gradient(circle at 50% -20%, #0f172a 0%, #000000 95%); color: #FFFFFF; font-family: 'Inter', sans-serif; }
-    [data-testid="stSidebar"] { background-color: rgba(255, 255, 255, 0.01) !important; backdrop-filter: blur(45px) !important; border-right: 1px solid rgba(255, 255, 255, 0.05) !important; }
-    [data-testid="stSidebar"] .stNumberInput input, [data-testid="stSidebar"] .stTextInput input, [data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] { background-color: rgba(255, 255, 255, 0.96) !important; border: 1px solid rgba(0, 255, 136, 0.2) !important; color: #000000 !important; font-family: 'Inter', sans-serif !important; font-weight: 300 !important; font-size: 0.85rem !important; border-radius: 4px !important; }
-    .advisor-seal { background: linear-gradient(135deg, rgba(0, 255, 136, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%); border-radius: 12px; padding: 15px 25px; border: 1px solid rgba(0, 255, 136, 0.4); margin-bottom: 20px; display: inline-block; }
-    .risk-card { background: rgba(255, 255, 255, 0.02); border-radius: 12px; padding: 15px 25px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px; }
-    .advisor-title { color: white; font-size: 1.6rem; font-weight: 700; margin: 0; letter-spacing: -1px; }
-    .advisor-subtitle { color: #00FF88; font-size: 0.85rem; font-weight: 400; margin: 0; letter-spacing: 1px; }
-    .intel-card { background: rgba(255, 255, 255, 0.02); border-radius: 12px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.05); font-weight: 300; font-size: 0.85rem; margin-bottom: 10px; }
-    label { font-size: 0.62rem !important; font-weight: 600 !important; color: #64748B !important; text-transform: uppercase; letter-spacing: 1.2px; }
-    div.stButton > button { background: linear-gradient(90deg, #00FF88 0%, #00BD63 100%) !important; color: #000000 !important; font-weight: 700; height: 4em; width: 100%; border-radius: 6px; border: none; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 10px 25px rgba(0, 255, 136, 0.1); }
-    hr { border-top: 1px solid rgba(255, 255, 255, 0.03) !important; margin: 15px 0 !important; }
-    .legend-box { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+    
+    /* Design das Caixas de Texto e Botões */
+    [data-testid="stSidebar"] { background-color: rgba(15, 23, 42, 0.8) !important; backdrop-filter: blur(20px); border-right: 1px solid rgba(0, 255, 136, 0.1); }
+    
+    .advisor-seal { 
+        background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%); 
+        border-radius: 16px; padding: 25px; border: 1px solid rgba(0, 255, 136, 0.3); 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 25px;
+    }
+
+    .intel-card { 
+        background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 18px; 
+        border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 12px;
+        transition: transform 0.2s ease;
+    }
+    .intel-card:hover { border-color: rgba(0, 255, 136, 0.4); transform: translateY(-2px); }
+
+    /* Estilo para as métricas de ajuda */
+    .help-icon { color: #00FF88; cursor: help; font-size: 0.8rem; margin-left: 5px; }
+    
+    h1, h2, h3 { letter-spacing: -0.05em; font-weight: 700; }
+    .stNumberInput label, .stSelectbox label { font-size: 0.65rem !important; color: #94A3B8 !important; text-transform: uppercase; letter-spacing: 0.1em; }
+    
+    /* Botão Principal */
+    div.stButton > button {
+        background: linear-gradient(90deg, #00FF88 0%, #00BD63 100%) !important;
+        color: #000000 !important; font-weight: 800; height: 3.5em; border-radius: 8px;
+        border: none; text-transform: uppercase; letter-spacing: 2px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    div.stButton > button:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. MOTOR DE API DIRETA ---
+# --- 2. MOTOR DE API E MATEMÁTICA (Consolidado) ---
 api_key = "8171043bf0a322286bb127947dbd4041" 
 api_host = "v3.football.api-sports.io" 
 headers = {"x-apisports-key": api_key}
 
 @st.cache_data(ttl=3600)
-def get_team_stats_cached(team_id, league_id):
-    url = f"https://{api_host}/teams/statistics"
+def get_team_stats(team_id, league_id):
     try:
-        response = requests.get(url, headers=headers, params={"league": league_id, "season": "2025", "team": team_id})
-        goals_stats = response.json().get('response', {}).get('goals', {})
+        url = f"https://{api_host}/teams/statistics"
+        res = requests.get(url, headers=headers, params={"league": league_id, "season": "2025", "team": team_id}).json()
+        goals = res.get('response', {}).get('goals', {})
         return {
-            "h_for": float(goals_stats.get('for', {}).get('average', {}).get('home', 1.5)),
-            "h_aga": float(goals_stats.get('against', {}).get('average', {}).get('home', 1.0)),
-            "a_for": float(goals_stats.get('for', {}).get('average', {}).get('away', 1.2)),
-            "a_aga": float(goals_stats.get('against', {}).get('average', {}).get('away', 1.3))
+            "h_for": float(goals.get('for', {}).get('average', {}).get('home', 1.5)),
+            "h_aga": float(goals.get('against', {}).get('average', {}).get('home', 1.0)),
+            "a_for": float(goals.get('for', {}).get('average', {}).get('away', 1.2)),
+            "a_aga": float(goals.get('against', {}).get('average', {}).get('away', 1.3))
         }
-    except:
-        return {"h_for": 1.5, "h_aga": 1.0, "a_for": 1.2, "a_aga": 1.3}
+    except: return {"h_for": 1.5, "h_aga": 1.0, "a_for": 1.2, "a_aga": 1.3}
 
-def get_fixtures_today(league_id):
-    url = f"https://{api_host}/fixtures"
-    try:
-        response = requests.get(url, headers=headers, params={"date": date.today().strftime('%Y-%m-%d'), "league": league_id, "season": "2025"})
-        return response.json().get('response', [])
-    except:
-        return []
-
-def calculate_pro_markets(lh, la, rho, ah_boost):
-    lh_boosted = lh * (1 + ah_boost)
-    la_boosted = la * (1 - ah_boost)
-    
-    max_goals = 10
-    prob_matrix = np.outer(poisson.pmf(np.arange(max_goals), lh_boosted), poisson.pmf(np.arange(max_goals), la_boosted))
-
+def calculate_probs(lh, la, rho, boost):
+    lh *= (1 + boost); la *= (1 - boost)
+    max_g = 10
+    prob_mtx = np.outer(poisson.pmf(np.arange(max_g), lh), poisson.pmf(np.arange(max_g), la))
     for x in range(2):
         for y in range(2):
-            if x == 0 and y == 0: prob_matrix[x, y] *= max(0, 1 - (lh_boosted * la_boosted * rho))
-            elif x == 0 and y == 1: prob_matrix[x, y] *= max(0, 1 + (lh_boosted * rho))
-            elif x == 1 and y == 0: prob_matrix[x, y] *= max(0, 1 + (la_boosted * rho))
-            elif x == 1 and y == 1: prob_matrix[x, y] *= max(0, 1 - rho)
-    prob_matrix /= prob_matrix.sum()
+            if x==0 and y==0: prob_mtx[x,y] *= (1 - lh*la*rho)
+            elif x==0 and y==1: prob_mtx[x,y] *= (1 + lh*rho)
+            elif x==1 and y==0: prob_mtx[x,y] *= (1 + la*rho)
+            elif x==1 and y==1: prob_mtx[x,y] *= (1 - rho)
+    prob_mtx /= prob_mtx.sum()
+    ph, px, pa = np.tril(prob_mtx, -1).sum(), np.trace(prob_mtx), np.triu(prob_mtx, 1).sum()
     
-    ph = np.tril(prob_matrix, -1).sum() 
-    px = np.trace(prob_matrix)          
-    pa = np.triu(prob_matrix, 1).sum()  
+    # AH 0.0 e AH -1.0
+    h_win_1 = np.trace(prob_mtx, offset=-1)
+    ah_1_h = (ph - h_win_1) / (1 - h_win_1) if (1 - h_win_1) > 0 else 0
+    ah_0_h = ph / (ph + pa) if (ph + pa) > 0 else 0
     
-    h_win_by_1 = np.trace(prob_matrix, offset=-1)
-    a_win_by_1 = np.trace(prob_matrix, offset=1)
-    h_win_by_2plus = ph - h_win_by_1
-    a_win_by_2plus = pa - a_win_by_1
+    o25 = prob_mtx[np.add.outer(np.arange(max_g), np.arange(max_g)) > 2.5].sum()
+    return ph, px, pa, ah_0_h, ah_1_h, o25, prob_mtx
 
-    ah_0_h = ph / (ph + pa) if (ph + pa) > 0 else 0 
-    ah_minus_05_h = ph 
-    ah_plus_05_h = ph + px 
-    ah_minus_1_h = h_win_by_2plus / (1 - h_win_by_1) if (1 - h_win_by_1) > 0 else 0 
-    
-    ah_0_a = pa / (ph + pa) if (ph + pa) > 0 else 0 
-    ah_minus_05_a = pa 
-    ah_plus_05_a = pa + px 
-    ah_minus_1_a = a_win_by_2plus / (1 - a_win_by_1) if (1 - a_win_by_1) > 0 else 0 
-
-    goals_sum = np.add.outer(np.arange(max_goals), np.arange(max_goals))
-    o25_prob = prob_matrix[goals_sum > 2.5].sum()
-    u25_prob = prob_matrix[goals_sum < 2.5].sum()
-    
-    return {
-        "1": ph, "X": px, "2": pa,
-        "O2.5": o25_prob, "U2.5": u25_prob,
-        "AH 0.0 (H)": ah_0_h, "AH -0.5 (H)": ah_minus_05_h, "AH +0.5 (H)": ah_plus_05_h, "AH -1.0 (H)": ah_minus_1_h,
-        "AH 0.0 (A)": ah_0_a, "AH -0.5 (A)": ah_minus_05_a, "AH +0.5 (A)": ah_plus_05_a, "AH -1.0 (A)": ah_minus_1_a
-    }, prob_matrix
-
-# --- 3. SIDEBAR COCKPIT ---
+# --- 3. SIDEBAR (UI INTERATIVA) ---
 with st.sidebar:
-    st.markdown("<h2 style='color:#00FF88; font-size:22px; font-weight:700;'>🏛️ ORACLE V140 PRO</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color:#00FF88; font-size:24px;'>🏛️ ORACLE V140</h1>", unsafe_allow_html=True)
     
-    st.markdown("<p style='color:#475569; font-size:0.65rem; font-weight:700;'>01 // BANKROLL MANAGEMENT</p>", unsafe_allow_html=True)
-    bankroll = st.number_input("TOTAL BANKROLL (€)", value=100.0, step=10.0, format="%.2f")
+    with st.expander("💰 GESTÃO DE CAPITAL", expanded=True):
+        bankroll = st.number_input("Banca Total (€)", value=100.0, help="O valor total que tens disponível para apostar.")
     
-    st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#475569; font-size:0.65rem; font-weight:700;'>02 // LIVE API INJECTION</p>", unsafe_allow_html=True)
-    league_map = {"Premier League": 39, "La Liga": 140, "Serie A": 135, "Primeira Liga (PT)": 94}
-    league_name = st.selectbox("SELECT LEAGUE", list(league_map.keys()))
-    fixtures = get_fixtures_today(league_map[league_name])
-    match_selected = None
-    
-    if fixtures:
-        match_map = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}": f['fixture']['id'] for f in fixtures}
-        match_display = st.selectbox("SELECT MATCH", list(match_map.keys()))
-        match_selected = next(f for f in fixtures if f['fixture']['id'] == match_map[match_display])
+    with st.expander("📡 SELEÇÃO DE DADOS", expanded=True):
+        league_map = {"Premier League": 39, "La Liga": 140, "Primeira Liga": 94}
+        l_name = st.selectbox("Liga", list(league_map.keys()))
+        
+        fixtures = requests.get(f"https://{api_host}/fixtures", headers=headers, 
+                               params={"date": date.today().strftime('%Y-%m-%d'), "league": league_map[l_name], "season": "2025"}).json().get('response', [])
+        
+        if fixtures:
+            m_map = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}": f['fixture']['id'] for f in fixtures}
+            m_display = st.selectbox("Jogo", list(m_map.keys()))
+            m_sel = next(f for f in fixtures if f['fixture']['id'] == m_map[m_display])
+        else:
+            st.warning("Sem jogos para hoje.")
+            m_sel = None
 
-    st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#475569; font-size:0.65rem; font-weight:700;'>03 // PRO MARKET ODDS</p>", unsafe_allow_html=True)
-    c1, cx, c2 = st.columns(3)
-    m1 = c1.number_input("1", value=2.10); mx = cx.number_input("X", value=3.40); m2 = c2.number_input("2", value=3.50)
-    
-    c3, c4 = st.columns(2)
-    ah_minus_05 = c3.number_input("AH -0.5 (H)", value=2.10)
-    ah_minus_1 = c4.number_input("AH -1.0 (H)", value=3.20)
-    o25 = c3.number_input("O2.5", value=1.90)
-    u25 = c4.number_input("U2.5", value=1.90)
+    with st.expander("🛠️ CALIBRAÇÃO QUANT", expanded=False):
+        rho = st.slider("Rho (Dixon-Coles)", -0.20, 0.20, -0.11, help="Ajusta a dependência de golos. Padrão: -0.11")
+        boost = st.slider("Home Advantage %", 0, 25, 12) / 100.0
+
+    with st.expander("📊 ODDS DA CASA", expanded=True):
+        c1, cx, c2 = st.columns(3)
+        odd1 = c1.number_input("Odd 1", value=2.10)
+        oddx = cx.number_input("Odd X", value=3.40)
+        odd2 = c2.number_input("Odd 2", value=3.50)
+        odd_ah0 = st.number_input("Odd AH 0.0 (H)", value=1.55)
+        odd_o25 = st.number_input("Odd Over 2.5", value=1.90)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    run_scan = st.button("🚀 EXECUTE SYNDICATE SCAN")
+    scan = st.button("🚀 EXECUTAR ALPHA SCAN")
 
-# --- 4. RESULTS INTERFACE ---
-if not run_scan or not match_selected:
-    st.markdown("<div style='text-align:center; padding-top:150px; opacity:0.1;'><h1>ORACLE V140 PRO</h1><p>PRO SYNDICATE HEATMAP BUILD</p></div>", unsafe_allow_html=True)
+# --- 4. ÁREA DE RESULTADOS (DESIGN DE ALTO ESCLARECIMENTO) ---
+if not scan or not m_sel:
+    st.markdown("<div style='text-align:center; padding-top:150px; opacity:0.1;'><h1>ORACLE V140</h1><p>Sovereign Quant Terminal</p></div>", unsafe_allow_html=True)
 else:
-    with st.spinner('A calibrar Matriz de Calor e Mercados Asiáticos...'):
-        h_id, a_id = match_selected['teams']['home']['id'], match_selected['teams']['away']['id']
-        h_n, a_n = match_selected['teams']['home']['name'].upper(), match_selected['teams']['away']['name'].upper()
-        
-        stats_h = get_team_stats_cached(h_id, league_map[league_name])
-        stats_a = get_team_stats_cached(a_id, league_map[league_name])
-        
-        lh = (stats_h["h_for"] * stats_a["a_aga"]) ** 0.5
-        la = (stats_a["a_for"] * stats_h["h_aga"]) ** 0.5
-
-        probs, prob_matrix = calculate_pro_markets(lh, la, -0.11, 0.12)
-
-    cv = np.sqrt(lh + la) / (lh + la) if (lh + la) > 0 else 1
-    conf_score = max(50.0, min(99.9, 100 * (1 - (cv / 2.8))))
-
-    # --- UI RENDER ---
-    st.markdown(f"<h1 style='letter-spacing:-3px; font-size:55px; margin:0; font-weight:700;'>{h_n} <span style='color:#00FF88; font-weight:300;'>vs</span> {a_n}</h1>", unsafe_allow_html=True)
+    # Processamento
+    s_h = get_team_stats(m_sel['teams']['home']['id'], league_map[l_name])
+    s_a = get_team_stats(m_sel['teams']['away']['id'], league_map[l_name])
+    lh, la = (s_h['h_for']*s_a['a_aga'])**0.5, (s_a['a_for']*s_h['h_aga'])**0.5
+    ph, px, pa, ah0, ah1, o25, mtx = calculate_probs(lh, la, rho, boost)
     
-    col_res, col_risk = st.columns([1.1, 0.9])
+    # UI Header
+    st.markdown(f"<h1 style='font-size:50px; margin-bottom:0;'>{m_sel['teams']['home']['name'].upper()} <span style='color:#00FF88; font-weight:200;'>vs</span> {m_sel['teams']['away']['name'].upper()}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<p style='color:#94A3B8; margin-top:0;'>ESTATÍSTICA BIVARIADA // DIXON-COLES ATIVO // MEDIA XG INJETADA</p>", unsafe_allow_html=True)
+
+    # 1. Cards de Decisão
+    col_main, col_side = st.columns([1.2, 0.8])
     
     mkts = [
-        ("WIN: "+h_n, probs["1"], m1), ("WIN: "+a_n, probs["2"], m2), ("DRAW (X)", probs["X"], mx),
-        ("AH -0.5: "+h_n, probs["AH -0.5 (H)"], ah_minus_05), 
-        ("AH -1.0: "+h_n, probs["AH -1.0 (H)"], ah_minus_1),
-        ("O2.5 GOALS", probs["O2.5"], o25), ("U2.5 GOALS", probs["U2.5"], u25)
+        ("WIN: " + m_sel['teams']['home']['name'], ph, odd1),
+        ("AH 0.0: " + m_sel['teams']['home']['name'], ah0, odd_ah0),
+        ("OVER 2.5 GOALS", o25, odd_o25)
     ]
+    best = sorted([(n,p,b,(p*b)-1) for n,p,b in mkts], key=lambda x: x[3], reverse=True)[0]
+    edge = best[3]
+    kelly = max(0, (edge/(best[2]-1))*0.5)
     
-    valid_mkts = [(n, p, b, (p*b)-1) for n, p, b in mkts if p > 0 and b > 1.01]
-    best = sorted(valid_mkts, key=lambda x: x[3], reverse=True)[0]
-    
-    if best[3] > 0.03: 
-        kelly_pct = max(0, (best[3] / (best[2] - 1)) * 0.50)
-        stake_eur = max(1.0, bankroll * kelly_pct) 
-        seal_color = "#00FF88" if best[3] < 0.10 else "#FFD700"
-        status_msg = f"PRO EDGE: {best[3]:+.1%} | STAKE: {stake_eur:.2f}€ ({kelly_pct:.1%} da Banca)"
-    else:
-        stake_eur = 0.0
-        seal_color = "#EF4444"
-        status_msg = "NO PRO VALUE DETECTED | DO NOT BET"
-
-    with col_res:
-        st.markdown(f"""<div class="advisor-seal" style="border-color: rgba({int(seal_color[1:3], 16)}, {int(seal_color[3:5], 16)}, {int(seal_color[5:7], 16)}, 0.4);"><h1 class="advisor-title">{best[0]}</h1><p class="advisor-subtitle" style="color:{seal_color};">{status_msg}</p></div>""", unsafe_allow_html=True)
-    with col_risk:
-        st.markdown(f"""<div class="risk-card"><b style="color:#00FF88; letter-spacing:1px; font-size:0.65rem;">🛡️ INSTITUTIONAL CONFIDENCE</b><h2 style="margin:5px 0; font-size:2rem; font-weight:700;">{conf_score:.1f}%</h2><p style="color:#64748B; font-size:0.75rem; margin:0;">ASIAN MARKETS & HEATMAP ACTIVE</p></div>""", unsafe_allow_html=True)
-
-    def get_row_color(edge):
-        if edge >= 0.10: return 'rgba(255, 215, 0, 0.25)'    
-        elif edge >= 0.05: return 'rgba(0, 255, 136, 0.25)'  
-        elif edge >= 0.02: return 'rgba(0, 255, 136, 0.08)'  
-        elif edge < 0: return 'rgba(239, 68, 68, 0.1)'       
-        else: return 'rgba(255, 255, 255, 0.02)'             
-
-    df = pd.DataFrame(mkts, columns=["Market", "Prob", "Odd"])
-    df["Fair"] = 1/df["Prob"]
-    df["Edge"] = (df["Prob"] * df["Odd"]) - 1
-    
-    row_colors = [[get_row_color(e) for e in df["Edge"]]]
-
-    # Legenda Compacta Acima da Tabela
-    st.markdown("""
-        <div style="margin-bottom: 10px; font-size: 0.75rem; color: #CBD5E1;">
-            <span class="legend-box" style="background-color: rgba(255, 215, 0, 0.6);"></span> <b>Elite</b> (>10%) &nbsp;&nbsp;
-            <span class="legend-box" style="background-color: rgba(0, 255, 136, 0.6);"></span> <b>Muito Boa</b> (5%-10%) &nbsp;&nbsp;
-            <span class="legend-box" style="background-color: rgba(0, 255, 136, 0.2);"></span> <b>Boa</b> (2%-5%) &nbsp;&nbsp;
-            <span class="legend-box" style="background-color: rgba(239, 68, 68, 0.4);"></span> <b>Armadilha / Trap</b> (<0%)
-        </div>
-    """, unsafe_allow_html=True)
-
-    fig = go.Figure(data=[go.Table(
-        header=dict(values=['<b>PRO MARKET</b>', '<b>QUANT PROB</b>', '<b>FAIR ODD</b>', '<b>BOOKIE</b>', '<b>TRUE EDGE</b>'], fill_color='#0A0A0A', align='center', font=dict(color='#475569', size=11), height=45),
-        cells=dict(values=[df.Market, df.Prob.map('{:.1%}'.format), df.Fair.map('{:.2f}'.format), df.Odd.map('{:.2f}'.format), df.Edge.map('{:+.1%}'.format)],
-                   fill_color=row_colors, align='center', font=dict(color='white', size=13), height=40))])
-    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), paper_bgcolor='rgba(0,0,0,0)', height=(len(mkts)*42+60))
-    st.plotly_chart(fig, use_container_width=True)
-
-    # --- GLOSSÁRIO INSTITUCIONAL (EXPLICAÇÃO DAS CORES) ---
-    st.markdown("""
-        <div class="intel-card" style="margin-top: 20px;">
-            <b style="color:#FFFFFF; font-size: 1rem;">📖 GLOSSÁRIO DE VALOR INSTITUCIONAL (COMO LER O HEATMAP)</b>
-            <hr style="margin: 10px 0;">
-            <div style="display: grid; grid-template-columns: 1fr; gap: 15px;">
-                <div>
-                    <span style="color:#FFD700; font-weight:bold;">🟨 OURO (Edge > 10%) - Erro Massivo da Casa:</span><br>
-                    <span style="color:#CBD5E1; font-size: 0.85rem;">A casa de apostas errou gravemente no preço desta linha. Estas são as apostas de "sniper" onde os fundos colocam o peso máximo recomendado pelo Critério de Kelly. Aposta obrigatória se a liquidez permitir.</span>
-                </div>
-                <div>
-                    <span style="color:#00FF88; font-weight:bold;">🟩 VERDE FORTE (Edge 5% a 10%) - Valor Sólido:</span><br>
-                    <span style="color:#CBD5E1; font-size: 0.85rem;">O pão e a manteiga dos apostadores profissionais. O modelo detetou uma ineficiência clara no mercado asiático. Excelentes apostas para crescimento de banca sustentável a longo prazo.</span>
-                </div>
-                <div>
-                    <span style="color:#6EE7B7; font-weight:bold;">🟩 VERDE SUAVE (Edge 2% a 5%) - Valor Jogável:</span><br>
-                    <span style="color:#CBD5E1; font-size: 0.85rem;">Existe uma ligeira vantagem matemática. Válido para apostar, mas a <i>Stake</i> gerada será conservadora para proteger o teu capital de variações (variância) de curto prazo.</span>
-                </div>
-                <div>
-                    <span style="color:#EF4444; font-weight:bold;">🟥 VERMELHO (Edge < 0%) - Zona de Armadilha (Trap):</span><br>
-                    <span style="color:#CBD5E1; font-size: 0.85rem;">Atenção máxima. A odd oferecida pela casa é inferior à probabilidade matemática real. A longo prazo, apostar em mercados vermelhos resulta na ruína da banca (falência). O sistema indica-te exatamente do que deves fugir.</span>
+    with col_main:
+        color = "#00FF88" if edge > 0.05 else "#FFD700" if edge > 0.02 else "#EF4444"
+        st.markdown(f"""
+            <div class="advisor-seal" style="border-color: {color};">
+                <p style="color:#94A3B8; font-size:0.7rem; text-transform:uppercase; margin-bottom:5px;">Aposta Recomendada</p>
+                <h1 style="margin:0; font-size:2.5rem;">{best[0]}</h1>
+                <div style="display:flex; gap:20px; margin-top:15px;">
+                    <div><p style="font-size:0.6rem; color:#94A3B8; margin:0;">EDGE</p><b style="color:{color}; font-size:1.2rem;">{edge:+.1%}</b></div>
+                    <div><p style="font-size:0.6rem; color:#94A3B8; margin:0;">STAKE SUGERIDA</p><b style="font-size:1.2rem;">{bankroll*kelly:.2f}€</b></div>
+                    <div><p style="font-size:0.6rem; color:#94A3B8; margin:0;">MODELO</p><b style="font-size:1.2rem;">Half-Kelly</b></div>
                 </div>
             </div>
-        </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+
+    with col_side:
+        conf = 100 * (1 - (np.sqrt(lh+la)/(lh+la)/2.8))
+        st.markdown(f"""
+            <div class="risk-card">
+                <p style="color:#94A3B8; font-size:0.7rem; text-transform:uppercase; margin-bottom:5px;">Confiança do Sistema</p>
+                <h2 style="margin:0; font-size:2.2rem;">{conf:.1f}%</h2>
+                <p style="color:#64748B; font-size:0.75rem; margin-top:10px;">Baseado na volatilidade dos ataques e qualidade dos dados de xG injetados.</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+    # 2. Ajuda e Insights
+    st.markdown("### 🧠 ANÁLISE TÁCTICA E AJUDA")
+    c1, c2, c3 = st.columns(3)
+    
+    with c1:
+        st.markdown(f"""<div class="intel-card">
+            <b style="color:#00FF88;">📈 EXPECTATIVA DE GOLOS (λ)</b><br>
+            <span style="font-size:0.8rem; color:#CBD5E1;">Casa: <b>{lh:.2f}</b> | Fora: <b>{la:.2f}</b><br>
+            O modelo prevê um total de <b>{lh+la:.2f}</b> golos.</span>
+        </div>""", unsafe_allow_html=True)
+        
+    with c2:
+        idx = np.unravel_index(np.argsort(mtx.ravel())[-2:], mtx.shape)
+        st.markdown(f"""<div class="intel-card">
+            <b style="color:#00FF88;">🎯 SCORES MAIS PROVÁVEIS</b><br>
+            <span style="font-size:0.8rem; color:#CBD5E1;">
+            1. {idx[0][1]}-{idx[1][1]} ({mtx[idx[0][1], idx[1][1]]:.1%})<br>
+            2. {idx[0][0]}-{idx[1][0]} ({mtx[idx[0][0], idx[1][0]]:.1%})</span>
+        </div>""", unsafe_allow_html=True)
+        
+    with c3:
+        st.markdown(f"""<div class="intel-card">
+            <b style="color:#00FF88;">💡 DICA DO ORACLE</b><br>
+            <span style="font-size:0.8rem; color:#CBD5E1;">
+            {"Cuidado com o empate." if px > 0.28 else "Jogo com tendência para vencedor claro."}<br>
+            {"Mercado de golos parece inflacionado." if o25 < (1/odd_o25) else "Valor detetado em Over/Under."}</span>
+        </div>""", unsafe_allow_html=True)
+
+    # 3. Tabela de Valor com Heatmap (Design Limpo)
+    df = pd.DataFrame([
+        ("Vitória Casa", ph, odd1), ("Empate (X)", px, oddx), ("Vitória Fora", pa, odd2),
+        ("AH 0.0 (Casa)", ah0, odd_ah0), ("Over 2.5 Golos", o25, odd_o25)
+    ], columns=["Mercado", "Prob", "Bookie"])
+    df["Fair"] = 1/df["Prob"]
+    df["Edge"] = (df["Prob"] * df["Bookie"]) - 1
+    
+    colors = [['rgba(0, 255, 136, 0.2)' if e > 0.05 else 'rgba(255, 215, 0, 0.1)' if e > 0 else 'rgba(239, 68, 68, 0.1)' for e in df["Edge"]]]
+    
+    fig = go.Figure(data=[go.Table(
+        header=dict(values=['MERCADO', 'PROB. MODELO', 'ODD JUSTA', 'ODD CASA', 'ALPHA EDGE'],
+                    fill_color='#0A0A0A', align='left', font=dict(color='#94A3B8', size=11)),
+        cells=dict(values=[df.Mercado, df.Prob.map('{:.1%}'.format), df.Fair.map('{:.2f}'.format), df.Bookie.map('{:.2f}'.format), df.Edge.map('{:+.1%}'.format)],
+                   fill_color=colors, align='left', font=dict(color='white', size=12), height=35)
+    )])
+    fig.update_layout(margin=dict(l=0,r=0,t=0,b=0), height=250, paper_bgcolor='rgba(0,0,0,0)')
+    st.plotly_chart(fig, use_container_width=True)
+
+    # 4. Glossário de Apoio ao Utilizador
+    with st.expander("❓ COMO INTERPRETAR ESTES DADOS? (GUIA DE AJUDA)"):
+        st.markdown("""
+        * **Alpha Edge:** Representa a tua vantagem sobre a casa. Se o Edge é +10%, significa que, estatisticamente, ganharás 10 cêntimos por cada 1€ apostado a longo prazo.
+        * **Odd Justa:** É a odd que a casa deveria estar a pagar se não houvesse margem de lucro. Se a 'Odd Casa' for maior que a 'Odd Justa', tens uma **Aposta de Valor**.
+        * **AH 0.0 (Asian Handicap):** Também conhecido como 'Draw No Bet'. Se o jogo empatar, a tua aposta é devolvida.
+        * **Half-Kelly:** É um método de gestão de banca que equilibra o crescimento agressivo com a segurança. Nunca ignores o valor de Stake sugerido!
+        """)
