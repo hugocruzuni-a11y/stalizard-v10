@@ -1,4 +1,4 @@
-import stimport streamlit as st
+iimport streamlit as st
 import numpy as np
 from scipy.stats import poisson
 import pandas as pd
@@ -6,12 +6,12 @@ import plotly.graph_objects as go
 
 # 1. Advanced Institutional Configuration
 st.set_page_config(
-    page_title="STARLINE V97 - FULL SOVEREIGN", 
+    page_title="STARLINE V98 - FINAL SOVEREIGN", 
     layout="wide", 
     initial_sidebar_state="expanded"
 )
 
-# 2. Sovereign UI CSS (2026 Stealth Design)
+# 2. Sovereign UI CSS (High-Definition 2026 Graphics)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
@@ -26,12 +26,8 @@ st.markdown("""
         background-color: #050505 !important; 
         backdrop-filter: blur(25px); border-right: 1px solid #1A1A1A; 
     }
-    [data-testid="stSidebar"] .stNumberInput, [data-testid="stSidebar"] .stTextInput {
-        background-color: #111111 !important; border: 1px solid #222222 !important;
-        border-radius: 8px !important; color: #00FF88 !important; font-family: 'JetBrains Mono', monospace;
-    }
-
-    /* Advisor & Intel Cards */
+    
+    /* Decision Cards */
     .advisor-premium {
         background: linear-gradient(135deg, rgba(0, 255, 136, 0.05) 0%, rgba(0, 0, 0, 0.4) 100%);
         border-radius: 20px; padding: 35px; border: 1px solid #00FF88;
@@ -42,14 +38,14 @@ st.markdown("""
         border: 1px solid rgba(255, 255, 255, 0.05); margin-top: 10px;
     }
 
-    /* Neon Execute Button */
+    /* Execute Button */
     div.stButton > button {
         background: #00FF88 !important; color: #000000 !important; font-weight: 900; 
         height: 4.5em; width: 100%; border-radius: 12px; border: none; text-transform: uppercase;
         letter-spacing: 2px; box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
     }
     
-    label { font-size: 0.7rem !important; font-weight: 800 !important; color: #64748B !important; text-transform: uppercase; }
+    label { font-size: 0.75rem !important; font-weight: 800 !important; color: #94A3B8 !important; text-transform: uppercase; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -59,33 +55,33 @@ def reset():
 # --- SIDEBAR: PRECISION COMMAND ---
 with st.sidebar:
     st.markdown("<h1 style='color:#00FF88; font-size:24px; margin-bottom:0;'>🏛️ STARLINE AI</h1>", unsafe_allow_html=True)
-    st.caption("SOVEREIGN VISION // V97.0")
+    st.caption("ULTRA-PRECISION // V98.0")
     
     st.markdown("---")
-    h_n = st.text_input("HOME TEAM", "VILLARREAL").upper()
-    a_n = st.text_input("AWAY TEAM", "REAL SOCIEDAD").upper()
+    h_n = st.text_input("HOME TEAM", "HOME TEAM").upper()
+    a_n = st.text_input("AWAY TEAM", "AWAY TEAM").upper()
     
     c_gf, c_ga = st.columns(2)
-    hgf = c_gf.number_input("H-GF", 9.0); hga = c_ga.number_input("H-GA", 7.0)
-    agf = c_gf.number_input("A-GF", 12.0); aga = c_ga.number_input("A-GA", 10.0)
+    hgf = c_gf.number_input("H-GF", 8.0); hga = c_ga.number_input("H-GA", 10.0)
+    agf = c_gf.number_input("A-GF", 10.0); aga = c_ga.number_input("A-GA", 12.0)
     
     st.markdown("---")
     st.write("1X2 & BTTS")
-    m1 = st.number_input("ODD 1", 1.90); mx = st.number_input("ODD X", 4.00); m2 = st.number_input("ODD 2", 3.35)
-    m_ob = st.number_input("BTTS YES", 1.32)
+    m1 = st.number_input("ODD 1", 2.10); mx = st.number_input("ODD X", 3.40); m2 = st.number_input("ODD 2", 3.60)
+    m_ob = st.number_input("BTTS YES", 1.80); m_ob_no = st.number_input("BTTS NO", 2.00)
     
     st.write("OVER / UNDER LADDER")
-    o15 = st.number_input("OVER 1.5", 1.16); o25 = st.number_input("OVER 2.5", 1.33); o35 = st.number_input("OVER 3.5", 1.78)
-    u15 = st.number_input("UNDER 1.5", 4.50); u25 = st.number_input("UNDER 2.5", 2.65); u35 = st.number_input("UNDER 3.5", 1.50)
+    o15 = st.number_input("O 1.5", 1.25); o25 = st.number_input("O 2.5", 1.85); o35 = st.number_input("O 3.5", 3.20)
+    u15 = st.number_input("U 1.5", 3.75); u25 = st.number_input("U 2.5", 1.95); u35 = st.number_input("U 3.5", 1.35)
     
-    st.write("HANDICAP 0.0 (DNB)")
-    m_ah0_h = st.number_input("AH 0.0 HOME", 1.33)
+    st.write("ASIAN HANDICAP (DNB)")
+    m_ah0_h = st.number_input("AH 0.0 HOME", 1.50); m_ah0_a = st.number_input("AH 0.0 AWAY", 2.50)
     
     st.markdown("<br>", unsafe_allow_html=True)
-    run = st.button("🚀 EXECUTE ALPHA SCAN")
+    run = st.button("🚀 EXECUTE QUANTUM SCAN")
     st.button("🗑️ RESET ENGINE", on_click=reset)
 
-# --- MAIN INTERFACE ---
+# --- SOVEREIGN INTERFACE ---
 if not run:
     st.markdown("""
         <div style='text-align:center; padding-top:100px;'>
@@ -94,10 +90,11 @@ if not run:
         </div>
     """, unsafe_allow_html=True)
 else:
-    # ENGINE 1.000.000 SIMULATIONS
+    # 1.000.000 SIMULATIONS ENGINE
     lh, la = max(0.01, ((hgf/5)*(aga/5))**0.5), max(0.01, ((agf/5)*(hga/5))**0.5)
     sim_h, sim_a = np.random.poisson(lh, 1000000), np.random.poisson(la, 1000000)
     stot = sim_h + sim_a
+    
     ph, px, pa = np.mean(sim_h > sim_a), np.mean(sim_h == sim_a), np.mean(sim_h < sim_a)
     ph, px, pa = ph/(ph+px+pa), px/(ph+px+pa), pa/(ph+px+pa)
 
@@ -106,43 +103,49 @@ else:
     # 1. ADVISOR & AI INSIGHTS
     col_adv, col_notes = st.columns([1.2, 0.8])
     
+    p_btts = np.mean((sim_h>0)&(sim_a>0))
+    p_ah0h = ph / (ph + pa) if (ph+pa) > 0 else 0
+    p_ah0a = pa / (ph + pa) if (ph+pa) > 0 else 0
+
     mkts = [
-        ("WIN: "+h_n, ph, m1), ("WIN: "+a_n, pa, m2), ("DRAW", px, mx),
+        ("WIN: "+h_n, ph, m1), ("WIN: "+a_n, pa, m2), ("DRAW (X)", px, mx),
         ("OVER 1.5", np.mean(stot>1.5), o15), ("OVER 2.5", np.mean(stot>2.5), o25), ("OVER 3.5", np.mean(stot>3.5), o35),
         ("UNDER 1.5", np.mean(stot<1.5), u15), ("UNDER 2.5", np.mean(stot<2.5), u25), ("UNDER 3.5", np.mean(stot<3.5), u35),
-        ("BTTS: YES", np.mean((sim_h>0)&(sim_a>0)), m_ob), ("AH 0.0: "+h_n, ph/(ph+pa), m_ah0_h)
+        ("BTTS: YES", p_btts, m_ob), ("BTTS: NO", 1-p_btts, m_ob_no),
+        ("AH 0.0: "+h_n, p_ah0h, m_ah0_h), ("AH 0.0: "+a_n, p_ah0a, m_ah0_a)
     ]
+    
     best = sorted([(n, p, b, (p*b)-1) for n, p, b in mkts], key=lambda x: x[3], reverse=True)[0]
 
     with col_adv:
         st.markdown(f"""
             <div class="advisor-premium">
                 <p style="color:#64748B; margin:0; font-size:0.8rem; font-weight:800; letter-spacing:4px;">QUANTUM MASTER SIGNAL</p>
-                <h1 style="color:white; margin:10px 0; font-size:3.5rem; letter-spacing:-1.5px;">{best[0]}</h1>
+                <h1 style="color:white; margin:10px 0; font-size:3.5rem; letter-spacing:-1px;">{best[0]}</h1>
                 <p style="color:#00FF88; font-size:1.5rem; margin:0; font-weight:800;">EDGE: {best[3]:+.1%} | PROBABILITY: {best[1]:.1%}</p>
             </div>
         """, unsafe_allow_html=True)
 
     with col_notes:
-        st.markdown("### 🧠 AI INTELLIGENCE")
+        st.markdown("### 🧠 AI INSIGHTS")
         clr = "#00FF88" if best[3] > 0.15 else "#FACC15"
         st.markdown(f"""
             <div class="intel-card">
-                <b style="color:{clr};">WHY THIS MARKET?</b><br>
+                <b style="color:{clr};">ALPHA EDGE SOURCE</b><br>
                 <span style="color:#94A3B8; font-size:0.9rem;">
-                Based on 1M simulations, the offensive efficiency of <b>{h_n if ph > pa else a_n}</b> 
-                creates a statistical <b>Edge of {best[3]:.1%}</b>. Market odds are misaligned by {abs(best[3]*100):.1%}.
+                Statistical discrepancy detected in <b>{best[0]}</b>. 
+                The bookmakers are miscalculating the {h_n if ph > pa else a_n} momentum.
                 </span>
             </div>
             <div class="intel-card">
                 <b style="color:#3B82F6;">VOLATILITY SCAN</b><br>
                 <span style="color:#94A3B8; font-size:0.9rem;">
-                Goal distribution shows stable variance. Poisson reliability: <b>HIGH</b>.
+                Confidence rating: <b>STABLE</b>. Goal density follows the Institutional standard.
                 </span>
             </div>
         """, unsafe_allow_html=True)
 
-    # 2. THE MATRIX (PLOTLY-POWERED TABLE)
+    # 2. THE MATRIX (PLOTLY SECURE RENDER)
     st.markdown("### 💎 COMPREHENSIVE MARKET MATRIX")
     df = pd.DataFrame(mkts, columns=["Market", "Prob", "Odd"])
     df["Fair"] = 1/df["Prob"]
@@ -160,10 +163,10 @@ else:
             align='center', font=dict(color='white', size=14), height=45
         )
     )])
-    fig_table.update_layout(margin=dict(l=0, r=0, t=0, b=0), paper_bgcolor='rgba(0,0,0,0)', height=500)
+    fig_table.update_layout(margin=dict(l=0, r=0, t=0, b=0), paper_bgcolor='rgba(0,0,0,0)', height=550)
     st.plotly_chart(fig_table, use_container_width=True)
 
-    # 3. ANALYTICS (GRÁFICOS 1000%)
+    # 3. ANALYTICS
     st.markdown("---")
     c1, c2 = st.columns([1.3, 0.7])
     with c1:
@@ -171,18 +174,12 @@ else:
         fig_p = go.Figure()
         fig_p.add_trace(go.Scatter(x=xr, y=[poisson.pmf(i, lh) for i in xr], name=h_n, fill='tozeroy', line_color='#00FF88', line_width=4))
         fig_p.add_trace(go.Scatter(x=xr, y=[poisson.pmf(i, la) for i in xr], name=a_n, fill='tozeroy', line_color='#3B82F6', line_width=4))
-        fig_p.update_layout(
-            title="POISSON DENSITY CURVES (PROBABILITY FLOW)", 
-            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
-            font_color="white", height=380,
-            xaxis=dict(gridcolor='rgba(255,255,255,0.05)'), yaxis=dict(gridcolor='rgba(255,255,255,0.05)')
-        )
+        fig_p.update_layout(title="POISSON DENSITY (ALPHA FLOW)", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", height=380)
         st.plotly_chart(fig_p, use_container_width=True)
     with c2:
-        st.write("**PREDICTED SCORES (TOP 3)**")
+        st.write("**TOP PREDICTED SCORES**")
         hp, ap = poisson.pmf(range(5), lh), poisson.pmf(range(5), la)
         mtx = np.outer(hp, ap); mtx /= mtx.sum()
         idx = np.unravel_index(np.argsort(mtx.ravel())[-3:], mtx.shape)
         for j in range(2, -1, -1):
-            st.metric(f"SCORE {idx[0][j]}-{idx[1][j]}", f"{mtx[idx[0][j], idx[1][j]]:.1%}")
             st.metric(f"SCORE {idx[0][j]}-{idx[1][j]}", f"{mtx[idx[0][j], idx[1][j]]:.1%}")
