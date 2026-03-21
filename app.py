@@ -6,64 +6,57 @@ import plotly.graph_objects as go
 import requests
 from datetime import date
 
-# --- 1. CONFIGURAÇÃO DE LUXO ---
-st.set_page_config(page_title="ORACLE V140 PRO - ELITE", layout="wide", initial_sidebar_state="expanded")
+# --- 1. CONFIGURAÇÃO DE DESIGN LIMPO (SEM MANCHAS DE LUZ) ---
+st.set_page_config(page_title="ORACLE V140 - ELITE", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
     
+    /* Fundo Escuro Puro e Sóbrio */
     .stApp { 
-        background: radial-gradient(circle at 20% 35%, rgba(0, 255, 136, 0.05) 0%, #020617 40%);
+        background-color: #020617;
+        background-image: none; /* REMOVIDA A LUZ QUE ESTAVA A TAPAR O TEXTO */
         color: #F8FAFC; 
         font-family: 'Plus Jakarta Sans', sans-serif; 
     }
     
     /* Sidebar de Alta Performance */
     [data-testid="stSidebar"] { 
-        background-color: rgba(2, 6, 23, 0.8) !important; 
-        backdrop-filter: blur(20px);
-        border-right: 1px solid rgba(0, 255, 136, 0.2) !important;
+        background-color: #050a1a !important; 
+        border-right: 1px solid rgba(0, 255, 136, 0.1) !important;
     }
 
-    /* Recommendation Card (Glassmorphism) */
+    /* Advisor Box - Glassmorphism Focado */
     .alpha-box { 
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
-        border-radius: 24px; 
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 20px; 
         padding: 35px; 
-        border: 1px solid rgba(0, 255, 136, 0.3);
-        box-shadow: 0 25px 50px -12px rgba(0, 255, 136, 0.15);
+        border: 1px solid rgba(0, 255, 136, 0.25);
+        box-shadow: 0 0 40px rgba(0, 255, 136, 0.05); /* Brilho apenas aqui */
         margin-bottom: 30px;
     }
 
     .bet-name { 
         font-size: 3.8rem; font-weight: 800; line-height: 1; 
-        background: linear-gradient(90deg, #FFFFFF, #00FF88);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        color: #FFFFFF;
         margin: 10px 0;
     }
 
     /* Cartões de Insight */
     .insight-card {
         background: rgba(255, 255, 255, 0.03);
-        border-radius: 16px; padding: 20px;
+        border-radius: 12px; padding: 18px;
         border: 1px solid rgba(255, 255, 255, 0.05);
-        height: 100%;
     }
 
-    /* Botão Neon */
+    /* Botão Neon Sólido */
     div.stButton > button {
-        background: linear-gradient(90deg, #00FF88 0%, #00BD63 100%) !important;
+        background: #00FF88 !important;
         color: #000000 !important; font-weight: 800 !important;
-        border-radius: 12px !important; border: none !important;
-        height: 3.8em !important; text-transform: uppercase; letter-spacing: 2px;
-        transition: all 0.3s ease;
+        border-radius: 10px !important; border: none !important;
+        height: 3.5em !important; text-transform: uppercase; letter-spacing: 2px;
     }
-    div.stButton > button:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0, 255, 136, 0.3); }
-
-    /* Estilo da Tabela */
-    .stTable { background: transparent !important; }
-    .badge-label { padding: 4px 12px; border-radius: 100px; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -98,54 +91,43 @@ def run_math(lh, la, rho, boost):
             elif x==1 and y==1: prob_mtx[x,y] *= max(0, 1 - rho)
     prob_mtx /= prob_mtx.sum()
     ph, px, pa = np.tril(prob_mtx, -1).sum(), np.trace(prob_mtx), np.triu(prob_mtx, 1).sum()
-    
-    h_win_1 = np.trace(prob_mtx, offset=-1)
-    a_win_1 = np.trace(prob_mtx, offset=1)
-    h_2p, a_2p = ph - h_win_1, pa - a_win_1
-
     ah0_h = ph / (ph + pa) if (ph + pa) > 0 else 0
-    ah1_h = h_2p / (1 - h_win_1) if (1 - h_win_1) > 0 else 0
-    
     o25 = prob_mtx[np.add.outer(np.arange(max_g), np.arange(max_g)) > 2.5].sum()
-    return ph, px, pa, ah0_h, ah1_h, o25, prob_mtx
+    return ph, px, pa, ah0_h, o25, prob_mtx
 
-# --- 3. SIDEBAR COCKPIT ---
+# --- 3. SIDEBAR ---
 with st.sidebar:
     st.markdown("<h2 style='color:#00FF88; letter-spacing:-1px;'>🏛️ ORACLE V140</h2>", unsafe_allow_html=True)
     bankroll = st.number_input("BANCA TOTAL (€)", value=100.0)
+    league_map = {"Premier League": 39, "La Liga": 140, "Primeira Liga": 94}
+    ln = st.selectbox("LIGA", list(league_map.keys()))
     
-    st.markdown("<hr style='opacity:0.1'>", unsafe_allow_html=True)
-    l_map = {"Premier League": 39, "La Liga": 140, "Serie A": 135, "Primeira Liga": 94}
-    ln = st.selectbox("LIGA", list(l_map.keys()))
-    
-    fix = requests.get(f"https://{api_host}/fixtures", headers=headers, params={"date": date.today().strftime('%Y-%m-%d'), "league": l_map[ln], "season": "2025"}).json().get('response', [])
+    fix = requests.get(f"https://{api_host}/fixtures", headers=headers, params={"date": date.today().strftime('%Y-%m-%d'), "league": league_map[ln], "season": "2025"}).json().get('response', [])
     if fix:
         m_map = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}": f['fixture']['id'] for f in fix}
         m_display = st.selectbox("CONFRONTO", list(m_map.keys()))
         m_sel = next(f for f in fix if f['fixture']['id'] == m_map[m_display])
     else: m_sel = None
 
-    st.markdown("<hr style='opacity:0.1'>", unsafe_allow_html=True)
     c1, cx, c2 = st.columns(3)
     o1 = c1.number_input("Odd 1", value=2.00); ox = cx.number_input("Odd X", value=3.40); o2 = c2.number_input("Odd 2", value=3.50)
     o_ah0 = st.number_input("Odd AH 0.0 (H)", value=1.55)
     o_o25 = st.number_input("Odd Over 2.5", value=1.95)
     scan = st.button("🚀 EXECUTE ALPHA SCAN")
 
-# --- 4. RESULTADOS (ULTIMATE DESIGN) ---
+# --- 4. RESULTADOS (ULTRA CLEAN) ---
 if not scan or not m_sel:
-    st.markdown("<div style='text-align:center; padding-top:200px; opacity:0.1;'><h1>ORACLE V140</h1><p>Sovereign Terminal Build</p></div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align:center; padding-top:200px; opacity:0.1;'><h1>ORACLE V140</h1><p>Ready for Data Injection</p></div>", unsafe_allow_html=True)
 else:
-    s_h = get_stats(m_sel['teams']['home']['id'], l_map[ln])
-    s_a = get_stats(m_sel['teams']['away']['id'], l_map[ln])
+    s_h = get_stats(m_sel['teams']['home']['id'], league_map[ln])
+    s_a = get_stats(m_sel['teams']['away']['id'], league_map[ln])
     lh, la = (s_h['h_f']*s_a['a_a'])**0.5, (s_a['a_f']*s_h['h_a'])**0.5
-    ph, px, pa, ah0, ah1, o25, mtx = run_math(lh, la, -0.11, 0.12)
+    ph, px, pa, ah0, o25, mtx = run_math(lh, la, -0.11, 0.12)
     
-    # Header
-    st.markdown(f"<h1 style='font-size:3.5rem; margin-bottom:0;'>{m_sel['teams']['home']['name'].upper()} <span style='color:#00FF88; font-weight:200;'>vs</span> {m_sel['teams']['away']['name'].upper()}</h1>", unsafe_allow_html=True)
-    st.markdown(f"<p style='color:#64748B; letter-spacing:2px; font-weight:600;'>DATA SYNC // {ln.upper()} // POISSON-DIXON ENGINE</p>", unsafe_allow_html=True)
+    # Título Sem Reflexos
+    st.markdown(f"<h1 style='font-size:4rem; margin-bottom:0; color:#FFFFFF;'>{m_sel['teams']['home']['name'].upper()} <span style='color:#00FF88; font-weight:200;'>vs</span> {m_sel['teams']['away']['name'].upper()}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<p style='color:#64748B; letter-spacing:2px; font-weight:600;'>{ln.upper()} // POISSON-DIXON ENGINE</p>", unsafe_allow_html=True)
 
-    # Grid Superior: Recomendação + Gráfico
     col1, col2 = st.columns([1.2, 0.8])
     
     with col1:
@@ -156,7 +138,7 @@ else:
         
         st.markdown(f"""
             <div class="alpha-box" style="border-left: 8px solid {color};">
-                <p style="color:#64748B; font-weight:800; font-size:0.7rem; text-transform:uppercase; letter-spacing:3px;">Recomendação Principal</p>
+                <p style="color:#64748B; font-weight:800; font-size:0.7rem; text-transform:uppercase; letter-spacing:3px;">Recomendação Alpha</p>
                 <div class="bet-name">{best[0]}</div>
                 <div style="display:flex; gap:40px; margin-top:20px;">
                     <div><p style="color:#64748B; font-size:0.6rem; margin:0; font-weight:700;">TRUE EDGE</p><b style="color:{color}; font-size:1.8rem;">{edge:+.1%}</b></div>
@@ -166,6 +148,7 @@ else:
         """, unsafe_allow_html=True)
 
     with col2:
+        # Gráfico limpo
         xr = np.arange(7)
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=xr, y=mtx.sum(axis=1), name="Casa", fill='tozeroy', line_color='#00FF88', line_width=4))
@@ -174,16 +157,15 @@ else:
                           margin=dict(l=0,r=0,t=0,b=0), xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)'))
         st.plotly_chart(fig, use_container_width=True)
 
-    # Tabela Centralizada
-    st.markdown("<h3 style='letter-spacing:-1px;'>Full Market Heatmap</h3>", unsafe_allow_html=True)
+    # Tabela Centralizada e Legenda
     df = pd.DataFrame([("Match Winner (1)", ph, o1), ("Draw (X)", px, ox), ("Match Winner (2)", pa, o2), ("AH 0.0 (DNB)", ah0, o_ah0), ("Over 2.5", o25, o_o25)], columns=["M", "P", "B"])
     df["F"] = 1/df["P"]; df["E"] = (df["P"] * df["B"]) - 1
     
     def get_c(e):
-        if e > 0.10: return 'rgba(16, 185, 129, 0.1)'
+        if e > 0.10: return 'rgba(0, 255, 136, 0.1)'
         if e > 0.02: return 'rgba(245, 158, 11, 0.1)'
         if e < 0: return 'rgba(239, 68, 68, 0.1)'
-        return 'rgba(255, 255, 255, 0.02)'
+        return 'rgba(255, 255, 255, 0.01)'
 
     fig_t = go.Figure(data=[go.Table(
         header=dict(values=['MERCADO', 'PROB. QUANT', 'ODD JUSTA', 'ODD CASA', 'TRUE EDGE'], 
@@ -193,22 +175,9 @@ else:
     )])
     fig_t.update_layout(margin=dict(l=0,r=0,t=0,b=0), height=320, paper_bgcolor='rgba(0,0,0,0)')
     st.plotly_chart(fig_t, use_container_width=True)
-
-    # Glossário Horizontal
-    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Glossário Horizontal Simples
     g1, g2, g3 = st.columns(3)
-    with g1:
-        st.markdown(f"""<div class="insight-card" style="border-top: 3px solid #00FF88;">
-            <b style="color:#00FF88; font-size:0.7rem;">🟡 ALPHA GOLD</b><br>
-            <p style="font-size:0.8rem; color:#94A3B8; margin-top:5px;">Edge > 10%. Ineficiência crítica detetada. Oportunidade de investimento de alta convicção.</p>
-        </div>""", unsafe_allow_html=True)
-    with g2:
-        st.markdown(f"""<div class="insight-card" style="border-top: 3px solid #F59E0B;">
-            <b style="color:#F59E0B; font-size:0.7rem;">🟢 VALUE PRO</b><br>
-            <p style="font-size:0.8rem; color:#94A3B8; margin-top:5px;">Edge 2-10%. Território profissional estável. Lucro garantido pelo volume a longo prazo.</p>
-        </div>""", unsafe_allow_html=True)
-    with g3:
-        st.markdown(f"""<div class="insight-card" style="border-top: 3px solid #EF4444;">
-            <b style="color:#EF4444; font-size:0.7rem;">🔴 TRAP ZONE</b><br>
-            <p style="font-size:0.8rem; color:#94A3B8; margin-top:5px;">Odd negativa. A casa está a pagar menos do que o risco matemático real. Fuga obrigatória.</p>
-        </div>""", unsafe_allow_html=True)
+    with g1: st.markdown(f"""<div class="insight-card" style="border-top: 3px solid #00FF88;"><b style="color:#00FF88; font-size:0.7rem;">🟡 ALPHA GOLD</b><p style="font-size:0.8rem; color:#94A3B8; margin-top:5px;">Edge > 10%. Ineficiência crítica detetada.</p></div>""", unsafe_allow_html=True)
+    with g2: st.markdown(f"""<div class="insight-card" style="border-top: 3px solid #F59E0B;"><b style="color:#F59E0B; font-size:0.7rem;">🟢 VALUE PRO</b><p style="font-size:0.8rem; color:#94A3B8; margin-top:5px;">Edge 2-10%. Território profissional estável.</p></div>""", unsafe_allow_html=True)
+    with g3: st.markdown(f"""<div class="insight-card" style="border-top: 3px solid #EF4444;"><b style="color:#EF4444; font-size:0.7rem;">🔴 TRAP ZONE</b><p style="font-size:0.8rem; color:#94A3B8; margin-top:5px;">Odd negativa. Fuga obrigatória deste mercado.</p></div>""", unsafe_allow_html=True)
