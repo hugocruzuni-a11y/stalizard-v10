@@ -3,193 +3,140 @@ import numpy as np
 from scipy.stats import poisson
 import pandas as pd
 import plotly.graph_objects as go
+import plotly.express as px
 
-# 1. Configuração de Terminal de Investimento 2026
+# 1. Ultra-High-End Configuration
 st.set_page_config(
-    page_title="STARLINE V88 - SOVEREIGN VISION", 
+    page_title="STARLINE V92 - QUANTUM FLOW", 
     layout="wide", 
     initial_sidebar_state="expanded"
 )
 
-# 2. CSS de Alta Legibilidade (Foco em Contraste e Espaçamento)
+# 2. CSS "Quantum Flow" (The 2026 Stealth Design)
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
     
-    /* Fundo Deep Black com Gradiente de Foco */
     .stApp { 
-        background: radial-gradient(circle at 50% -20%, #1e293b 0%, #000000 80%);
-        color: #FFFFFF; 
-        font-family: 'Inter', sans-serif; 
+        background: radial-gradient(circle at 50% -20%, #1e293b 0%, #000000 90%);
+        color: #FFFFFF; font-family: 'Plus Jakarta Sans', sans-serif; 
     }
     
-    /* Sidebar Profissional */
     [data-testid="stSidebar"] { 
-        background-color: rgba(10, 10, 15, 0.98) !important; 
-        border-right: 1px solid rgba(255,255,255,0.05); 
+        background-color: rgba(5, 5, 10, 0.95) !important; 
+        backdrop-filter: blur(20px); border-right: 1px solid rgba(255,255,255,0.05); 
     }
     
-    /* Hero Section - Boas-Vindas */
-    .hero-container {
-        text-align: center; padding: 80px 40px;
+    .advisor-glow {
         background: rgba(255, 255, 255, 0.02);
-        border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
-        margin-top: 50px;
+        border-radius: 20px; padding: 30px; border: 1px solid rgba(0, 255, 136, 0.2);
+        box-shadow: 0 0 50px rgba(0, 255, 136, 0.05); margin-bottom: 30px;
     }
 
-    /* Advisor de Decisão Rápida */
-    .advisor-premium {
-        background: #0A0A0A; border-left: 8px solid #00FF88;
-        padding: 30px; border-radius: 12px; margin-bottom: 30px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-    }
+    label { color: #94A3B8 !important; font-weight: 700 !important; text-transform: uppercase; font-size: 0.7rem !important; letter-spacing: 2px; }
 
-    /* Tabela Bloomberg Style (Limpa) */
-    .stDataFrame {
-        border: none !important;
-        margin-top: 20px;
-    }
-    
-    /* Labels dos Inputs */
-    label { 
-        color: #94A3B8 !important; 
-        font-weight: 700 !important; 
-        text-transform: uppercase; 
-        font-size: 0.75rem !important;
-        letter-spacing: 1.5px;
-    }
-
-    /* Botão Principal */
     div.stButton > button {
-        background: #00FF88 !important; color: #000000 !important; font-weight: 900; 
-        height: 4.5em; width: 100%; border-radius: 12px; border: none; 
-        text-transform: uppercase; letter-spacing: 2px;
-        transition: 0.3s;
+        background: linear-gradient(90deg, #00FF88 0%, #00BD63 100%) !important;
+        color: #000000 !important; font-weight: 900; height: 4.5em; width: 100%; border-radius: 12px; border: none; text-transform: uppercase;
+        box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
     }
-    div.stButton > button:hover { transform: scale(1.02); box-shadow: 0 0 30px rgba(0,255,136,0.3); }
     </style>
     """, unsafe_allow_html=True)
 
 def reset():
     for key in list(st.session_state.keys()): del st.session_state[key]
 
-# --- SIDEBAR DE COMANDO ---
+# --- SIDEBAR: SYSTEM COMMANDS ---
 with st.sidebar:
-    st.markdown("<h1 style='color:#00FF88; font-size:24px;'>🏛️ TERMINAL V88</h1>", unsafe_allow_html=True)
-    st.caption("ALGORITHMIC TRADING // 2026")
-    
-    bank = st.number_input("BANCA PARA GESTÃO (€)", value=1000.0, step=100.0)
+    st.markdown("<h1 style='color:#00FF88; font-size:24px;'>🏛️ STARLINE V92</h1>", unsafe_allow_html=True)
+    st.caption("QUANTUM FLOW TERMINAL // 2026")
     
     st.markdown("---")
-    h_n = st.text_input("EQUIPA DA CASA", "LEIPZIG").upper()
-    a_n = st.text_input("EQUIPA DE FORA", "HOFFENHEIM").upper()
+    h_n = st.text_input("HOME TEAM", "VILLARREAL").upper()
+    a_n = st.text_input("AWAY TEAM", "REAL SOCIEDAD").upper()
     
-    st.write("MÉDIAS DE PERFORMANCE")
     c1, c2 = st.columns(2)
-    hgf = c1.number_input("GOLOS MARCADOS (H)", 8.0); hga = c2.number_input("GOLOS SOFRIDOS (H)", 12.0)
-    agf = c1.number_input("GOLOS MARCADOS (A)", 12.0); aga = c2.number_input("GOLOS SOFRIDOS (A)", 10.0)
+    hgf = c1.number_input("H-GF", 9.0); hga = c2.number_input("H-GA", 7.0)
+    agf = c1.number_input("A-GF", 12.0); aga = c2.number_input("A-GA", 10.0)
     
     st.markdown("---")
-    st.write("ODDS 1X2")
-    m1 = st.number_input("ODD CASA (1)", 1.90); mx = st.number_input("ODD EMPATE (X)", 4.00); m2 = st.number_input("ODD FORA (2)", 3.35)
+    m1 = st.number_input("ODD 1", 1.90); mx = st.number_input("ODD X", 4.00); m2 = st.number_input("ODD 2", 3.35)
+    o25 = st.number_input("OVER 2.5", 1.33); u25 = st.number_input("UNDER 2.5", 2.65)
+    m_ob = st.number_input("BTTS YES", 1.32)
     
-    st.write("MERCADO DE GOLOS")
-    o15 = st.number_input("OVER 1.5", 1.16); o25 = st.number_input("OVER 2.5", 1.33); u25 = st.number_input("UNDER 2.5", 2.65)
-    
-    st.write("ESPECIAIS")
-    m_ob = st.number_input("AMBAS MARCAM (SIM)", 1.32); m_hah = st.number_input("DNB (CASA)", 1.33)
-    
-    run = st.button("🚀 INICIAR ANÁLISE")
-    st.button("🗑️ LIMPAR SISTEMA", on_click=reset)
+    st.markdown("<br>", unsafe_allow_html=True)
+    run = st.button("⚡ EXECUTE QUANTUM SCAN")
+    st.button("🗑️ CLEAR SYSTEM", on_click=reset)
 
-# --- CORPO DO TERMINAL ---
+# --- MAIN INTERFACE ---
 if not run:
-    st.markdown(f"""
-        <div class="hero-container">
-            <h1 style="font-size: 5rem; margin-bottom: 0; font-weight: 900; letter-spacing: -4px;">STARLINE</h1>
-            <p style="color:#00FF88; font-size: 1.5rem; letter-spacing: 5px; font-weight: 300;">SOVEREIGN VISION V88</p>
-            <div style="margin-top: 40px; padding: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
-                <p style="color:#64748B; font-family:'JetBrains Mono';">SISTEMA AGUARDANDO PARÂMETROS DE ENTRADA</p>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<div style='text-align:center; margin-top:15%; opacity:0.1;'><h1>SYSTEM IDLE</h1><p>WAITING FOR PARAMETERS</p></div>", unsafe_allow_html=True)
 else:
-    # ENGINE 1.000.000 SIMULAÇÕES
+    # ENGINE 1M
     lh, la = max(0.01, ((hgf/5)*(aga/5))**0.5), max(0.01, ((agf/5)*(hga/5))**0.5)
     sim_h, sim_a = np.random.poisson(lh, 1000000), np.random.poisson(la, 1000000)
     stot = sim_h + sim_a
     ph, px, pa = np.mean(sim_h > sim_a), np.mean(sim_h == sim_a), np.mean(sim_h < sim_a)
-    norm = ph+px+pa; ph, px, pa = ph/norm, px/norm, pa/norm
+    ph, px, pa = ph/(ph+px+pa), px/(ph+px+pa), pa/(ph+px+pa)
 
-    st.markdown(f"<h1 style='font-size:3.5rem; margin-bottom:0;'>{h_n} <span style='color:#00FF88; font-weight:300;'>vs</span> {a_n}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h1 style='letter-spacing:-3px; font-size:50px; margin:0;'>{h_n} <span style='color:#00FF88;'>VS</span> {a_n}</h1>", unsafe_allow_html=True)
 
-    # 1. ADVISOR DE ELITE (TOP)
+    # 1. ADVISOR GLOW (TOP)
     mkts = [
-        ("VITÓRIA: "+h_n, ph, m1), ("EMPATE (X)", px, mx), ("VITÓRIA: "+a_n, pa, m2),
-        ("MAIS DE 1.5 GOLOS", np.mean(stot>1.5), o15), ("MAIS DE 2.5 GOLOS", np.mean(stot>2.5), o25),
-        ("MENOS DE 2.5 GOLOS", np.mean(stot<2.5), u25), ("AMBAS MARCAM (SIM)", np.mean((sim_h>0)&(sim_a>0)), m_ob)
+        ("WIN: "+h_n, ph, m1), ("DRAW (X)", px, mx), ("WIN: "+a_n, pa, m2),
+        ("OVER 2.5", np.mean(stot>2.5), o25), ("UNDER 2.5", np.mean(stot<2.5), u25),
+        ("BTTS: YES", np.mean((sim_h>0)&(sim_a>0)), m_ob)
     ]
-    recoms = sorted([(n, p, b, (p*b)-1) for n, p, b in mkts if (p*b)-1 > 0.05], key=lambda x: x[3], reverse=True)
+    best = sorted([(n, p, b, (p*b)-1) for n, p, b in mkts], key=lambda x: x[3], reverse=True)[0]
+    
+    st.markdown(f"""
+        <div class="advisor-glow">
+            <p style="color:#64748B; margin:0; font-size:0.8rem; font-weight:800; letter-spacing:3px;">HIGHEST PROBABILITY SIGNAL DETECTED</p>
+            <h1 style="color:white; margin:10px 0; font-size:3rem;">{best[0]}</h1>
+            <p style="color:#00FF88; font-size:1.5rem; margin:0; font-weight:800;">ALPHA EDGE: {best[3]:+.1%} | CONFIDENCE: {best[1]:.1%}</p>
+        </div>
+    """, unsafe_allow_html=True)
 
-    if recoms:
-        n, p, b, edge = recoms[0]
-        st.markdown(f"""
-            <div class="advisor-premium">
-                <p style="color:#94A3B8; margin:0; font-size:0.75rem; font-weight:900; letter-spacing:2px;">SINAL DE VALOR DETETADO</p>
-                <h1 style="color:white; margin:10px 0; font-size:2.8rem;">{n}</h1>
-                <p style="color:#00FF88; font-size:1.3rem; margin:0; font-weight:700;">VALOR ESTIMADO (EDGE): {edge:+.1%} | PROBABILIDADE: {p:.1%}</p>
-                <p style="color:#64748B; font-family:'JetBrains Mono'; margin-top:10px;">ODD MERCADO: {b:.2f} | NOSSA ODD: {1/p:.2f}</p>
-            </div>
-        """, unsafe_allow_html=True)
-
-    # 2. MATRIX DE DADOS (CENTER - LEITURA LIMPA)
-    st.markdown("### 💎 MATRIX DE VALOR")
+    # 2. THE QUANTUM MATRIX (A TABELA DINÂMICA)
+    st.markdown("### 💎 INTERACTIVE MARKET MATRIX")
     
     df_data = []
-    for n, p, b in mkts:
+    for n, p, b in mkts + [("DNB: "+h_n, ph/(ph+pa), 1.33)]:
         edge = (p * b) - 1
-        df_data.append({
-            "MERCADO": n,
-            "PROB (%)": p,
-            "ODD JUSTA": 1/p,
-            "CASA": b,
-            "VALOR (EV)": edge
-        })
+        df_data.append({"Market": n, "Confidence": p*100, "Fair": 1/p, "Bookie": b, "Edge": edge*100})
     
     df = pd.DataFrame(df_data)
-    st.dataframe(
-        df,
-        column_config={
-            "MERCADO": st.column_config.TextColumn("MERCADO"),
-            "PROB (%)": st.column_config.NumberColumn("CONFIANÇA", format="%.1%"),
-            "ODD JUSTA": st.column_config.NumberColumn("ODD ALVO", format="%.2f"),
-            "CASA": st.column_config.NumberColumn("CASA", format="%.2f"),
-            "VALOR (EV)": st.column_config.NumberColumn("LUCRO/EDGE", format="%+.1%"),
-        },
-        hide_index=True,
-        use_container_width=True
-    )
+
+    # Gráfico de Tabela Plotly (Estilo Matrix de Trading)
+    fig_table = go.Figure(data=[go.Table(
+        header=dict(
+            values=['<b>MARKET</b>', '<b>CONFIDENCE (%)</b>', '<b>FAIR ODD</b>', '<b>MARKET ODD</b>', '<b>ALPHA EDGE (%)</b>'],
+            fill_color='#0A0A0A',
+            align='center', font=dict(color='#94A3B8', size=12), height=40
+        ),
+        cells=dict(
+            values=[df.Market, df.Confidence.map('{:,.1f}%'.format), df.Fair.map('{:,.2f}'.format), 
+                    df.Bookie, df.Edge.map('{:+.1f}%'.format)],
+            fill_color=[['rgba(255,255,255,0.02)' if e < 0 else 'rgba(0, 255, 136, 0.1)' for e in df.Edge]],
+            align='center', font=dict(color='white', size=14), height=45
+        )
+    )])
+    fig_table.update_layout(margin=dict(l=0, r=0, t=0, b=0), paper_bgcolor='rgba(0,0,0,0)', height=400)
+    st.plotly_chart(fig_table, use_container_width=True)
 
     # 3. ANALYTICS (BOTTOM)
-    st.markdown("<br>", unsafe_allow_html=True)
-    c_graph, c_score = st.columns([1.3, 0.7])
-    
-    with c_graph:
+    c_g1, c_g2 = st.columns([1.2, 0.8])
+    with c_g1:
         xr = list(range(7))
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=xr, y=[poisson.pmf(i, lh) for i in xr], name=h_n, fill='tozeroy', line_color='#00FF88', line_width=4))
-        fig.add_trace(go.Scatter(x=xr, y=[poisson.pmf(i, la) for i in xr], name=a_n, fill='tozeroy', line_color='#3B82F6', line_width=4))
-        fig.update_layout(
-            title="DENSIDADE DE GOLOS (POISSON)", 
-            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
-            font_color="white", height=320, margin=dict(l=0,r=0,t=40,b=0)
-        )
-        st.plotly_chart(fig, use_container_width=True)
-        
-    with c_score:
-        st.write("**PLACAR MAIS PROVÁVEL**")
+        fig_p = go.Figure()
+        fig_p.add_trace(go.Scatter(x=xr, y=[poisson.pmf(i, lh) for i in xr], name=h_n, fill='tozeroy', line_color='#00FF88', line_width=4))
+        fig_p.add_trace(go.Scatter(x=xr, y=[poisson.pmf(i, la) for i in xr], name=a_n, fill='tozeroy', line_color='#3B82F6', line_width=4))
+        fig_p.update_layout(title="GOAL DENSITY CURVES", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", height=300)
+        st.plotly_chart(fig_p, use_container_width=True)
+    with c_g2:
         hp, ap = poisson.pmf(range(5), lh), poisson.pmf(range(5), la)
         mtx = np.outer(hp, ap); mtx /= mtx.sum()
         idx = np.unravel_index(np.argsort(mtx.ravel())[-3:], mtx.shape)
+        st.write("**TOP 3 PREDICTED SCORES**")
         for j in range(2, -1, -1):
-            st.metric(f"RESULTADO {idx[0][j]}-{idx[1][j]}", f"{mtx[idx[0][j], idx[1][j]]:.1%}")
+            st.metric(f"SCORE {idx[0][j]}-{idx[1][j]}", f"{mtx[idx[0][j], idx[1][j]]:.1%}")
