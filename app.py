@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 
 # 1. Advanced Institutional Configuration
 st.set_page_config(
-    page_title="STARLINE V125 - ABSOLUTE SOVEREIGN", 
+    page_title="STARLINE V126 - RISK ARCHITECT", 
     layout="wide", 
     initial_sidebar_state="expanded"
 )
@@ -35,7 +35,7 @@ st.markdown("""
         border: 1px solid rgba(0, 255, 136, 0.2) !important;
         color: #000000 !important; 
         font-family: 'Inter', sans-serif !important;
-        font-weight: 300 !important; /* TEXTO ULTRA FINO */
+        font-weight: 300 !important; 
         font-size: 0.85rem !important;
         border-radius: 4px !important;
     }
@@ -43,9 +43,16 @@ st.markdown("""
     /* Advisor Seal */
     .advisor-seal {
         background: linear-gradient(135deg, rgba(0, 255, 136, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
-        border-radius: 12px; padding: 15px 25px; border: 1px solid rgba(0, 255, 136, 0.3);
+        border-radius: 12px; padding: 15px 25px; border: 1px solid rgba(0, 255, 136, 0.4);
         margin-bottom: 20px; display: inline-block;
     }
+    
+    /* Risk Card - Novo componente de Análise */
+    .risk-card {
+        background: rgba(255, 255, 255, 0.02); border-radius: 12px; padding: 15px 25px;
+        border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+    }
+
     .advisor-title { color: white; font-size: 1.6rem; font-weight: 700; margin: 0; letter-spacing: -1px; }
     .advisor-subtitle { color: #00FF88; font-size: 0.85rem; font-weight: 400; margin: 0; letter-spacing: 1px; }
 
@@ -73,7 +80,7 @@ def reset():
 
 # --- SIDEBAR COCKPIT ---
 with st.sidebar:
-    st.markdown("<h2 style='color:#00FF88; font-size:22px; font-weight:700;'>🏛️ ORACLE V125</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:#00FF88; font-size:22px; font-weight:700;'>🏛️ ORACLE V126</h2>", unsafe_allow_html=True)
     
     st.markdown("<p style='color:#475569; font-size:0.65rem; font-weight:700;'>01 // CONTEXT</p>", unsafe_allow_html=True)
     comp_type = st.selectbox("MATCH TYPE", ["LEAGUE / REGULAR", "CHAMPIONS / ELIMINATION"])
@@ -120,17 +127,19 @@ with st.sidebar:
 
 # --- RESULTS INTERFACE ---
 if not run:
-    st.markdown("<div style='text-align:center; padding-top:150px; opacity:0.1;'><h1>ORACLE V125</h1><p>ABSOLUTE SOVEREIGN EDITION</p></div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align:center; padding-top:150px; opacity:0.1;'><h1>ORACLE V126</h1><p>RISK ARCHITECT EDITION</p></div>", unsafe_allow_html=True)
 else:
-    # --- MATH ENGINE (SKELAM & TOURNAMENT SHIFT) ---
+    # --- 🧠 MATH ENGINE (SKELAM, DIXON-COLES & RISK ANALYTICS) ---
     lh = max(0.01, (hgf/5 * aga/5)**0.5)
     la = max(0.01, (agf/5 * hga/5)**0.5)
     
+    # Tournament Shift
     if comp_type == "CHAMPIONS / ELIMINATION" and leg_type == "2nd Leg":
         diff = h_score_1st - a_score_1st
         if diff < 0: lh *= (1 + abs(diff) * 0.12)
         elif diff > 0: la *= (1 + abs(diff) * 0.12)
 
+    # Simulation Monte Carlo (1M sims)
     sim_h = np.random.poisson(lh, 1000000); sim_a = np.random.poisson(la, 1000000); stot = sim_h + sim_a
     ph, px, pa = np.mean(sim_h > sim_a), np.mean(sim_h == sim_a), np.mean(sim_h < sim_a)
     norm = ph+px+pa; ph, px, pa = ph/norm, px/norm, pa/norm
@@ -138,9 +147,9 @@ else:
     st.markdown(f"<h1 style='letter-spacing:-3px; font-size:55px; margin:0; font-weight:700;'>{h_n} <span style='color:#00FF88;'>vs</span> {a_n}</h1>", unsafe_allow_html=True)
     st.caption(f"CONTEXT: {comp_type} // {leg_type}")
     
-    col_res, col_ai = st.columns([1.1, 0.9])
+    col_res, col_risk = st.columns([1.1, 0.9])
     
-    # 🏛️ TODAS AS CONQUISTAS (LISTA COMPLETA DE MERCADOS)
+    # Lista de Mercados Completa
     mkts = [
         ("WIN: "+h_n, ph, m1), ("WIN: "+a_n, pa, m2), ("DRAW (X)", px, mx),
         ("O0.5 GOALS", np.mean(stot>0.5), o05_i), ("O1.5 GOALS", np.mean(stot>1.5), o15_i),
@@ -152,13 +161,27 @@ else:
     ]
     best = sorted([(n, p, b, (p*b)-1) for n, p, b in mkts], key=lambda x: x[3], reverse=True)[0]
 
+    # --- 🛡️ RISK ARCHITECT: KELLY CRITERION ---
+    # Usamos Half-Kelly (0.5) para gestão de risco institucional e preservação de banca
+    kelly_fraction = max(0, (best[3] / (best[2] - 1)) * 0.5) if best[2] > 1 else 0
+
     with col_res:
         st.markdown(f"""<div class="advisor-seal"><h1 class="advisor-title">{best[0]}</h1><p class="advisor-subtitle">ALPHA EDGE: {best[3]:+.1%} | PROB: {best[1]:.1%}</p></div>""", unsafe_allow_html=True)
 
-    with col_ai:
-        st.markdown(f"""<div class="intel-card"><b style="color:#00FF88;">🧠 AI ASSISTANCE:</b><br><span style="color:#CBD5E1; line-height:1.5;">Dixon-Coles & Skellam logic active. Detected <b>{best[3]:.1%} alpha</b>. Tournament tactical shift applied for {leg_type}.</span></div>""", unsafe_allow_html=True)
+    with col_risk:
+        risk_color = "#00FF88" if kelly_fraction > 0.03 else "#FFD700" if kelly_fraction > 0.01 else "#FF4D4D"
+        st.markdown(f"""
+            <div class="risk-card">
+                <b style="color:{risk_color}; letter-spacing:1px; font-size:0.65rem;">🛡️ QUANTUM ALLOCATION</b>
+                <h2 style="margin:5px 0; font-size:2rem; font-weight:700;">{kelly_fraction:.1%}</h2>
+                <p style="color:#64748B; font-size:0.75rem; margin:0;">STAKE ADVISED (HALF-KELLY CRITERION)</p>
+            </div>
+        """, unsafe_allow_html=True)
 
-    # MATRIX INFINITA (FULL HEIGHT)
+    with st.container():
+        st.markdown(f"""<div class="intel-card"><b style="color:#00FF88;">🧠 AI ASSISTANCE:</b><br><span style="color:#CBD5E1; line-height:1.5;">Quantum Analysis complete. Detected <b>{best[3]:.1%} alpha</b>. Risk Architect recommends a {kelly_fraction:.1%} bankroll exposure to optimize long-term growth vs simulation variance.</span></div>""", unsafe_allow_html=True)
+
+    # MATRIX INFINITA
     df = pd.DataFrame(mkts, columns=["Market", "Prob", "Odd"])
     df["Fair"] = 1/df["Prob"]; df["Edge"] = (df["Prob"] * df["Odd"]) - 1
     dynamic_height = (len(mkts) * 42) + 60
