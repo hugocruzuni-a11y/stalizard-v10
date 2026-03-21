@@ -6,88 +6,74 @@ import plotly.graph_objects as go
 import requests
 from datetime import date
 
-# --- 1. CONFIGURAÇÃO DE INTERFACE (ESTÉTICA BLOOMBERG) ---
-st.set_page_config(
-    page_title="ORACLE V140 - SYNDICATE TERMINAL", 
-    layout="wide", 
-    initial_sidebar_state="expanded"
-)
+# --- 1. CONFIGURAÇÃO DE LUXO ---
+st.set_page_config(page_title="ORACLE V140 PRO - ELITE", layout="wide", initial_sidebar_state="expanded")
 
-# CSS Profissional: Foco em Tipografia e Espaçamento
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Inter:wght@400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
     
-    /* Fundo Escuro Profundo Neutro */
     .stApp { 
-        background-color: #0A0D14; 
-        color: #E2E8F0; 
-        font-family: 'Inter', sans-serif; 
+        background: radial-gradient(circle at 20% 35%, rgba(0, 255, 136, 0.05) 0%, #020617 40%);
+        color: #F8FAFC; 
+        font-family: 'Plus Jakarta Sans', sans-serif; 
     }
     
-    /* Sidebar Sobria */
+    /* Sidebar de Alta Performance */
     [data-testid="stSidebar"] { 
-        background-color: #06080C !important; 
-        border-right: 1px solid #1E293B !important; 
+        background-color: rgba(2, 6, 23, 0.8) !important; 
+        backdrop-filter: blur(20px);
+        border-right: 1px solid rgba(0, 255, 136, 0.2) !important;
     }
 
-    /* Advisor Box - Compacta e Directa */
-    .advisor-seal { 
-        background: #111827; 
-        border-radius: 8px; 
-        padding: 20px 25px; 
-        border: 1px solid #1E293B;
-        border-left: 5px solid #10B981; 
-        margin-bottom: 20px;
+    /* Recommendation Card (Glassmorphism) */
+    .alpha-box { 
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+        border-radius: 24px; 
+        padding: 35px; 
+        border: 1px solid rgba(0, 255, 136, 0.3);
+        box-shadow: 0 25px 50px -12px rgba(0, 255, 136, 0.15);
+        margin-bottom: 30px;
     }
 
-    /* Tipografia de Decisão */
-    .recommendation-label { font-size: 0.75rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.1em; }
-    .main-bet { font-size: 2.8rem; font-weight: 800; color: #FFFFFF; margin: 5px 0; line-height: 1; letter-spacing: -0.03em; }
-    .alpha-edge { font-family: 'Roboto Mono', monospace; font-size: 1.25rem; font-weight: 700; color: #10B981; }
-
-    /* Inputs e Labels de Dados */
-    .stNumberInput label, .stSelectbox label, .stSlider label { 
-        font-size: 0.7rem !important; 
-        font-weight: 600 !important;
-        color: #94A3B8 !important; 
-        text-transform: uppercase; 
-        letter-spacing: 0.05em; 
+    .bet-name { 
+        font-size: 3.8rem; font-weight: 800; line-height: 1; 
+        background: linear-gradient(90deg, #FFFFFF, #00FF88);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        margin: 10px 0;
     }
-    .stNumberInput input, .stSelectbox div { background-color: #111827 !important; border: 1px solid #1E293B !important; color: #FFFFFF !important; }
 
-    /* Botão de Comando */
-    div.stButton > button {
-        background: #10B981 !important;
-        color: #FFFFFF !important;
-        font-weight: 700 !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.1em !important;
-        border-radius: 6px !important;
-        border: none !important;
-        height: 3.2rem !important;
-        transition: background 0.2s ease !important;
-    }
-    div.stButton > button:hover { background: #059669 !important; }
-
-    /* Guia de Performance */
-    .performance-card {
-        background: rgba(255, 255, 255, 0.01);
-        border-radius: 8px;
-        padding: 15px;
+    /* Cartões de Insight */
+    .insight-card {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 16px; padding: 20px;
         border: 1px solid rgba(255, 255, 255, 0.05);
-        margin-top: 10px;
+        height: 100%;
     }
+
+    /* Botão Neon */
+    div.stButton > button {
+        background: linear-gradient(90deg, #00FF88 0%, #00BD63 100%) !important;
+        color: #000000 !important; font-weight: 800 !important;
+        border-radius: 12px !important; border: none !important;
+        height: 3.8em !important; text-transform: uppercase; letter-spacing: 2px;
+        transition: all 0.3s ease;
+    }
+    div.stButton > button:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0, 255, 136, 0.3); }
+
+    /* Estilo da Tabela */
+    .stTable { background: transparent !important; }
+    .badge-label { padding: 4px 12px; border-radius: 100px; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. ENGINE LÓGICA (Mantida) ---
-api_key = "8171043bf0a322286bb127947dbd4041"
-api_host = "v3.football.api-sports.io"
+# --- 2. MOTOR LÓGICO ---
+api_key = "8171043bf0a322286bb127947dbd4041" 
+api_host = "v3.football.api-sports.io" 
 headers = {"x-apisports-key": api_key}
 
 @st.cache_data(ttl=3600)
-def fetch_stats(team_id, league_id):
+def get_stats(team_id, league_id):
     try:
         url = f"https://{api_host}/teams/statistics"
         r = requests.get(url, headers=headers, params={"league": league_id, "season": "2025", "team": team_id}).json()
@@ -106,119 +92,123 @@ def run_math(lh, la, rho, boost):
     prob_mtx = np.outer(poisson.pmf(np.arange(max_g), lh), poisson.pmf(np.arange(max_g), la))
     for x in range(2):
         for y in range(2):
-            if x==0 and y==0: prob_mtx[x,y] *= (1 - lh*la*rho)
-            elif x==0 and y==1: prob_mtx[x,y] *= (1 + lh*rho)
-            elif x==1 and y==0: prob_mtx[x,y] *= (1 + la*rho)
-            elif x==1 and y==1: prob_mtx[x,y] *= (1 - rho)
+            if x==0 and y==0: prob_mtx[x,y] *= max(0, 1 - (lh*la*rho))
+            elif x==0 and y==1: prob_mtx[x,y] *= max(0, 1 + (lh*rho))
+            elif x==1 and y==0: prob_mtx[x,y] *= max(0, 1 + (la*rho))
+            elif x==1 and y==1: prob_mtx[x,y] *= max(0, 1 - rho)
     prob_mtx /= prob_mtx.sum()
     ph, px, pa = np.tril(prob_mtx, -1).sum(), np.trace(prob_mtx), np.triu(prob_mtx, 1).sum()
-    ah0_h = ph / (ph + pa) if (ph + pa) > 0 else 0
-    o25 = prob_mtx[np.add.outer(np.arange(max_g), np.arange(max_g)) > 2.5].sum()
-    return ph, px, pa, ah0_h, o25, prob_mtx
+    
+    h_win_1 = np.trace(prob_mtx, offset=-1)
+    a_win_1 = np.trace(prob_mtx, offset=1)
+    h_2p, a_2p = ph - h_win_1, pa - a_win_1
 
-# --- 3. SIDEBAR (PAINEL DE DADOS) ---
+    ah0_h = ph / (ph + pa) if (ph + pa) > 0 else 0
+    ah1_h = h_2p / (1 - h_win_1) if (1 - h_win_1) > 0 else 0
+    
+    o25 = prob_mtx[np.add.outer(np.arange(max_g), np.arange(max_g)) > 2.5].sum()
+    return ph, px, pa, ah0_h, ah1_h, o25, prob_mtx
+
+# --- 3. SIDEBAR COCKPIT ---
 with st.sidebar:
-    st.markdown("<h3 style='margin:0; font-family:Roboto Mono;'>ORACLE V140</h3>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:0.7rem; color:#64748B; margin-bottom:20px;'>SYNDICATE TERMINAL</p>", unsafe_allow_html=True)
-    bankroll = st.number_input("BANCA (€)", value=100.0)
+    st.markdown("<h2 style='color:#00FF88; letter-spacing:-1px;'>🏛️ ORACLE V140</h2>", unsafe_allow_html=True)
+    bankroll = st.number_input("BANCA TOTAL (€)", value=100.0)
     
-    st.markdown("<hr style='border:1px solid #1E293B; margin:10px 0;'>", unsafe_allow_html=True)
-    league_map = {"Premier League": 39, "La Liga": 140, "Primeira Liga": 94}
-    ln = st.selectbox("LIGA", list(league_map.keys()))
+    st.markdown("<hr style='opacity:0.1'>", unsafe_allow_html=True)
+    l_map = {"Premier League": 39, "La Liga": 140, "Serie A": 135, "Primeira Liga": 94}
+    ln = st.selectbox("LIGA", list(l_map.keys()))
     
-    fix = requests.get(f"https://{api_host}/fixtures", headers=headers, 
-                       params={"date": date.today().strftime('%Y-%m-%d'), "league": league_map[ln], "season": "2025"}).json().get('response', [])
-    
+    fix = requests.get(f"https://{api_host}/fixtures", headers=headers, params={"date": date.today().strftime('%Y-%m-%d'), "league": l_map[ln], "season": "2025"}).json().get('response', [])
     if fix:
         m_map = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}": f['fixture']['id'] for f in fix}
-        m_display = st.selectbox("JOGO", list(m_map.keys()))
+        m_display = st.selectbox("CONFRONTO", list(m_map.keys()))
         m_sel = next(f for f in fix if f['fixture']['id'] == m_map[m_display])
     else: m_sel = None
 
-    st.markdown("<hr style='border:1px solid #1E293B; margin:10px 0;'>", unsafe_allow_html=True)
-    st.write("MERCADO (BET365)")
+    st.markdown("<hr style='opacity:0.1'>", unsafe_allow_html=True)
     c1, cx, c2 = st.columns(3)
-    o1 = c1.number_input("Odd 1", value=2.00)
-    ox = cx.number_input("Odd X", value=3.40)
-    o2 = c2.number_input("Odd 2", value=3.50)
+    o1 = c1.number_input("Odd 1", value=2.00); ox = cx.number_input("Odd X", value=3.40); o2 = c2.number_input("Odd 2", value=3.50)
     o_ah0 = st.number_input("Odd AH 0.0 (H)", value=1.55)
     o_o25 = st.number_input("Odd Over 2.5", value=1.95)
-    
-    execute = st.button("🚀 EXECUTE ALPHA SCAN")
+    scan = st.button("🚀 EXECUTE ALPHA SCAN")
 
-# --- 4. ÁREA DE RESULTADOS SYNDICATE ---
-if not execute or not m_sel:
-    st.markdown("<div style='text-align:center; padding-top:200px; opacity:0.1;'><h1>ORACLE V140</h1><p>Terminal Status: Ready // Waiting for Command</p></div>", unsafe_allow_html=True)
+# --- 4. RESULTADOS (ULTIMATE DESIGN) ---
+if not scan or not m_sel:
+    st.markdown("<div style='text-align:center; padding-top:200px; opacity:0.1;'><h1>ORACLE V140</h1><p>Sovereign Terminal Build</p></div>", unsafe_allow_html=True)
 else:
-    s = fetch_stats(m_sel['teams']['home']['id'], league_map[ln])
-    lh_f, la_f = (s['h_f']*s['a_a'])**0.5, (s['a_f']*s['h_a'])**0.5
-    ph, px, pa, ah0, o25, mtx = run_math(lh_f, la_f, -0.11, 0.12)
+    s_h = get_stats(m_sel['teams']['home']['id'], l_map[ln])
+    s_a = get_stats(m_sel['teams']['away']['id'], l_map[ln])
+    lh, la = (s_h['h_f']*s_a['a_a'])**0.5, (s_a['a_f']*s_h['h_a'])**0.5
+    ph, px, pa, ah0, ah1, o25, mtx = run_math(lh, la, -0.11, 0.12)
     
-    # Header do Jogo
-    st.markdown(f"""
-        <div style="margin-bottom: 30px;">
-            <p style="color:#64748B; font-weight:600; font-size:0.75rem; text-transform:uppercase;">Live Analysis // {ln.upper()}</p>
-            <h1 style="font-size: 3.5rem; line-height: 1; margin:0;">{m_sel['teams']['home']['name']} <span style="font-weight:300; color:#475569;">vs</span> {m_sel['teams']['away']['name']}</h1>
-        </div>
-    """, unsafe_allow_html=True)
+    # Header
+    st.markdown(f"<h1 style='font-size:3.5rem; margin-bottom:0;'>{m_sel['teams']['home']['name'].upper()} <span style='color:#00FF88; font-weight:200;'>vs</span> {m_sel['teams']['away']['name'].upper()}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<p style='color:#64748B; letter-spacing:2px; font-weight:600;'>DATA SYNC // {ln.upper()} // POISSON-DIXON ENGINE</p>", unsafe_allow_html=True)
 
-    col_res, col_info = st.columns([1, 1])
-
-    with col_res:
+    # Grid Superior: Recomendação + Gráfico
+    col1, col2 = st.columns([1.2, 0.8])
+    
+    with col1:
         mkts = [("WIN: "+m_sel['teams']['home']['name'], ph, o1), ("AH 0.0: "+m_sel['teams']['home']['name'], ah0, o_ah0), ("OVER 2.5", o25, o_o25)]
         best = sorted([(n,p,b,(p*b)-1) for n,p,b in mkts], key=lambda x: x[3], reverse=True)[0]
         edge = best[3]; kelly = max(0, (edge/(best[2]-1))*0.5)
-        color = "#10B981" if edge > 0.08 else "#F59E0B" if edge > 0.02 else "#EF4444"
+        color = "#00FF88" if edge > 0.08 else "#FFD700" if edge > 0.02 else "#EF4444"
         
-        # Advisor Seal - Sobrio e Profissional
         st.markdown(f"""
-            <div class="advisor-seal" style="border-left-color: {color};">
-                <p class="recommendation-label">Alpha Recommendation</p>
-                <p class="main-bet">{best[0]}</p>
-                <div style="display:flex; gap:30px; margin-top:15px;">
-                    <div><p style="color:#64748B; font-size:0.6rem; margin:0;">ALPHA EDGE</p><b class="alpha-edge" style="color:{color};">{edge:+.1%}</b></div>
-                    <div><p style="color:#64748B; font-size:0.6rem; margin:0;">SUGERIDO (HALF-KELLY)</p><b style="font-family:Roboto Mono; font-size:1.25rem; color:#FFFFFF;">{bankroll*kelly:.2f}€</b></div>
+            <div class="alpha-box" style="border-left: 8px solid {color};">
+                <p style="color:#64748B; font-weight:800; font-size:0.7rem; text-transform:uppercase; letter-spacing:3px;">Recomendação Principal</p>
+                <div class="bet-name">{best[0]}</div>
+                <div style="display:flex; gap:40px; margin-top:20px;">
+                    <div><p style="color:#64748B; font-size:0.6rem; margin:0; font-weight:700;">TRUE EDGE</p><b style="color:{color}; font-size:1.8rem;">{edge:+.1%}</b></div>
+                    <div><p style="color:#64748B; font-size:0.6rem; margin:0; font-weight:700;">SUGERIDO (€)</p><b style="font-size:1.8rem; color:white;">{bankroll*kelly:.2f}€</b></div>
                 </div>
             </div>
         """, unsafe_allow_html=True)
 
-    with col_info:
-        # Tabela de Mercados Estilo "Dark Trading"
-        st.markdown("### 📊 Market Matrix")
-        df = pd.DataFrame([("Match Winner (1)", ph, o1), ("Empate (X)", px, ox), ("Match Winner (2)", pa, o2), ("AH 0.0 (DNB)", ah0, o_ah0), ("Over 2.5 Golos", o25, o_o25)], columns=["M", "P", "B"])
-        df["F"] = 1/df["P"]; df["E"] = (df["P"] * df["B"]) - 1
-        
-        def get_c(e):
-            if e > 0.10: return 'rgba(16, 185, 129, 0.15)'
-            if e > 0.02: return 'rgba(245, 158, 11, 0.15)'
-            if e < 0: return 'rgba(239, 68, 68, 0.15)'
-            return 'rgba(255, 255, 255, 0.02)'
+    with col2:
+        xr = np.arange(7)
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=xr, y=mtx.sum(axis=1), name="Casa", fill='tozeroy', line_color='#00FF88', line_width=4))
+        fig.add_trace(go.Scatter(x=xr, y=mtx.sum(axis=0), name="Fora", fill='tozeroy', line_color='#3B82F6', line_width=4))
+        fig.update_layout(height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="#64748B", 
+                          margin=dict(l=0,r=0,t=0,b=0), xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)'))
+        st.plotly_chart(fig, use_container_width=True)
 
-        fig_t = go.Figure(data=[go.Table(
-            header=dict(values=['MERCADO', 'PROB.', 'ODD JUSTA', 'ODD CASA', 'EDGE'], 
-                        fill_color='#020617', align='center', font=dict(color='#64748B', size=11, family='Inter')),
-            cells=dict(values=[df.M, df.P.map('{:.1%}'.format), df.F.map('{:.2f}'.format), df.B.map('{:.2f}'.format), df.E.map('{:+.1%}'.format)],
-                       fill_color=[[get_c(e) for e in df["E"]]], align='center', font=dict(color='white', size=13, family='Roboto Mono'), height=30)
-        )])
-        fig_t.update_layout(margin=dict(l=0,r=0,t=0,b=0), height=250, paper_bgcolor='rgba(0,0,0,0)')
-        st.plotly_chart(fig_t, use_container_width=True)
+    # Tabela Centralizada
+    st.markdown("<h3 style='letter-spacing:-1px;'>Full Market Heatmap</h3>", unsafe_allow_html=True)
+    df = pd.DataFrame([("Match Winner (1)", ph, o1), ("Draw (X)", px, ox), ("Match Winner (2)", pa, o2), ("AH 0.0 (DNB)", ah0, o_ah0), ("Over 2.5", o25, o_o25)], columns=["M", "P", "B"])
+    df["F"] = 1/df["P"]; df["E"] = (df["P"] * df["B"]) - 1
+    
+    def get_c(e):
+        if e > 0.10: return 'rgba(16, 185, 129, 0.1)'
+        if e > 0.02: return 'rgba(245, 158, 11, 0.1)'
+        if e < 0: return 'rgba(239, 68, 68, 0.1)'
+        return 'rgba(255, 255, 255, 0.02)'
 
+    fig_t = go.Figure(data=[go.Table(
+        header=dict(values=['MERCADO', 'PROB. QUANT', 'ODD JUSTA', 'ODD CASA', 'TRUE EDGE'], 
+                    fill_color='#020617', align='center', font=dict(color='#64748B', size=11), height=50),
+        cells=dict(values=[df.M, df.P.map('{:.1%}'.format), df.F.map('{:.2f}'.format), df.B.map('{:.2f}'.format), df.E.map('{:+.1%}'.format)],
+                   fill_color=[[get_c(e) for e in df["E"]]], align='center', font=dict(color='white', size=14), height=45)
+    )])
+    fig_t.update_layout(margin=dict(l=0,r=0,t=0,b=0), height=320, paper_bgcolor='rgba(0,0,0,0)')
+    st.plotly_chart(fig_t, use_container_width=True)
+
+    # Glossário Horizontal
     st.markdown("<br>", unsafe_allow_html=True)
-
-    # Guia de Performance e Cores (Frio e Técnico)
     g1, g2, g3 = st.columns(3)
     with g1:
-        st.markdown(f"""<div class="performance-card">
-            <b style="color:#10B981; font-family:Roboto Mono;">[🟢 ELITE VALUE]</b><br>
-            <p style="font-size:0.8rem; color:#94A3B8; margin:0;">Edge superior a 8%. Ineficiência crítica detetada. Risco desproporcional à recompensa.</p>
+        st.markdown(f"""<div class="insight-card" style="border-top: 3px solid #00FF88;">
+            <b style="color:#00FF88; font-size:0.7rem;">🟡 ALPHA GOLD</b><br>
+            <p style="font-size:0.8rem; color:#94A3B8; margin-top:5px;">Edge > 10%. Ineficiência crítica detetada. Oportunidade de investimento de alta convicção.</p>
         </div>""", unsafe_allow_html=True)
     with g2:
-        st.markdown(f"""<div class="performance-card">
-            <b style="color:#F59E0B; font-family:Roboto Mono;">[🟡 PRO VALUE]</b><br>
-            <p style="font-size:0.8rem; color:#94A3B8; margin:0;">Edge entre 2% e 8%. Valor profissional sólido para crescimento de banca sustentável.</p>
+        st.markdown(f"""<div class="insight-card" style="border-top: 3px solid #F59E0B;">
+            <b style="color:#F59E0B; font-size:0.7rem;">🟢 VALUE PRO</b><br>
+            <p style="font-size:0.8rem; color:#94A3B8; margin-top:5px;">Edge 2-10%. Território profissional estável. Lucro garantido pelo volume a longo prazo.</p>
         </div>""", unsafe_allow_html=True)
     with g3:
-        st.markdown(f"""<div class="performance-card">
-            <b style="color:#EF4444; font-family:Roboto Mono;">[🔴 TRAP ZONE]</b><br>
-            <p style="font-size:0.8rem; color:#94A3B8; margin:0;">Edge negativo. O modelo indica que a odd oferecida é uma armadilha matemática.</p>
+        st.markdown(f"""<div class="insight-card" style="border-top: 3px solid #EF4444;">
+            <b style="color:#EF4444; font-size:0.7rem;">🔴 TRAP ZONE</b><br>
+            <p style="font-size:0.8rem; color:#94A3B8; margin-top:5px;">Odd negativa. A casa está a pagar menos do que o risco matemático real. Fuga obrigatória.</p>
         </div>""", unsafe_allow_html=True)
