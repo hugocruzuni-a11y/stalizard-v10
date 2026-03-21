@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 
 # 1. Advanced Institutional Configuration
 st.set_page_config(
-    page_title="STARLINE V126 - RISK ARCHITECT", 
+    page_title="STARLINE V128 - INFINITE SOVEREIGN", 
     layout="wide", 
     initial_sidebar_state="expanded"
 )
@@ -40,14 +40,12 @@ st.markdown("""
         border-radius: 4px !important;
     }
 
-    /* Advisor Seal */
     .advisor-seal {
         background: linear-gradient(135deg, rgba(0, 255, 136, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
         border-radius: 12px; padding: 15px 25px; border: 1px solid rgba(0, 255, 136, 0.4);
         margin-bottom: 20px; display: inline-block;
     }
     
-    /* Risk Card - Novo componente de Análise */
     .risk-card {
         background: rgba(255, 255, 255, 0.02); border-radius: 12px; padding: 15px 25px;
         border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
@@ -56,7 +54,6 @@ st.markdown("""
     .advisor-title { color: white; font-size: 1.6rem; font-weight: 700; margin: 0; letter-spacing: -1px; }
     .advisor-subtitle { color: #00FF88; font-size: 0.85rem; font-weight: 400; margin: 0; letter-spacing: 1px; }
 
-    /* AI Assistance Card */
     .intel-card {
         background: rgba(255, 255, 255, 0.02); border-radius: 12px; padding: 20px;
         border: 1px solid rgba(255, 255, 255, 0.05); font-weight: 300; font-size: 0.9rem;
@@ -80,7 +77,7 @@ def reset():
 
 # --- SIDEBAR COCKPIT ---
 with st.sidebar:
-    st.markdown("<h2 style='color:#00FF88; font-size:22px; font-weight:700;'>🏛️ ORACLE V126</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:#00FF88; font-size:22px; font-weight:700;'>🏛️ ORACLE V128</h2>", unsafe_allow_html=True)
     
     st.markdown("<p style='color:#475569; font-size:0.65rem; font-weight:700;'>01 // CONTEXT</p>", unsafe_allow_html=True)
     comp_type = st.selectbox("MATCH TYPE", ["LEAGUE / REGULAR", "CHAMPIONS / ELIMINATION"])
@@ -92,8 +89,9 @@ with st.sidebar:
         leg_type = st.radio("LEG SELECTION", ["1st Leg", "2nd Leg"])
         if leg_type == "2nd Leg":
             c1, c2 = st.columns(2)
-            h_score_1st = c1.number_input("H-1st Leg", value=0, step=1)
-            a_score_1st = c2.number_input("A-1st Leg", value=0, step=1)
+            # GOLOS SEM LIMITES (APENAS INTEIROS)
+            h_score_1st = c1.number_input("H-1st Leg", value=0, step=1, format="%d")
+            a_score_1st = c2.number_input("A-1st Leg", value=0, step=1, format="%d")
 
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("<p style='color:#475569; font-size:0.65rem; font-weight:700;'>02 // ASSETS</p>", unsafe_allow_html=True)
@@ -101,25 +99,31 @@ with st.sidebar:
     a_n = st.text_input("AWAY TEAM", "REAL SOCIEDAD").upper()
     
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#475569; font-size:0.65rem; font-weight:700;'>03 // PERFORMANCE</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#475569; font-size:0.65rem; font-weight:700;'>03 // PERFORMANCE (TOTAL GOALS)</p>", unsafe_allow_html=True)
     col_gf, col_ga = st.columns(2)
-    hgf = col_gf.number_input("H-GF", 9.0); hga = col_gf.number_input("H-GA", 7.0)
-    agf = col_ga.number_input("A-GF", 12.0); aga = col_ga.number_input("A-GA", 10.0)
+    # GOLOS SEM LIMITES (APENAS INTEIROS)
+    hgf = col_gf.number_input("H-GF", value=9, step=1, format="%d")
+    hga = col_gf.number_input("H-GA", value=7, step=1, format="%d")
+    agf = col_ga.number_input("A-GF", value=12, step=1, format="%d")
+    aga = col_ga.number_input("A-GA", value=10, step=1, format="%d")
 
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("<p style='color:#475569; font-size:0.65rem; font-weight:700;'>04 // MARKET QUOTES</p>", unsafe_allow_html=True)
     c1, cx, c2 = st.columns(3)
-    m1 = c1.number_input("1", 1.90); mx = cx.number_input("X", 4.00); m2 = c2.number_input("2", 3.35)
+    # ODDS SEM LIMITES
+    m1 = c1.number_input("1", value=1.90)
+    mx = cx.number_input("X", value=4.00)
+    m2 = c2.number_input("2", value=3.35)
     
     st.write("OVER / UNDER LADDER")
-    o05_i = st.number_input("O0.5", 1.05); o15_i = st.number_input("O1.5", 1.16)
-    o25_i = st.number_input("O2.5", 1.33); o35_i = st.number_input("O3.5", 1.78)
-    u05_i = st.number_input("U0.5", 9.50); u15_i = st.number_input("U1.5", 4.50)
-    u25_i = st.number_input("U2.5", 2.65); u35_i = st.number_input("U3.5", 1.60)
+    o05_i = st.number_input("O0.5", value=1.05); o15_i = st.number_input("O1.5", value=1.16)
+    o25_i = st.number_input("O2.5", value=1.33); o35_i = st.number_input("O3.5", value=1.78)
+    u05_i = st.number_input("U0.5", value=9.50); u15_i = st.number_input("U1.5", value=4.50)
+    u25_i = st.number_input("U2.5", value=2.65); u35_i = st.number_input("U3.5", value=1.60)
     
     st.write("SPECIALS")
-    m_ob = st.number_input("BTTS (YES)", 1.32)
-    ah_h = st.number_input("AH 0.0 (H)", 1.33); ah_a = st.number_input("AH 0.0 (A)", 1.85)
+    m_ob = st.number_input("BTTS (YES)", value=1.32)
+    ah_h = st.number_input("AH 0.0 (H)", value=1.33); ah_a = st.number_input("AH 0.0 (A)", value=1.85)
     
     st.markdown("<br>", unsafe_allow_html=True)
     run = st.button("🚀 EXECUTE ALPHA SCAN")
@@ -127,19 +131,17 @@ with st.sidebar:
 
 # --- RESULTS INTERFACE ---
 if not run:
-    st.markdown("<div style='text-align:center; padding-top:150px; opacity:0.1;'><h1>ORACLE V126</h1><p>RISK ARCHITECT EDITION</p></div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align:center; padding-top:150px; opacity:0.1;'><h1>ORACLE V128</h1><p>INFINITE SOVEREIGN BUILD</p></div>", unsafe_allow_html=True)
 else:
-    # --- 🧠 MATH ENGINE (SKELAM, DIXON-COLES & RISK ANALYTICS) ---
+    # --- MATH ENGINE ---
     lh = max(0.01, (hgf/5 * aga/5)**0.5)
     la = max(0.01, (agf/5 * hga/5)**0.5)
     
-    # Tournament Shift
     if comp_type == "CHAMPIONS / ELIMINATION" and leg_type == "2nd Leg":
         diff = h_score_1st - a_score_1st
         if diff < 0: lh *= (1 + abs(diff) * 0.12)
         elif diff > 0: la *= (1 + abs(diff) * 0.12)
 
-    # Simulation Monte Carlo (1M sims)
     sim_h = np.random.poisson(lh, 1000000); sim_a = np.random.poisson(la, 1000000); stot = sim_h + sim_a
     ph, px, pa = np.mean(sim_h > sim_a), np.mean(sim_h == sim_a), np.mean(sim_h < sim_a)
     norm = ph+px+pa; ph, px, pa = ph/norm, px/norm, pa/norm
@@ -149,7 +151,6 @@ else:
     
     col_res, col_risk = st.columns([1.1, 0.9])
     
-    # Lista de Mercados Completa
     mkts = [
         ("WIN: "+h_n, ph, m1), ("WIN: "+a_n, pa, m2), ("DRAW (X)", px, mx),
         ("O0.5 GOALS", np.mean(stot>0.5), o05_i), ("O1.5 GOALS", np.mean(stot>1.5), o15_i),
@@ -161,8 +162,7 @@ else:
     ]
     best = sorted([(n, p, b, (p*b)-1) for n, p, b in mkts], key=lambda x: x[3], reverse=True)[0]
 
-    # --- 🛡️ RISK ARCHITECT: KELLY CRITERION ---
-    # Usamos Half-Kelly (0.5) para gestão de risco institucional e preservação de banca
+    # Half-Kelly Calculation
     kelly_fraction = max(0, (best[3] / (best[2] - 1)) * 0.5) if best[2] > 1 else 0
 
     with col_res:
@@ -174,14 +174,11 @@ else:
             <div class="risk-card">
                 <b style="color:{risk_color}; letter-spacing:1px; font-size:0.65rem;">🛡️ QUANTUM ALLOCATION</b>
                 <h2 style="margin:5px 0; font-size:2rem; font-weight:700;">{kelly_fraction:.1%}</h2>
-                <p style="color:#64748B; font-size:0.75rem; margin:0;">STAKE ADVISED (HALF-KELLY CRITERION)</p>
+                <p style="color:#64748B; font-size:0.75rem; margin:0;">STAKE ADVISED (HALF-KELLY)</p>
             </div>
         """, unsafe_allow_html=True)
 
-    with st.container():
-        st.markdown(f"""<div class="intel-card"><b style="color:#00FF88;">🧠 AI ASSISTANCE:</b><br><span style="color:#CBD5E1; line-height:1.5;">Quantum Analysis complete. Detected <b>{best[3]:.1%} alpha</b>. Risk Architect recommends a {kelly_fraction:.1%} bankroll exposure to optimize long-term growth vs simulation variance.</span></div>""", unsafe_allow_html=True)
-
-    # MATRIX INFINITA
+    # MATRIX
     df = pd.DataFrame(mkts, columns=["Market", "Prob", "Odd"])
     df["Fair"] = 1/df["Prob"]; df["Edge"] = (df["Prob"] * df["Odd"]) - 1
     dynamic_height = (len(mkts) * 42) + 60
