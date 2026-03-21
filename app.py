@@ -4,14 +4,14 @@ from scipy.stats import poisson
 import pandas as pd
 import plotly.graph_objects as go
 
-# 1. Institutional Configuration
+# 1. Advanced Institutional Configuration
 st.set_page_config(
-    page_title="STARLINE V112 - GLOBAL ELITE", 
+    page_title="STARLINE V114 - DEFINITIVE SOVEREIGN", 
     layout="wide", 
     initial_sidebar_state="expanded"
 )
 
-# 2. Sovereign Glassmorphism CSS (Legibilidade Otimizada)
+# 2. Sovereign Glassmorphism CSS (Legibilidade Total 2026)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
@@ -21,83 +21,92 @@ st.markdown("""
         color: #FFFFFF; font-family: 'Plus Jakarta Sans', sans-serif; 
     }
     
-    /* SIDEBAR: GLASS EFFECT */
+    /* SIDEBAR GLASS */
     [data-testid="stSidebar"] { 
         background-color: rgba(255, 255, 255, 0.02) !important; 
         backdrop-filter: blur(40px) !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
     
-    /* Input Styling - ICE BLUE para Legibilidade Máxima */
+    /* INPUTS: MÁXIMO CONTRASTE (PRETO NO BRANCO) */
     [data-testid="stSidebar"] .stNumberInput input, 
     [data-testid="stSidebar"] .stTextInput input {
-        background-color: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        color: #E2E8F0 !important; /* ICE BLUE DATA */
+        background-color: rgba(255, 255, 255, 0.95) !important; 
+        border: 2px solid #00FF88 !important; 
+        color: #000000 !important; /* TEXTO PRETO PARA LEITURA IMEDIATA */
         font-family: 'JetBrains Mono', monospace !important;
+        font-weight: 800 !important;
         border-radius: 8px !important;
-        font-size: 0.95rem !important;
     }
-    
+
+    /* Labels (Títulos dos Campos em Branco Puro) */
+    label { 
+        font-size: 0.75rem !important; 
+        font-weight: 800 !important; 
+        color: #FFFFFF !important; 
+        text-transform: uppercase; 
+        letter-spacing: 1.5px;
+        margin-bottom: 10px !important;
+    }
+
     .advisor-premium {
         background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%);
         border-radius: 24px; padding: 35px; border: 1px solid rgba(0, 255, 136, 0.4);
-        box-shadow: 0 0 40px rgba(0, 255, 136, 0.05); margin-bottom: 25px;
     }
 
     .intel-card {
         background: rgba(255, 255, 255, 0.03); border-radius: 16px; padding: 25px;
-        border: 1px solid rgba(255, 255, 255, 0.1); margin-top: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     div.stButton > button {
         background: linear-gradient(90deg, #00FF88 0%, #00BD63 100%) !important;
-        color: #000000 !important; font-weight: 800; 
+        color: #000000 !important; font-weight: 900; 
         height: 4.8em; width: 100%; border-radius: 12px; border: none; text-transform: uppercase;
         letter-spacing: 3px; box-shadow: 0 15px 35px rgba(0, 255, 136, 0.25);
     }
     
-    label { font-size: 0.75rem !important; font-weight: 700 !important; color: #94A3B8 !important; text-transform: uppercase; letter-spacing: 1.5px; }
-    hr { border-top: 1px solid rgba(255, 255, 255, 0.08) !important; }
+    hr { border-top: 1px solid rgba(255, 255, 255, 0.1) !important; }
     </style>
     """, unsafe_allow_html=True)
 
 def reset():
     for key in list(st.session_state.keys()): del st.session_state[key]
 
-# --- SIDEBAR: THE ELITE COCKPIT ---
+# --- SIDEBAR: THE HD COCKPIT ---
 with st.sidebar:
-    st.markdown("<h2 style='color:white; font-size:26px; font-weight:800;'>🏛️ ORACLE <span style='color:#00FF88;'>V112</span></h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:#00FF88; font-size:26px; font-weight:800;'>🏛️ ORACLE V114</h2>", unsafe_allow_html=True)
     
-    st.markdown("<p style='color:white; font-weight:800; margin-top:20px;'>01 // ASSET IDENTIFICATION</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#94A3B8; font-weight:800; margin-top:10px;'>01 // IDENTIFICATION</p>", unsafe_allow_html=True)
     h_n = st.text_input("HOME TEAM NAME", "VILLARREAL").upper()
     a_n = st.text_input("AWAY TEAM NAME", "REAL SOCIEDAD").upper()
     
-    st.markdown("<p style='color:white; font-weight:800;'>02 // PERFORMANCE (LAST 5 GAMES)</p>", unsafe_allow_html=True)
-    c_h, c_a = st.columns(2)
-    hgf = c_h.number_input("HOME GOALS SCORED", 9.0)
-    hga = c_h.number_input("HOME GOALS CONCEDED", 7.0)
-    agf = c_a.number_input("AWAY GOALS SCORED", 12.0)
-    aga = c_a.number_input("AWAY GOALS CONCEDED", 10.0)
+    st.markdown("<hr>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#94A3B8; font-weight:800;'>02 // PERFORMANCE (LAST 5 GAMES)</p>", unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    hgf = col1.number_input("HOME GOALS SCORED", 9.0)
+    hga = col1.number_input("HOME GOALS CONCEDED", 7.0)
+    agf = col2.number_input("AWAY GOALS SCORED", 12.0)
+    aga = col2.number_input("AWAY GOALS CONCEDED", 10.0)
 
     st.markdown("<hr>", unsafe_allow_html=True)
-
-    st.markdown("<p style='color:white; font-weight:800;'>03 // LIVE MARKET QUOTES</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#94A3B8; font-weight:800;'>03 // MARKET QUOTES</p>", unsafe_allow_html=True)
     c1, cx, c2 = st.columns(3)
     m1 = c1.number_input("HOME WIN (1)", 1.90)
     mx = cx.number_input("DRAW (X)", 4.00)
     m2 = c2.number_input("AWAY WIN (2)", 3.35)
     
     st.caption("GOALS LADDER")
-    o15 = st.number_input("OVER 1.5 GOALS ODD", 1.16)
-    o25 = st.number_input("OVER 2.5 GOALS ODD", 1.33)
-    o35 = st.number_input("OVER 3.5 GOALS ODD", 1.78)
-    u25 = st.number_input("UNDER 2.5 GOALS ODD", 2.65)
+    col_o1, col_o2 = st.columns(2)
+    o05 = col_o1.number_input("OVER 0.5 GOALS", 1.05)
+    o15 = col_o2.number_input("OVER 1.5 GOALS", 1.16)
+    o25 = col_o1.number_input("OVER 2.5 GOALS", 1.33)
+    o35 = col_o2.number_input("OVER 3.5 GOALS", 1.78)
     
     st.caption("SPECIALS")
     m_ob = st.number_input("BOTH TEAMS TO SCORE (YES)", 1.32)
-    m_ah_h = st.number_input("ASIAN HANDICAP 0.0 (HOME)", 1.33)
-    m_ah_a = st.number_input("ASIAN HANDICAP 0.0 (AWAY)", 1.85)
+    ah_h = st.number_input("ASIAN HANDICAP 0.0 (HOME)", 1.33)
+    ah_a = st.number_input("ASIAN HANDICAP 0.0 (AWAY)", 1.85)
     
     st.markdown("<br>", unsafe_allow_html=True)
     run = st.button("🚀 EXECUTE ALPHA SCAN")
@@ -105,29 +114,24 @@ with st.sidebar:
 
 # --- RESULTS INTERFACE ---
 if not run:
-    st.markdown("<div style='text-align:center; padding-top:150px; opacity:0.1;'><h1>ORACLE READY</h1><p>V112 SOVEREIGN ELITE</p></div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align:center; padding-top:150px; opacity:0.1;'><h1>ORACLE READY</h1><p>SOVEREIGN DATA TERMINAL</p></div>", unsafe_allow_html=True)
 else:
-    # 3. MATH ENGINE: INSTITUTIONAL POISSON
-    lh = max(0.01, (hgf/5 * aga/5)**0.5)
-    la = max(0.01, (agf/5 * hga/5)**0.5)
-    
-    sim_h = np.random.poisson(lh, 1000000)
-    sim_a = np.random.poisson(la, 1000000)
-    stot = sim_h + sim_a
-    
+    # INSTITUTIONAL ENGINE
+    lh = max(0.01, (hgf/5 * aga/5)**0.5); la = max(0.01, (agf/5 * hga/5)**0.5)
+    sim_h = np.random.poisson(lh, 1000000); sim_a = np.random.poisson(la, 1000000); stot = sim_h + sim_a
     ph = np.mean(sim_h > sim_a); px = np.mean(sim_h == sim_a); pa = np.mean(sim_h < sim_a)
     norm = ph + px + pa; ph, px, pa = ph/norm, px/norm, pa/norm
     
     st.markdown(f"<h1 style='letter-spacing:-4px; font-size:60px; margin:0;'>{h_n} <span style='color:#00FF88; font-weight:300;'>vs</span> {a_n}</h1>", unsafe_allow_html=True)
     
-    # 4. ADVISOR & AI INSIGHTS
     col_adv, col_note = st.columns([1.2, 0.8])
+    
     mkts = [
         ("WIN: "+h_n, ph, m1), ("WIN: "+a_n, pa, m2), ("DRAW (X)", px, mx),
-        ("OVER 1.5 GOALS", np.mean(stot>1.5), o15), ("OVER 2.5 GOALS", np.mean(stot>2.5), o25), 
-        ("OVER 3.5 GOALS", np.mean(stot>3.5), o35), ("UNDER 2.5 GOALS", np.mean(stot<2.5), u25),
+        ("OVER 0.5 GOALS", np.mean(stot>0.5), o05), ("OVER 1.5 GOALS", np.mean(stot>1.5), o15),
+        ("OVER 2.5 GOALS", np.mean(stot>2.5), o25), ("OVER 3.5 GOALS", np.mean(stot>3.5), o35),
         ("BOTH TEAMS TO SCORE (YES)", np.mean((sim_h>0)&(sim_a>0)), m_ob),
-        ("ASIAN HANDICAP 0.0: "+h_n, ph/(ph+pa), m_ah_h), ("ASIAN HANDICAP 0.0: "+a_n, pa/(ph+pa), m_ah_a)
+        ("ASIAN HANDICAP 0.0: "+h_n, ph/(ph+pa), ah_h), ("ASIAN HANDICAP 0.0: "+a_n, pa/(ph+pa), ah_a)
     ]
     best = sorted([(n, p, b, (p*b)-1) for n, p, b in mkts], key=lambda x: x[3], reverse=True)[0]
 
@@ -143,12 +147,11 @@ else:
         st.markdown(f"""<div class="intel-card">
             <b style="color:#00FF88; font-size:1rem;">INSTITUTIONAL INSIGHT:</b><br>
             <p style="color:#CBD5E1; font-size:0.95rem; line-height:1.6; margin-top:10px;">
-            The engine detected a <b>{best[3]:.1%} alpha gap</b>. This is based on the attack efficiency of {h_n if ph > pa else a_n} 
-            outperforming current market prices. High reliability institutional scan.
+            The engine detected a <b>{best[3]:.1%} alpha gap</b>. High-precision Poisson adjustment confirms <b>{h_n if ph > pa else a_n}</b> offensive efficiency outperforms market pricing.
             </p>
         </div>""", unsafe_allow_html=True)
 
-    # 5. MATRIX INFINITA (VISIBILIDADE TOTAL)
+    # MATRIX INFINITA (FULL HEIGHT)
     df = pd.DataFrame(mkts, columns=["Market", "Prob", "Odd"])
     df["Fair"] = 1/df["Prob"]; df["Edge"] = (df["Prob"] * df["Odd"]) - 1
     
@@ -163,7 +166,7 @@ else:
     fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), paper_bgcolor='rgba(0,0,0,0)', height=(len(mkts)*40+60))
     st.plotly_chart(fig, use_container_width=True)
 
-    # 6. ANALYTICS
+    # ANALYTICS
     c1, c2 = st.columns([1.3, 0.7])
     with c1:
         xr = list(range(7))
