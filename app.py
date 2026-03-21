@@ -1,12 +1,12 @@
-iimport streamlit as st
+import streamlit as st
 import numpy as np
 from scipy.stats import poisson
 import pandas as pd
 import plotly.graph_objects as go
 
-# 1. Advanced Institutional Configuration
+# 1. Institutional System Configuration
 st.set_page_config(
-    page_title="STARLINE V98 - FINAL SOVEREIGN", 
+    page_title="STARLINE V99 - FINAL SOVEREIGN", 
     layout="wide", 
     initial_sidebar_state="expanded"
 )
@@ -55,30 +55,40 @@ def reset():
 # --- SIDEBAR: PRECISION COMMAND ---
 with st.sidebar:
     st.markdown("<h1 style='color:#00FF88; font-size:24px; margin-bottom:0;'>🏛️ STARLINE AI</h1>", unsafe_allow_html=True)
-    st.caption("ULTRA-PRECISION // V98.0")
+    st.caption("ULTRA-PRECISION // V99.0")
     
     st.markdown("---")
-    h_n = st.text_input("HOME TEAM", "HOME TEAM").upper()
-    a_n = st.text_input("AWAY TEAM", "AWAY TEAM").upper()
+    h_n = st.text_input("HOME TEAM", "VILLARREAL").upper()
+    a_n = st.text_input("AWAY TEAM", "REAL SOCIEDAD").upper()
     
     c_gf, c_ga = st.columns(2)
-    hgf = c_gf.number_input("H-GF", 8.0); hga = c_ga.number_input("H-GA", 10.0)
-    agf = c_gf.number_input("A-GF", 10.0); aga = c_ga.number_input("A-GA", 12.0)
+    hgf = c_gf.number_input("H-GF (Last 5)", 9.0)
+    hga = c_ga.number_input("H-GA (Last 5)", 7.0)
+    agf = c_gf.number_input("A-GF (Last 5)", 12.0)
+    aga = c_ga.number_input("A-GA (Last 5)", 10.0)
     
     st.markdown("---")
-    st.write("1X2 & BTTS")
-    m1 = st.number_input("ODD 1", 2.10); mx = st.number_input("ODD X", 3.40); m2 = st.number_input("ODD 2", 3.60)
-    m_ob = st.number_input("BTTS YES", 1.80); m_ob_no = st.number_input("BTTS NO", 2.00)
+    st.write("1X2 & BTTS QUOTES")
+    m1 = st.number_input("HOME ODD (1)", 1.90)
+    mx = st.number_input("DRAW ODD (X)", 4.00)
+    m2 = st.number_input("AWAY ODD (2)", 3.35)
+    m_ob = st.number_input("BTTS YES", 1.32)
+    m_ob_no = st.number_input("BTTS NO", 2.20)
     
     st.write("OVER / UNDER LADDER")
-    o15 = st.number_input("O 1.5", 1.25); o25 = st.number_input("O 2.5", 1.85); o35 = st.number_input("O 3.5", 3.20)
-    u15 = st.number_input("U 1.5", 3.75); u25 = st.number_input("U 2.5", 1.95); u35 = st.number_input("U 3.5", 1.35)
+    o15 = st.number_input("OVER 1.5", 1.16)
+    o25 = st.number_input("OVER 2.5", 1.33)
+    o35 = st.number_input("OVER 3.5", 1.78)
+    u15 = st.number_input("UNDER 1.5", 4.50)
+    u25 = st.number_input("UNDER 2.5", 2.65)
+    u35 = st.number_input("UNDER 3.5", 1.60)
     
-    st.write("ASIAN HANDICAP (DNB)")
-    m_ah0_h = st.number_input("AH 0.0 HOME", 1.50); m_ah0_a = st.number_input("AH 0.0 AWAY", 2.50)
+    st.write("ASIAN HANDICAP 0.0 (DNB)")
+    m_ah0_h = st.number_input("AH 0.0 HOME", 1.33)
+    m_ah0_a = st.number_input("AH 0.0 AWAY", 1.85)
     
     st.markdown("<br>", unsafe_allow_html=True)
-    run = st.button("🚀 EXECUTE QUANTUM SCAN")
+    run = st.button("🚀 EXECUTE ALPHA SCAN")
     st.button("🗑️ RESET ENGINE", on_click=reset)
 
 # --- SOVEREIGN INTERFACE ---
@@ -121,7 +131,7 @@ else:
         st.markdown(f"""
             <div class="advisor-premium">
                 <p style="color:#64748B; margin:0; font-size:0.8rem; font-weight:800; letter-spacing:4px;">QUANTUM MASTER SIGNAL</p>
-                <h1 style="color:white; margin:10px 0; font-size:3.5rem; letter-spacing:-1px;">{best[0]}</h1>
+                <h1 style="color:white; margin:10px 0; font-size:3.5rem; letter-spacing:-1.5px;">{best[0]}</h1>
                 <p style="color:#00FF88; font-size:1.5rem; margin:0; font-weight:800;">EDGE: {best[3]:+.1%} | PROBABILITY: {best[1]:.1%}</p>
             </div>
         """, unsafe_allow_html=True)
@@ -133,14 +143,14 @@ else:
             <div class="intel-card">
                 <b style="color:{clr};">ALPHA EDGE SOURCE</b><br>
                 <span style="color:#94A3B8; font-size:0.9rem;">
-                Statistical discrepancy detected in <b>{best[0]}</b>. 
-                The bookmakers are miscalculating the {h_n if ph > pa else a_n} momentum.
+                Model confirms <b>{best[3]:.1%} inefficiency</b> in {best[0]}. 
+                Current odds reflect standard bias; Quantum engine reveals offensive value.
                 </span>
             </div>
             <div class="intel-card">
                 <b style="color:#3B82F6;">VOLATILITY SCAN</b><br>
                 <span style="color:#94A3B8; font-size:0.9rem;">
-                Confidence rating: <b>STABLE</b>. Goal density follows the Institutional standard.
+                Confidence rating: <b>STABLE</b>. Goal density follows Institutional standards for Low Variance.
                 </span>
             </div>
         """, unsafe_allow_html=True)
@@ -166,7 +176,7 @@ else:
     fig_table.update_layout(margin=dict(l=0, r=0, t=0, b=0), paper_bgcolor='rgba(0,0,0,0)', height=550)
     st.plotly_chart(fig_table, use_container_width=True)
 
-    # 3. ANALYTICS
+    # 3. ANALYTICS (HD GRAPHS)
     st.markdown("---")
     c1, c2 = st.columns([1.3, 0.7])
     with c1:
@@ -174,7 +184,12 @@ else:
         fig_p = go.Figure()
         fig_p.add_trace(go.Scatter(x=xr, y=[poisson.pmf(i, lh) for i in xr], name=h_n, fill='tozeroy', line_color='#00FF88', line_width=4))
         fig_p.add_trace(go.Scatter(x=xr, y=[poisson.pmf(i, la) for i in xr], name=a_n, fill='tozeroy', line_color='#3B82F6', line_width=4))
-        fig_p.update_layout(title="POISSON DENSITY (ALPHA FLOW)", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", height=380)
+        fig_p.update_layout(
+            title="POISSON DENSITY (ALPHA FLOW)", 
+            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
+            font_color="white", height=380,
+            xaxis=dict(gridcolor='rgba(255,255,255,0.05)'), yaxis=dict(gridcolor='rgba(255,255,255,0.05)')
+        )
         st.plotly_chart(fig_p, use_container_width=True)
     with c2:
         st.write("**TOP PREDICTED SCORES**")
