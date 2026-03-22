@@ -124,10 +124,11 @@ def run_master_math(lh, la, rho, boost, zip_factor=1.05):
         "Vencedor Casa": ph, "Empate (X)": px, "Vencedor Fora": pa,
         "Mais de 1.5 Golos": prob_mtx[goals_sum > 1.5].sum(), "Menos de 1.5 Golos": prob_mtx[goals_sum < 1.5].sum() + prob_mtx[goals_sum == 1.5].sum(),
         "Mais de 2.5 Golos": prob_mtx[goals_sum > 2.5].sum(), "Menos de 2.5 Golos": prob_mtx[goals_sum < 2.5].sum() + prob_mtx[goals_sum == 2.5].sum(),
+        "Mais de 3.5 Golos": prob_mtx[goals_sum > 3.5].sum(), "Menos de 3.5 Golos": prob_mtx[goals_sum < 3.5].sum() + prob_mtx[goals_sum == 3.5].sum(),
         "Ambas Marcam (Sim)": 1 - (prob_mtx[0, :].sum() + prob_mtx[:, 0].sum() - prob_mtx[0,0]), "Ambas Marcam (Não)": prob_mtx[0, :].sum() + prob_mtx[:, 0].sum() - prob_mtx[0,0],
         "Handicap +1.5 (Casa)": 1 - np.triu(prob_mtx, 2).sum(), "Handicap +0.5 (Casa)": ph + px,
         "Empate Anula (Casa)": ph / (ph + pa) if (ph + pa) > 0 else 0, "Handicap -0.5 (Casa)": ph,
-        "Handicap -1.0 (Casa)": (ph - h_win_1) / (1 - h_win_1) if (1 - h_win_1) > 0 else 0
+        "Handicap -1.0 (Casa)": (ph - h_win_1) / (1 - h_win_1) if (1 - h_win_1) > 0 else 0, "Handicap -1.5 (Casa)": np.tril(prob_mtx, -2).sum()
     }, prob_mtx
 
 # --- 3. SIDEBAR ---
@@ -149,11 +150,11 @@ with st.sidebar:
         m_sel = None; auto_odds = {k: 0.0 for k in ["1","X","2","O15","U15","O25","U25","O35","U35","BTTS_Y","BTTS_N","AH_P15","AH_P05","AH_00","AH_M05","AH_M10","AH_M15"]}
 
     st.markdown("<br>", unsafe_allow_html=True)
-    with st.expander("⚙️ ODDS MANUAIS COMPLETAS"):
+    with st.expander("⚙️ ODDS MANUAIS COMPLETAS (Opção Deep Dive)"):
         c1, c2, c3 = st.columns(3)
         o_1 = c1.number_input("1 (Casa)", value=auto_odds["1"]); o_x = c2.number_input("X (Emp)", value=auto_odds["X"]); o_2 = c3.number_input("2 (Fora)", value=auto_odds["2"])
         o_o25 = c1.number_input("Mais 2.5", value=auto_odds["O25"]); o_u25 = c2.number_input("Menos 2.5", value=auto_odds["U25"]); o_btts_y = c3.number_input("Ambas Sim", value=auto_odds["BTTS_Y"])
-        # Restantes mapeados em background para manter a UI limpa
+        # As odds de Handicap e Over/Under extra são geridas pela API
         
 # --- 4. TABS (O CORAÇÃO DO SOFTWARE) ---
 tab1, tab2 = st.tabs(["🔬 DEEP DIVE (ANÁLISE DE JOGO)", "🌍 ALPHA SCANNER (PORTFÓLIO GLOBAL)"])
@@ -162,7 +163,6 @@ with tab1:
     if not m_sel:
         st.markdown("<div style='text-align:center; padding-top:150px;'><h1 style='opacity:0.1; font-size:4rem;'>SEM JOGOS</h1></div>", unsafe_allow_html=True)
     else:
-        # A lógica do Deep Dive (O que construímos antes)
         s_h = get_pro_stats(m_sel['teams']['home']['id'], l_map[ln])
         s_a = get_pro_stats(m_sel['teams']['away']['id'], l_map[ln])
         lh, la = (s_h['h_f']*s_a['a_a'])**0.5, (s_a['a_f']*s_h['h_a'])**0.5
@@ -176,17 +176,27 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
+        # 17 Mercados Ativados no Deep Dive
         all_mkts = [
             ("Vencedor Casa", res["Vencedor Casa"], o_1), ("Empate (X)", res["Empate (X)"], o_x), ("Vencedor Fora", res["Vencedor Fora"], o_2),
+            ("Mais de 1.5 Golos", res["Mais de 1.5 Golos"], auto_odds["O15"]), ("Menos de 1.5 Golos", res["Menos de 1.5 Golos"], auto_odds["U15"]),
             ("Mais de 2.5 Golos", res["Mais de 2.5 Golos"], o_o25), ("Menos de 2.5 Golos", res["Menos de 2.5 Golos"], o_u25),
+            ("Mais de 3.5 Golos", res["Mais de 3.5 Golos"], auto_odds["O35"]), ("Menos de 3.5 Golos", res["Menos de 3.5 Golos"], auto_odds["U35"]),
             ("Ambas Marcam (Sim)", res["Ambas Marcam (Sim)"], o_btts_y), ("Ambas Marcam (Não)", res["Ambas Marcam (Não)"], auto_odds["BTTS_N"]),
-            ("Empate Anula (Casa)", res["Empate Anula (Casa)"], auto_odds["AH_00"]), ("Handicap -1.0 (Casa)", res["Handicap -1.0 (Casa)"], auto_odds["AH_M10"])
+            ("Handicap +1.5 (Casa)", res["Handicap +1.5 (Casa)"], auto_odds["AH_P15"]), ("Handicap +0.5 (Casa)", res["Handicap +0.5 (Casa)"], auto_odds["AH_P05"]),
+            ("Empate Anula (Casa)", res["Empate Anula (Casa)"], auto_odds["AH_00"]), ("Handicap -0.5 (Casa)", res["Handicap -0.5 (Casa)"], auto_odds["AH_M05"]),
+            ("Handicap -1.0 (Casa)", res["Handicap -1.0 (Casa)"], auto_odds["AH_M10"]), ("Handicap -1.5 (Casa)", res["Handicap -1.5 (Casa)"], auto_odds["AH_M15"])
         ]
         valid_mkts = [(n,p,b,(p*b)-1) for n,p,b in all_mkts if b > 1.05]
         
         if len(valid_mkts) > 0:
             value_bets = [m for m in valid_mkts if m[3] > 0.02] 
-            best = sorted(value_bets if value_bets else valid_mkts, key=lambda x: x[1], reverse=True)[0]
+            if value_bets:
+                safe_bets = [m for m in value_bets if 1.45 <= m[2] <= 3.50]
+                if safe_bets: best = sorted(safe_bets, key=lambda x: x[1], reverse=True)[0]
+                else: best = sorted(value_bets, key=lambda x: x[1], reverse=True)[0]
+            else: best = sorted(valid_mkts, key=lambda x: x[1], reverse=True)[0]
+            
             edge = best[3]; kelly = max(0, (edge/(best[2]-1)) * 0.50); odd_justa = 1/best[1]
             
             st.markdown(f"""
@@ -213,7 +223,7 @@ with tab1:
 
 with tab2:
     st.markdown("<h2 style='font-size:2.5rem; letter-spacing:-1px;'>🌍 SCANNER GLOBAL DE MERCADO</h2>", unsafe_allow_html=True)
-    st.markdown(f"<p style='color:#94A3B8;'>O robô vai analisar todos os jogos de hoje na <b>{ln}</b>, cruzar a matemática com as odds da Bet365 e montar o teu portfólio de investimento para o dia.</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='color:#94A3B8;'>O robô vai analisar todos os jogos de hoje na <b>{ln}</b>, avaliar os 17 mercados de cada um, cruzar com as odds da Bet365 e montar o teu portfólio de investimento diário focado no risco/recompensa ideal.</p>", unsafe_allow_html=True)
     
     if st.button("🔥 EXECUTAR VARREDURA GLOBAL (PORTFÓLIO)", key="scan_global"):
         if not fix_data:
@@ -229,62 +239,74 @@ with tab2:
                 away = f['teams']['away']['name']
                 fix_id = f['fixture']['id']
                 
-                status_text.text(f"A analisar {home} vs {away}...")
+                status_text.text(f"A analisar os 17 mercados para {home} vs {away}...")
                 
-                # Puxa Dados
                 s_h = get_pro_stats(f['teams']['home']['id'], l_map[ln])
                 s_a = get_pro_stats(f['teams']['away']['id'], l_map[ln])
                 odds = get_auto_odds(fix_id)
                 
-                if odds["1"] > 1.01: # Se a Bet365 tiver odds para este jogo
+                # Só calcula se o mercado tiver odds reais da API
+                if odds["1"] > 1.01:
                     lh, la = (s_h['h_f']*s_a['a_a'])**0.5, (s_a['a_f']*s_h['h_a'])**0.5
                     res, mtx = run_master_math(lh, la, -0.11, 0.12)
                     
+                    # OS 17 MERCADOS VOLTAM PARA A VARREDURA GLOBAL
                     game_mkts = [
                         (f"{home} (Vencedor)", res["Vencedor Casa"], odds["1"]),
-                        (f"Empate: {home} vs {away}", res["Empate (X)"], odds["X"]),
+                        (f"Empate ({home} vs {away})", res["Empate (X)"], odds["X"]),
                         (f"{away} (Vencedor)", res["Vencedor Fora"], odds["2"]),
-                        (f"Mais de 2.5: {home} vs {away}", res["Mais de 2.5 Golos"], odds["O25"]),
-                        (f"Ambas Marcam: {home} vs {away}", res["Ambas Marcam (Sim)"], odds["BTTS_Y"])
+                        (f"Mais 1.5 Golos ({home} vs {away})", res["Mais de 1.5 Golos"], odds["O15"]),
+                        (f"Menos 1.5 Golos ({home} vs {away})", res["Menos de 1.5 Golos"], odds["U15"]),
+                        (f"Mais 2.5 Golos ({home} vs {away})", res["Mais de 2.5 Golos"], odds["O25"]),
+                        (f"Menos 2.5 Golos ({home} vs {away})", res["Menos de 2.5 Golos"], odds["U25"]),
+                        (f"Mais 3.5 Golos ({home} vs {away})", res["Mais de 3.5 Golos"], odds["O35"]),
+                        (f"Menos 3.5 Golos ({home} vs {away})", res["Menos de 3.5 Golos"], odds["U35"]),
+                        (f"Ambas Marcam: Sim ({home} vs {away})", res["Ambas Marcam (Sim)"], odds["BTTS_Y"]),
+                        (f"Ambas Marcam: Não ({home} vs {away})", res["Ambas Marcam (Não)"], odds["BTTS_N"]),
+                        (f"Handicap +1.5 ({home})", res["Handicap +1.5 (Casa)"], odds["AH_P15"]),
+                        (f"Handicap +0.5 ({home})", res["Handicap +0.5 (Casa)"], odds["AH_P05"]),
+                        (f"Empate Anula ({home})", res["Empate Anula (Casa)"], odds["AH_00"]),
+                        (f"Handicap -0.5 ({home})", res["Handicap -0.5 (Casa)"], odds["AH_M05"]),
+                        (f"Handicap -1.0 ({home})", res["Handicap -1.0 (Casa)"], odds["AH_M10"]),
+                        (f"Handicap -1.5 ({home})", res["Handicap -1.5 (Casa)"], odds["AH_M15"])
                     ]
                     
-                    # Filtra só o que tem valor real e segurança (>2% Edge, <3.50 Odd)
                     for m_name, prob, odd in game_mkts:
+                        # Sweet Spot Filter para o Portfólio (Valor real, odd mínima aceitável)
                         if odd > 1.40 and odd <= 3.50:
                             edge = (prob * odd) - 1
-                            if edge > 0.05: # Só entra no Portfólio o que for Ouro/Verde Forte
-                                kelly = max(0, (edge/(odd-1)) * 0.25) # Quarter Kelly para diluir risco em múltiplas apostas
+                            if edge > 0.05: # Ouro ou Verde Forte
+                                kelly = max(0, (edge/(odd-1)) * 0.25)
                                 portfolio.append({"Jogo/Aposta": m_name, "Certeza": prob, "Odd Casa": odd, "Lucro Extra": edge, "Kelly_Frac": kelly})
                 
                 progress_bar.progress((i + 1) / len(fix_data))
-                time.sleep(0.5) # Respeitar limites da API
+                time.sleep(0.5) 
                 
             status_text.text("Varredura Concluída! A compilar Portfólio de Risco...")
             
             if len(portfolio) > 0:
                 df_port = pd.DataFrame(portfolio)
-                df_port = df_port.sort_values(by="Lucro Extra", ascending=False).head(5) # Top 5 apostas do dia
+                df_port = df_port.sort_values(by="Lucro Extra", ascending=False).head(5) 
                 
-                # Normalização da Banca (Distribuir o Bankroll pelas melhores opções consoante o Risco)
                 total_kelly = df_port["Kelly_Frac"].sum()
                 if total_kelly > 0:
-                    df_port["Stake (€)"] = (df_port["Kelly_Frac"] / total_kelly) * (bankroll * min(total_kelly, 0.20)) # Nunca expõe mais de 20% da banca no dia
+                    df_port["Stake (€)"] = (df_port["Kelly_Frac"] / total_kelly) * (bankroll * min(total_kelly, 0.20)) 
                 else:
                     df_port["Stake (€)"] = 0
                     
                 st.markdown(f"""
                 <div class="portfolio-card">
                     <h3 style="margin-top:0; color:#FFD700;">💼 O TEU PORTFÓLIO DE INVESTIMENTO (TOP 5)</h3>
-                    <p style="color:#94A3B8; font-size:0.9rem;">De todos os jogos de hoje, estes são os {len(df_port)} maiores erros da casa de apostas. A tua banca de {bankroll}€ foi distribuída matematicamente para minimizar o risco da variância.</p>
+                    <p style="color:#94A3B8; font-size:0.9rem;">O sistema avaliou todos os jogos e handicaps possíveis. Estas são as {len(df_port)} apostas com erro crítico da casa. A tua banca de {bankroll}€ foi distribuída matematicamente para diluir o risco (Markowitz Portfolio Theory).</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
                 fig_port = go.Figure(data=[go.Table(
                     columnorder = [1,2,3,4,5], columnwidth = [250, 100, 100, 100, 120],
-                    header=dict(values=['<b>JOGO / APOSTA</b>', '<b>CERTEZA</b>', '<b>ODD CASA</b>', '<b>LUCRO EXTRA</b>', '<b>STAKE RECOMENDADA</b>'], fill_color='#020408', align='center', font=dict(color='#64748B', size=11), height=45),
+                    header=dict(values=['<b>JOGO / APOSTA (MERCADOS TOTAIS)</b>', '<b>CERTEZA</b>', '<b>ODD CASA</b>', '<b>LUCRO EXTRA</b>', '<b>STAKE RECOMENDADA</b>'], fill_color='#020408', align='center', font=dict(color='#64748B', size=11), height=45),
                     cells=dict(values=[df_port["Jogo/Aposta"], df_port["Certeza"].map('{:.1%}'.format), df_port["Odd Casa"].map('{:.2f}'.format), df_port["Lucro Extra"].map('{:+.1%}'.format), df_port["Stake (€)"].map('{:.2f}€'.format)], fill_color='#0B1120', align='center', font=dict(color=['#FFFFFF', '#E2E8F0', '#E2E8F0', '#00FF88', '#FFD700'], size=13, family='JetBrains Mono'), height=45)
                 )])
                 fig_port.update_layout(margin=dict(l=0,r=0,t=0,b=0), height=(len(df_port)*45)+50, paper_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_port, use_container_width=True)
             else:
-                st.error("A varredura foi concluída, mas as casas de apostas foram implacáveis. Não há uma única aposta de valor seguro (>5% Edge) hoje na Liga selecionada. Guarda o teu dinheiro.")
+                st.error("A varredura completa aos 17 mercados foi terminada. Nenhuma odd bateu a matemática com a margem de segurança de >5% de vantagem. Guarda a banca para amanhã.")
