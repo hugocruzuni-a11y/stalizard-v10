@@ -4,15 +4,15 @@ from scipy.stats import poisson
 import pandas as pd
 import plotly.graph_objects as go
 import requests
-from datetime import date, datetime
+from datetime import date
 import time
 
-# --- 1. CONFIGURAÇÃO DE DESIGN (OMNI PREMIUM + DATABASE) ---
-st.set_page_config(page_title="ORACLE V140 - SYNDICATE BUILD", layout="wide", initial_sidebar_state="expanded")
+# --- 1. CONFIGURAÇÃO DE DESIGN E BASE DE DADOS ---
+st.set_page_config(page_title="ORACLE V140 - ELITE SNIPER", layout="wide", initial_sidebar_state="expanded")
 
-# Inicializar Base de Dados na Memória (Session State)
+# Inicializar Base de Dados na Memória (Caixa Forte)
 if 'bet_history' not in st.session_state:
-    st.session_state.bet_history = pd.DataFrame(columns=["Data", "Jogo", "Aposta", "Odd Comprada", "Odd Real (Modelo)", "Stake (€)", "Lucro Extra (Edge)", "Estado"])
+    st.session_state.bet_history = pd.DataFrame(columns=["Data", "Jogo", "Aposta", "Odd Comprada", "Odd Real", "Stake (€)", "Lucro Extra", "Estado"])
 
 st.markdown("""
     <style>
@@ -21,39 +21,38 @@ st.markdown("""
     .stApp { background-color: #050810; color: #FFFFFF; font-family: 'Inter', sans-serif; }
     [data-testid="stSidebar"] { background-color: #020408 !important; border-right: 1px solid #1E293B !important; }
     
-    /* Tabs Premium */
+    /* Navegação Tabs */
     .stTabs [data-baseweb="tab-list"] { background-color: transparent; gap: 10px; }
     .stTabs [data-baseweb="tab"] { color: #64748B; font-weight: 800; font-size: 1.0rem; padding: 10px 20px; background: #0B1120; border-radius: 8px 8px 0 0; border: 1px solid #1E293B; border-bottom: none; }
     .stTabs [aria-selected="true"] { color: #00FF88 !important; background: #050810; border-top: 3px solid #00FF88; }
     
+    /* Cartões UI */
     .top-recommendation { background: linear-gradient(90deg, #0B1120 0%, #050810 100%); border-radius: 12px; border: 1px solid #1E293B; border-left: 6px solid #00FF88; padding: 25px 40px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
     .top-rec-title { font-size: 0.75rem; color: #94A3B8; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
     .top-rec-value { font-size: 2.2rem; font-weight: 800; color: #FFFFFF; margin: 0; line-height: 1; font-family: 'Inter', sans-serif; }
     .top-rec-odd { font-size: 2.2rem; font-weight: 800; color: #FFD700; margin: 0; line-height: 1; font-family: 'JetBrains Mono', monospace; }
-    .top-rec-edge { font-size: 2.2rem; font-weight: 800; color: #00FF88; margin: 0; line-height: 1; font-family: 'JetBrains Mono', monospace; }
     
     .context-card { background: #0B1120; border-radius: 12px; padding: 20px; border: 1px solid #1E293B; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
     .team-name-context { font-size: 1.1rem; font-weight: 800; color: #FFF; margin-bottom: 10px; }
     .stats-text { font-size: 0.85rem; color: #94A3B8; margin-bottom: 3px; }
     
+    .xg-alert { background: rgba(255, 215, 0, 0.1); border: 1px solid #FFD700; border-left: 4px solid #FFD700; padding: 15px; border-radius: 8px; color: #FFD700; font-weight: 600; font-size: 0.9rem; margin-bottom: 20px;}
     .ai-box { background: rgba(0, 255, 136, 0.03); border-radius: 12px; padding: 25px; border: 1px solid rgba(0, 255, 136, 0.2); border-top: 3px solid #00FF88; height: 100%; }
-    
-    /* Cartões Financeiros da Caixa Forte */
+    .help-box { background: #0B1120; border-radius: 12px; padding: 25px; border: 1px solid #1E293B; border-left: 4px solid #3B82F6; height: 100%; }
     .metric-card { background: #0B1120; border-radius: 10px; padding: 20px; border: 1px solid #1E293B; text-align: center; }
     .metric-title { font-size: 0.8rem; color: #94A3B8; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px; }
     .metric-value { font-size: 2rem; color: #FFF; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
     
+    /* Inputs e Botões */
     .stNumberInput label, .stSelectbox label { font-size: 0.70rem !important; color: #94A3B8 !important; font-weight: 700; text-transform: uppercase; }
     div.stButton > button { background: linear-gradient(90deg, #00FF88 0%, #00BD63 100%) !important; color: #000000 !important; font-weight: 800 !important; height: 3.8rem !important; border-radius: 8px !important; border: none !important; width: 100%; letter-spacing: 1px; transition: transform 0.2s; }
     div.stButton > button:hover { transform: translateY(-2px); }
-    
-    /* Botão secundário para Registar Aposta */
     .btn-register button { background: transparent !important; border: 2px solid #00FF88 !important; color: #00FF88 !important; height: 3.8rem !important; }
     .btn-register button:hover { background: rgba(0, 255, 136, 0.1) !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. MOTOR DE DADOS ---
+# --- 2. MOTOR DE API E DADOS ---
 api_key = "8171043bf0a322286bb127947dbd4041"
 api_host = "v3.football.api-sports.io"
 headers = {"x-apisports-key": api_key}
@@ -118,22 +117,27 @@ def get_auto_odds(fixture_id):
 def run_master_math(lh, la, rho, boost, zip_factor=1.05):
     lh *= (1+boost); la *= (1-boost); max_g = 10
     prob_mtx = np.outer(poisson.pmf(np.arange(max_g), lh), poisson.pmf(np.arange(max_g), la))
+    
+    # Ajuste Bivariado de Dixon-Coles
     for x in range(2):
         for y in range(2):
             if x==0 and y==0: prob_mtx[x,y] *= (1-lh*la*rho)
             elif x==0 and y==1: prob_mtx[x,y] *= (1+lh*rho)
             elif x==1 and y==0: prob_mtx[x,y] *= (1+la*rho)
             elif x==1 and y==1: prob_mtx[x,y] *= (1-rho)
-    prob_mtx[0,0] *= zip_factor
+            
+    prob_mtx[0,0] *= zip_factor # Zero-Inflated Poisson (ZIP)
     prob_mtx /= prob_mtx.sum() 
     
     ph, px, pa = np.tril(prob_mtx, -1).sum(), np.trace(prob_mtx), np.triu(prob_mtx, 1).sum()
-    h_win_1 = np.trace(prob_mtx, offset=-1); goals_sum = np.add.outer(np.arange(max_g), np.arange(max_g))
+    h_win_1 = np.trace(prob_mtx, offset=-1)
+    goals_sum = np.add.outer(np.arange(max_g), np.arange(max_g))
     
     return {
         "Vencedor Casa": ph, "Empate (X)": px, "Vencedor Fora": pa,
         "Mais de 1.5 Golos": prob_mtx[goals_sum > 1.5].sum(), "Menos de 1.5 Golos": prob_mtx[goals_sum < 1.5].sum() + prob_mtx[goals_sum == 1.5].sum(),
         "Mais de 2.5 Golos": prob_mtx[goals_sum > 2.5].sum(), "Menos de 2.5 Golos": prob_mtx[goals_sum < 2.5].sum() + prob_mtx[goals_sum == 2.5].sum(),
+        "Mais de 3.5 Golos": prob_mtx[goals_sum > 3.5].sum(), "Menos de 3.5 Golos": prob_mtx[goals_sum < 3.5].sum() + prob_mtx[goals_sum == 3.5].sum(),
         "Ambas Marcam (Sim)": 1 - (prob_mtx[0, :].sum() + prob_mtx[:, 0].sum() - prob_mtx[0,0]), "Ambas Marcam (Não)": prob_mtx[0, :].sum() + prob_mtx[:, 0].sum() - prob_mtx[0,0],
         "Handicap +1.5 (Casa)": 1 - np.triu(prob_mtx, 2).sum(), "Handicap +0.5 (Casa)": ph + px,
         "Empate Anula (Casa)": ph / (ph + pa) if (ph + pa) > 0 else 0, "Handicap -0.5 (Casa)": ph,
@@ -154,29 +158,52 @@ with st.sidebar:
         m_map = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}": f['fixture']['id'] for f in fix_data}
         m_display = st.selectbox("JOGO (Apenas para Deep Dive)", list(m_map.keys()))
         m_sel = next(f for f in fix_data if f['fixture']['id'] == m_map[m_display])
-        auto_odds = get_auto_odds(m_sel['fixture']['id'])
+        with st.spinner('A analisar mercado global...'):
+            auto_odds = get_auto_odds(m_sel['fixture']['id'])
     else: 
         m_sel = None; auto_odds = {k: 0.0 for k in ["1","X","2","O15","U15","O25","U25","O35","U35","BTTS_Y","BTTS_N","AH_P15","AH_P05","AH_00","AH_M05","AH_M10","AH_M15"]}
 
+    st.markdown("<hr style='border-color:#1E293B; margin: 15px 0;'>", unsafe_allow_html=True)
+    
+    # 🧠 MODO xG (SNIPER)
+    use_xg = st.toggle("🧠 MODO SNIPER (USAR xG)", value=False, help="Substitui os golos reais por projeções xG.")
+    if use_xg:
+        st.markdown("<p style='font-size:0.7rem; color:#FFD700;'>Insere o xG projetado (ex: FBRef):</p>", unsafe_allow_html=True)
+        c_xg1, c_xg2 = st.columns(2)
+        xg_home = c_xg1.number_input("xG Casa", value=1.50, step=0.10)
+        xg_away = c_xg2.number_input("xG Fora", value=1.10, step=0.10)
+
     st.markdown("<br>", unsafe_allow_html=True)
-    with st.expander("⚙️ ODDS MANUAIS COMPLETAS"):
+    execute = st.button("🚀 INICIAR ALPHA SCAN")
+
+    with st.expander("⚙️ ODDS MANUAIS (DEEP DIVE)"):
         c1, c2, c3 = st.columns(3)
         o_1 = c1.number_input("1 (Casa)", value=auto_odds["1"]); o_x = c2.number_input("X (Emp)", value=auto_odds["X"]); o_2 = c3.number_input("2 (Fora)", value=auto_odds["2"])
         o_o25 = c1.number_input("Mais 2.5", value=auto_odds["O25"]); o_u25 = c2.number_input("Menos 2.5", value=auto_odds["U25"]); o_btts_y = c3.number_input("Ambas Sim", value=auto_odds["BTTS_Y"])
 
 # --- 4. TABS (O CORAÇÃO DO SOFTWARE) ---
-tab1, tab2, tab3 = st.tabs(["🔬 DEEP DIVE", "🌍 ALPHA SCANNER", "🏦 CAIXA FORTE (DESEMPENHO)"])
+tab1, tab2, tab3 = st.tabs(["🔬 DEEP DIVE (ANÁLISE)", "🌍 ALPHA SCANNER (MERCADO)", "🏦 CAIXA FORTE (DESEMPENHO)"])
 
+# ====== TAB 1: DEEP DIVE ======
 with tab1:
     if not m_sel:
         st.markdown("<div style='text-align:center; padding-top:150px;'><h1 style='opacity:0.1; font-size:4rem;'>SEM JOGOS</h1></div>", unsafe_allow_html=True)
     else:
         s_h = get_pro_stats(m_sel['teams']['home']['id'], l_map[ln])
         s_a = get_pro_stats(m_sel['teams']['away']['id'], l_map[ln])
-        lh, la = (s_h['h_f']*s_a['a_a'])**0.5, (s_a['a_f']*s_h['h_a'])**0.5
-        res, mtx = run_master_math(lh, la, -0.11, 0.12)
+        
+        # Matemática Dinâmica (Golos ou xG)
+        if use_xg:
+            lh, la = xg_home, xg_away
+            res, mtx = run_master_math(lh, la, -0.11, 0.0) # Boost 0 pois o analista já inclui o fator casa no seu xG
+            st.markdown("<div class='xg-alert'>⚡ MODO PRO ATIVADO: Probabilidades calculadas através das tuas projeções de Expected Goals.</div>", unsafe_allow_html=True)
+        else:
+            lh, la = (s_h['h_f']*s_a['a_a'])**0.5, (s_a['a_f']*s_h['h_a'])**0.5
+            res, mtx = run_master_math(lh, la, -0.11, 0.12)
         
         st.markdown(f"<h2 style='margin-bottom:10px; font-size:3.2rem; letter-spacing:-2px;'>{m_sel['teams']['home']['name'].upper()} <span style='color:#475569; font-weight:300;'>vs</span> {m_sel['teams']['away']['name'].upper()}</h2>", unsafe_allow_html=True)
+        
+        # Painel de Contexto Raio-X
         st.markdown(f"""
         <div class="context-card">
             <div><div class="team-name-context">🏠 {m_sel['teams']['home']['name']}</div><div class="stats-text">Forma: {format_form(s_h['form'])}</div><div class="stats-text">Golos (Média): <b style="color:#FFF;">{s_h['h_f']:.2f}</b></div></div>
@@ -188,8 +215,11 @@ with tab1:
             ("Vencedor Casa", res["Vencedor Casa"], o_1), ("Empate (X)", res["Empate (X)"], o_x), ("Vencedor Fora", res["Vencedor Fora"], o_2),
             ("Mais de 1.5 Golos", res["Mais de 1.5 Golos"], auto_odds["O15"]), ("Menos de 1.5 Golos", res["Menos de 1.5 Golos"], auto_odds["U15"]),
             ("Mais de 2.5 Golos", res["Mais de 2.5 Golos"], o_o25), ("Menos de 2.5 Golos", res["Menos de 2.5 Golos"], o_u25),
+            ("Mais de 3.5 Golos", res["Mais de 3.5 Golos"], auto_odds["O35"]), ("Menos de 3.5 Golos", res["Menos de 3.5 Golos"], auto_odds["U35"]),
             ("Ambas Marcam (Sim)", res["Ambas Marcam (Sim)"], o_btts_y), ("Ambas Marcam (Não)", res["Ambas Marcam (Não)"], auto_odds["BTTS_N"]),
-            ("Handicap -1.0 (Casa)", res["Handicap -1.0 (Casa)"], auto_odds["AH_M10"]), ("Empate Anula (Casa)", res["Empate Anula (Casa)"], auto_odds["AH_00"])
+            ("Handicap +1.5 (Casa)", res["Handicap +1.5 (Casa)"], auto_odds["AH_P15"]), ("Handicap +0.5 (Casa)", res["Handicap +0.5 (Casa)"], auto_odds["AH_P05"]),
+            ("Empate Anula (Casa)", res["Empate Anula (Casa)"], auto_odds["AH_00"]), ("Handicap -0.5 (Casa)", res["Handicap -0.5 (Casa)"], auto_odds["AH_M05"]),
+            ("Handicap -1.0 (Casa)", res["Handicap -1.0 (Casa)"], auto_odds["AH_M10"]), ("Handicap -1.5 (Casa)", res["Handicap -1.5 (Casa)"], auto_odds["AH_M15"])
         ]
         valid_mkts = [(n,p,b,(p*b)-1) for n,p,b in all_mkts if b > 1.05]
         
@@ -203,7 +233,7 @@ with tab1:
             edge = best[3]; kelly = max(0, (edge/(best[2]-1)) * 0.50); odd_justa = 1/best[1]
             stake_sugerida = bankroll * kelly
             
-            # --- ÁREA DE RECOMENDAÇÃO E BOTÃO DE REGISTO ---
+            # Bloco Superior: Recomendação e Registo
             col_rec, col_btn = st.columns([3, 1])
             with col_rec:
                 st.markdown(f"""
@@ -216,22 +246,17 @@ with tab1:
                 """, unsafe_allow_html=True)
             
             with col_btn:
-                st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True) # Spacer
+                st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
                 st.markdown("<div class='btn-register'>", unsafe_allow_html=True)
                 if st.button("📥 REGISTAR APOSTA", key="reg_bet"):
-                    nova_aposta = pd.DataFrame([{
-                        "Data": date.today().strftime('%Y-%m-%d'),
-                        "Jogo": f"{m_sel['teams']['home']['name']} vs {m_sel['teams']['away']['name']}",
-                        "Aposta": best[0], "Odd Comprada": best[2], "Odd Real (Modelo)": round(odd_justa, 2),
-                        "Stake (€)": round(stake_sugerida, 2), "Lucro Extra (Edge)": round(edge, 3), "Estado": "Pendente"
-                    }])
+                    nova_aposta = pd.DataFrame([{"Data": date.today().strftime('%Y-%m-%d'), "Jogo": f"{m_sel['teams']['home']['name']} vs {m_sel['teams']['away']['name']}", "Aposta": best[0], "Odd Comprada": best[2], "Odd Real": round(odd_justa, 2), "Stake (€)": round(stake_sugerida, 2), "Lucro Extra": round(edge, 3), "Estado": "Pendente"}])
                     st.session_state.bet_history = pd.concat([st.session_state.bet_history, nova_aposta], ignore_index=True)
                     st.success("Aposta gravada na Caixa Forte!")
                 st.markdown("</div>", unsafe_allow_html=True)
             
             st.markdown("<br>", unsafe_allow_html=True)
-            # ------------------------------------------------
             
+            # Tabela de Matriz Completa
             df = pd.DataFrame(valid_mkts, columns=["Aposta", "Certeza", "OddCasa", "Vantagem"])
             df["OddReal"] = 1 / df["Certeza"]
             df = df.sort_values(by="Vantagem", ascending=False)
@@ -245,49 +270,115 @@ with tab1:
             fig_t.update_layout(margin=dict(l=0,r=0,t=0,b=0), height=(len(df)*40)+50, paper_bgcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig_t, use_container_width=True)
 
-with tab2:
-    st.markdown("<h2 style='font-size:2.5rem; letter-spacing:-1px;'>🌍 SCANNER GLOBAL</h2>", unsafe_allow_html=True)
-    if st.button("🔥 EXECUTAR VARREDURA", key="scan_global"):
-        st.info("Scanner a varrer o mercado... (Simulação no Deep Dive para focar na Caixa Forte nesta versão)")
+            # Bloco Inferior: IA e Gráfico Lado a Lado
+            col_ai, col_chart = st.columns([1, 1])
+            with col_ai:
+                texto_ia = f"Avaliados <b>{len(valid_mkts)} mercados</b>.<br><br>"
+                if edge > 0.02: texto_ia += f"🎯 <b>VERDICTO:</b> A recomendação '{best[0]}' (odd {best[2]:.2f}) é matematicamente viável e protege a tua banca a longo prazo. A Odd Real devia ser {odd_justa:.2f}. "
+                else: texto_ia += f"⛔ <b>ALERTA:</b> Não há falhas na casa de apostas para este jogo. Fica de fora."
+                st.markdown(f"<div class='ai-box'><h4 style='margin:0 0 10px 0; color:#00FF88;'>🤖 Assistente Oracle</h4><p style='color:#E2E8F0; font-size:0.95rem; margin:0;'>{texto_ia}</p></div>", unsafe_allow_html=True)
+                
+            with col_chart:
+                st.markdown("<div class='chart-box'>", unsafe_allow_html=True)
+                xr = np.arange(7); fig = go.Figure()
+                fig.add_trace(go.Scatter(x=xr, y=mtx.sum(axis=1), name="Ataque Casa", mode='lines+markers', fill='tozeroy', line=dict(color='#00FF88', width=3)))
+                fig.add_trace(go.Scatter(x=xr, y=mtx.sum(axis=0), name="Ataque Fora", mode='lines+markers', fill='tozeroy', line=dict(color='#3B82F6', width=3)))
+                fig.update_layout(title=dict(text="📊 DISTRIBUIÇÃO DE GOLOS", font=dict(color="#94A3B8", size=13)), height=250, margin=dict(l=20,r=20,t=40,b=20), paper_bgcolor='#0B1120', plot_bgcolor='#0B1120', xaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', color="#64748B"), yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', color="#64748B", tickformat=".0%"), legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1))
+                st.plotly_chart(fig, use_container_width=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            st.warning("O robô não encontrou odds. Abre a gaveta lateral e insere manualmente.")
 
+# ====== TAB 2: ALPHA SCANNER ======
+with tab2:
+    st.markdown("<h2 style='font-size:2.5rem; letter-spacing:-1px;'>🌍 SCANNER GLOBAL DE MERCADO</h2>", unsafe_allow_html=True)
+    st.markdown(f"<p style='color:#94A3B8;'>Analisa todos os jogos de hoje na <b>{ln}</b>. O motor varre os 17 mercados de cada jogo, compara com as odds reais e constrói o teu portfólio de risco (Top 5).</p>", unsafe_allow_html=True)
+    
+    if st.button("🔥 EXECUTAR VARREDURA GLOBAL", key="scan_global"):
+        if not fix_data:
+            st.warning(f"Não há jogos agendados hoje na {ln}.")
+        else:
+            progress_bar = st.progress(0); status_text = st.empty()
+            portfolio = []
+            
+            for i, f in enumerate(fix_data):
+                home = f['teams']['home']['name']; away = f['teams']['away']['name']; fix_id = f['fixture']['id']
+                status_text.text(f"A verificar {home} vs {away}...")
+                
+                s_h = get_pro_stats(f['teams']['home']['id'], l_map[ln])
+                s_a = get_pro_stats(f['teams']['away']['id'], l_map[ln])
+                odds = get_auto_odds(fix_id)
+                
+                if odds["1"] > 1.01:
+                    lh, la = (s_h['h_f']*s_a['a_a'])**0.5, (s_a['a_f']*s_h['h_a'])**0.5
+                    res, _ = run_master_math(lh, la, -0.11, 0.12)
+                    
+                    game_mkts = [
+                        (f"{home} (Venc)", res["Vencedor Casa"], odds["1"]), (f"Empate ({home})", res["Empate (X)"], odds["X"]), (f"{away} (Venc)", res["Vencedor Fora"], odds["2"]),
+                        (f"Mais 1.5 ({home})", res["Mais de 1.5 Golos"], odds["O15"]), (f"Menos 1.5 ({home})", res["Menos de 1.5 Golos"], odds["U15"]),
+                        (f"Mais 2.5 ({home})", res["Mais de 2.5 Golos"], odds["O25"]), (f"Menos 2.5 ({home})", res["Menos de 2.5 Golos"], odds["U25"]),
+                        (f"Ambas Sim ({home})", res["Ambas Marcam (Sim)"], odds["BTTS_Y"]), (f"Ambas Não ({home})", res["Ambas Marcam (Não)"], odds["BTTS_N"]),
+                        (f"AH +1.5 {home}", res["Handicap +1.5 (Casa)"], odds["AH_P15"]), (f"AH -1.0 {home}", res["Handicap -1.0 (Casa)"], odds["AH_M10"]), (f"DNB {home}", res["Empate Anula (Casa)"], odds["AH_00"])
+                    ]
+                    
+                    for m_name, prob, odd in game_mkts:
+                        if odd > 1.45 and odd <= 3.50:
+                            edge = (prob * odd) - 1
+                            if edge > 0.05: # Ouro ou Verde Forte
+                                kelly = max(0, (edge/(odd-1)) * 0.25) # Quarter Kelly
+                                portfolio.append({"Jogo/Aposta": m_name, "Certeza": prob, "Odd Casa": odd, "Lucro Extra": edge, "Kelly_Frac": kelly})
+                
+                progress_bar.progress((i + 1) / len(fix_data))
+                time.sleep(0.5) 
+                
+            status_text.text("Concluído! A compilar Portfólio de Risco de Markowitz...")
+            
+            if len(portfolio) > 0:
+                df_port = pd.DataFrame(portfolio).sort_values(by="Lucro Extra", ascending=False).head(5) 
+                total_kelly = df_port["Kelly_Frac"].sum()
+                
+                if total_kelly > 0: df_port["Stake (€)"] = (df_port["Kelly_Frac"] / total_kelly) * (bankroll * min(total_kelly, 0.20)) 
+                else: df_port["Stake (€)"] = 0
+                    
+                st.markdown("<div style='background:#0B1120; border-radius:12px; padding:20px; border-top:4px solid #FFD700; margin-bottom:20px;'><h3 style='margin:0; color:#FFD700;'>💼 O TEU PORTFÓLIO (TOP 5)</h3><p style='color:#94A3B8; font-size:0.9rem; margin:0;'>Banca diluída pelas apostas com maior erro do mercado.</p></div>", unsafe_allow_html=True)
+                
+                fig_port = go.Figure(data=[go.Table(
+                    columnorder = [1,2,3,4,5], columnwidth = [250, 100, 100, 100, 120],
+                    header=dict(values=['<b>JOGO / APOSTA</b>', '<b>CERTEZA</b>', '<b>ODD CASA</b>', '<b>LUCRO EXTRA</b>', '<b>STAKE RECOMENDADA</b>'], fill_color='#020408', align='center', font=dict(color='#64748B', size=11), height=45),
+                    cells=dict(values=[df_port["Jogo/Aposta"], df_port["Certeza"].map('{:.1%}'.format), df_port["Odd Casa"].map('{:.2f}'.format), df_port["Lucro Extra"].map('{:+.1%}'.format), df_port["Stake (€)"].map('{:.2f}€'.format)], fill_color='#0B1120', align='center', font=dict(color=['#FFFFFF', '#E2E8F0', '#E2E8F0', '#00FF88', '#FFD700'], size=13, family='JetBrains Mono'), height=40)
+                )])
+                fig_port.update_layout(margin=dict(l=0,r=0,t=0,b=0), height=(len(df_port)*40)+50, paper_bgcolor='rgba(0,0,0,0)')
+                st.plotly_chart(fig_port, use_container_width=True)
+            else:
+                st.error("Varredura terminada. Nenhuma odd bateu a matemática com >5% de margem de segurança. Guarda a banca.")
+
+# ====== TAB 3: CAIXA FORTE ======
 with tab3:
-    st.markdown("<h2 style='font-size:2.5rem; letter-spacing:-1px; color:#FFD700;'>🏦 CAIXA FORTE E DESEMPENHO</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#94A3B8;'>Aqui provas a tua superioridade perante o mercado. O Closing Line Value (CLV) é a métrica dos profissionais.</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='font-size:2.5rem; letter-spacing:-1px; color:#FFD700;'>🏦 CAIXA FORTE</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#94A3B8;'>O teu painel financeiro. Regista o teu Closing Line Value (CLV) e gere o crescimento a longo prazo.</p>", unsafe_allow_html=True)
     
     if st.session_state.bet_history.empty:
-        st.markdown("<div style='text-align:center; padding-top:80px;'><h3 style='opacity:0.3;'>Sem apostas registadas. Usa a aba 'Deep Dive' para registar as tuas posições de mercado.</h3></div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center; padding-top:80px;'><h3 style='opacity:0.3;'>Usa a aba 'Deep Dive' para registar as tuas posições.</h3></div>", unsafe_allow_html=True)
     else:
         df_hist = st.session_state.bet_history
         
-        # Cálculos de Performance
-        total_investido = df_hist["Stake (€)"].sum()
-        clv_medio = df_hist["Lucro Extra (Edge)"].mean()
-        # Simulação de Retorno Esperado (EV)
-        retorno_esperado = (df_hist["Stake (€)"] * df_hist["Lucro Extra (Edge)"]).sum()
-        
         c1, c2, c3 = st.columns(3)
-        with c1:
-            st.markdown(f"<div class='metric-card'><div class='metric-title'>Total Investido</div><div class='metric-value'>{total_investido:.2f}€</div></div>", unsafe_allow_html=True)
-        with c2:
-            cor_clv = "#00FF88" if clv_medio > 0 else "#EF4444"
-            st.markdown(f"<div class='metric-card'><div class='metric-title'>Closing Line Value (Médio)</div><div class='metric-value' style='color:{cor_clv};'>{clv_medio:+.1%}</div></div>", unsafe_allow_html=True)
-        with c3:
-            st.markdown(f"<div class='metric-card'><div class='metric-title'>Lucro Esperado (Matemático)</div><div class='metric-value' style='color:#FFD700;'>+{retorno_esperado:.2f}€</div></div>", unsafe_allow_html=True)
+        with c1: st.markdown(f"<div class='metric-card'><div class='metric-title'>Total Investido</div><div class='metric-value'>{df_hist['Stake (€)'].sum():.2f}€</div></div>", unsafe_allow_html=True)
+        with c2: 
+            clv = df_hist["Lucro Extra"].mean()
+            st.markdown(f"<div class='metric-card'><div class='metric-title'>CLV Médio (Vantagem Real)</div><div class='metric-value' style='color:{'#00FF88' if clv > 0 else '#EF4444'};'>{clv:+.1%}</div></div>", unsafe_allow_html=True)
+        with c3: st.markdown(f"<div class='metric-card'><div class='metric-title'>Lucro Esperado (EV)</div><div class='metric-value' style='color:#FFD700;'>+{(df_hist['Stake (€)'] * df_hist['Lucro Extra']).sum():.2f}€</div></div>", unsafe_allow_html=True)
 
-        st.markdown("<h3 style='margin-top:30px; font-size:1.2rem; color:#94A3B8;'>📋 HISTÓRICO DE PORTFÓLIO</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin-top:30px; font-size:1.2rem; color:#94A3B8;'>📋 HISTÓRICO DE INVESTIMENTO</h3>", unsafe_allow_html=True)
         
-        # Formatação Visual da Tabela da Caixa Forte
         fig_hist = go.Figure(data=[go.Table(
-            columnorder = [1,2,3,4,5,6,7,8], columnwidth = [100, 200, 200, 100, 100, 100, 100, 100],
-            header=dict(values=list(df_hist.columns), fill_color='#020408', align='center', font=dict(color='#64748B', size=11), height=40),
-            cells=dict(
-                values=[df_hist["Data"], df_hist["Jogo"], df_hist["Aposta"], df_hist["Odd Comprada"].map('{:.2f}'.format), df_hist["Odd Real (Modelo)"].map('{:.2f}'.format), df_hist["Stake (€)"].map('{:.2f}€'.format), df_hist["Lucro Extra (Edge)"].map('{:+.1%}'.format), df_hist["Estado"]], 
-                fill_color='#0B1120', align='center', font=dict(color='#E2E8F0', size=12), height=35
-            )
+            columnorder = [1,2,3,4,5,6,7], columnwidth = [100, 200, 150, 100, 100, 100, 100],
+            header=dict(values=["<b>DATA</b>", "<b>JOGO</b>", "<b>APOSTA</b>", "<b>ODD (TUA)</b>", "<b>ODD REAL</b>", "<b>STAKE</b>", "<b>LUCRO EXTRA</b>"], fill_color='#020408', align='center', font=dict(color='#64748B', size=11), height=40),
+            cells=dict(values=[df_hist["Data"], df_hist["Jogo"], df_hist["Aposta"], df_hist["Odd Comprada"].map('{:.2f}'.format), df_hist["Odd Real"].map('{:.2f}'.format), df_hist["Stake (€)"].map('{:.2f}€'.format), df_hist["Lucro Extra"].map('{:+.1%}'.format)], fill_color='#0B1120', align='center', font=dict(color='#E2E8F0', size=12), height=35)
         )])
         fig_hist.update_layout(margin=dict(l=0,r=0,t=0,b=0), height=(len(df_hist)*35)+50, paper_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_hist, use_container_width=True)
         
-        if st.button("🗑️ Limpar Histórico"):
-            st.session_state.bet_history = pd.DataFrame(columns=["Data", "Jogo", "Aposta", "Odd Comprada", "Odd Real (Modelo)", "Stake (€)", "Lucro Extra (Edge)", "Estado"])
+        if st.button("🗑️ Limpar Caixa Forte"):
+            st.session_state.bet_history = pd.DataFrame(columns=["Data", "Jogo", "Aposta", "Odd Comprada", "Odd Real", "Stake (€)", "Lucro Extra", "Estado"])
             st.rerun()
