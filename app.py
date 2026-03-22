@@ -5,9 +5,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import requests
 from datetime import date
-import textwrap
 
-# --- 1. CONFIGURAÇÃO DE DESIGN (ULTRA PREMIUM & FLUXO LÓGICO) ---
+# --- 1. CONFIGURAÇÃO DE DESIGN (ULTRA PREMIUM & RESPONSIVO) ---
 st.set_page_config(page_title="ORACLE V140 - ELITE AUTOPILOT", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
@@ -17,6 +16,7 @@ st.markdown("""
     .stApp { background-color: #050810; color: #FFFFFF; font-family: 'Inter', sans-serif; }
     [data-testid="stSidebar"] { background-color: #020408 !important; border-right: 1px solid #1E293B !important; }
     
+    /* Cartão Principal Horizontal */
     .top-recommendation { 
         background: linear-gradient(90deg, #0B1120 0%, #050810 100%);
         border-radius: 12px; border: 1px solid #1E293B; border-left: 6px solid #00FF88; 
@@ -25,11 +25,12 @@ st.markdown("""
     }
     .top-rec-title { font-size: 0.75rem; color: #94A3B8; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
     .top-rec-value { font-size: 2.4rem; font-weight: 800; color: #FFFFFF; margin: 0; line-height: 1; font-family: 'Inter', sans-serif; }
+    .top-rec-odd { font-size: 2.4rem; font-weight: 800; color: #FFD700; margin: 0; line-height: 1; font-family: 'JetBrains Mono', monospace; }
     .top-rec-edge { font-size: 2.2rem; font-weight: 800; color: #00FF88; margin: 0; line-height: 1; font-family: 'JetBrains Mono', monospace; }
     
-    .ai-box { background: rgba(0, 255, 136, 0.03); border-radius: 12px; padding: 25px; border: 1px solid rgba(0, 255, 136, 0.2); border-top: 3px solid #00FF88; margin-bottom: 20px; }
-    .chart-box { background: #0B1120; border-radius: 12px; padding: 20px; border: 1px solid #1E293B; margin-bottom: 30px; }
-    .help-box { background: #0B1120; border-radius: 12px; padding: 25px; border: 1px solid #1E293B; border-left: 4px solid #3B82F6; margin-top: 15px; }
+    .ai-box { background: rgba(0, 255, 136, 0.03); border-radius: 12px; padding: 25px; border: 1px solid rgba(0, 255, 136, 0.2); border-top: 3px solid #00FF88; margin-bottom: 30px; }
+    .chart-box { background: #0B1120; border-radius: 12px; padding: 20px; border: 1px solid #1E293B; margin-top: 20px; margin-bottom: 30px; }
+    .help-box { background: #0B1120; border-radius: 12px; padding: 25px; border: 1px solid #1E293B; border-left: 4px solid #3B82F6; margin-top: 20px; }
     
     .stNumberInput label, .stSelectbox label { font-size: 0.70rem !important; color: #94A3B8 !important; font-weight: 700; text-transform: uppercase; }
     div.stButton > button { background: linear-gradient(90deg, #00FF88 0%, #00BD63 100%) !important; color: #000000 !important; font-weight: 800 !important; height: 3.8rem !important; border-radius: 8px !important; border: none !important; width: 100%; letter-spacing: 1px; transition: transform 0.2s; }
@@ -37,7 +38,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. MOTOR DE API E AUTOMAÇÃO TOTAL DE MERCADOS ---
+# --- 2. MOTOR DE API E AUTOMAÇÃO DE MERCADOS ---
 api_key = "8171043bf0a322286bb127947dbd4041"
 api_host = "v3.football.api-sports.io"
 headers = {"x-apisports-key": api_key}
@@ -79,7 +80,6 @@ def get_auto_odds(fixture_id):
                     odds["BTTS_Y"] = float(next((v['odd'] for v in bet['values'] if v['value'] == 'Yes'), 0.0))
                     odds["BTTS_N"] = float(next((v['odd'] for v in bet['values'] if v['value'] == 'No'), 0.0))
                 elif bet['name'] == 'Asian Handicap':
-                    # Lógica para pescar handicaps asiáticos comuns da casa
                     for v in bet['values']:
                         if v['value'] == 'Home +1.5': odds["AH_P15"] = float(v['odd'])
                         elif v['value'] == 'Home +0.5': odds["AH_P05"] = float(v['odd'])
@@ -113,12 +113,9 @@ def run_master_math(lh, la, rho, boost):
         "Mais de 3.5 Golos": prob_mtx[goals_sum > 3.5].sum(), "Menos de 3.5 Golos": prob_mtx[goals_sum < 3.5].sum() + prob_mtx[goals_sum == 3.5].sum(),
         "Ambas Marcam (Sim)": 1 - (prob_mtx[0, :].sum() + prob_mtx[:, 0].sum() - prob_mtx[0,0]), 
         "Ambas Marcam (Não)": prob_mtx[0, :].sum() + prob_mtx[:, 0].sum() - prob_mtx[0,0],
-        "Handicap +1.5 (Casa)": 1 - np.triu(prob_mtx, 2).sum(),
-        "Handicap +0.5 (Casa)": ph + px,
-        "Empate Anula (Casa)": ph / (ph + pa) if (ph + pa) > 0 else 0,
-        "Handicap -0.5 (Casa)": ph,
-        "Handicap -1.0 (Casa)": (ph - h_win_1) / (1 - h_win_1) if (1 - h_win_1) > 0 else 0,
-        "Handicap -1.5 (Casa)": np.tril(prob_mtx, -2).sum()
+        "Handicap +1.5 (Casa)": 1 - np.triu(prob_mtx, 2).sum(), "Handicap +0.5 (Casa)": ph + px,
+        "Empate Anula (Casa)": ph / (ph + pa) if (ph + pa) > 0 else 0, "Handicap -0.5 (Casa)": ph,
+        "Handicap -1.0 (Casa)": (ph - h_win_1) / (1 - h_win_1) if (1 - h_win_1) > 0 else 0, "Handicap -1.5 (Casa)": np.tril(prob_mtx, -2).sum()
     }, prob_mtx
 
 # --- 3. SIDEBAR ---
@@ -135,7 +132,7 @@ with st.sidebar:
         m_map = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}": f['fixture']['id'] for f in fix}
         m_display = st.selectbox("JOGO", list(m_map.keys()))
         m_sel = next(f for f in fix if f['fixture']['id'] == m_map[m_display])
-        with st.spinner('A calibrar algoritmos e puxar odds...'):
+        with st.spinner('A puxar odds automaticamente...'):
             auto_odds = get_auto_odds(m_sel['fixture']['id'])
     else: 
         m_sel = None; auto_odds = {k: 0.0 for k in ["1","X","2","O15","U15","O25","U25","O35","U35","BTTS_Y","BTTS_N","AH_P15","AH_P05","AH_00","AH_M05","AH_M10","AH_M15"]}
@@ -145,13 +142,12 @@ with st.sidebar:
 
     with st.expander("⚙️ ODDS MANUAIS (SE A API FALHAR)"):
         c1, c2 = st.columns(2)
-        o_1 = c1.number_input("1 (Casa)", value=auto_odds["1"], format="%.2f"); o_x = c2.number_input("X (Empate)", value=auto_odds["X"], format="%.2f"); o_2 = c1.number_input("2 (Fora)", value=auto_odds["2"], format="%.2f")
+        o_1 = c1.number_input("1 (Casa)", value=auto_odds["1"], format="%.2f"); o_x = c2.number_input("X (Emp)", value=auto_odds["X"], format="%.2f"); o_2 = c1.number_input("2 (Fora)", value=auto_odds["2"], format="%.2f")
         o_o25 = c2.number_input("Mais 2.5", value=auto_odds["O25"], format="%.2f"); o_u25 = c1.number_input("Menos 2.5", value=auto_odds["U25"], format="%.2f")
         o_btts_y = c2.number_input("Ambas Sim", value=auto_odds["BTTS_Y"], format="%.2f"); o_btts_n = c1.number_input("Ambas Não", value=auto_odds["BTTS_N"], format="%.2f")
         o_ah0 = c2.number_input("Empate Anula", value=auto_odds["AH_00"], format="%.2f"); o_ahm1 = c1.number_input("AH -1.0 Casa", value=auto_odds["AH_M10"], format="%.2f")
-        # Mantendo os outros escondidos na UI para não sobrecarregar, mas o código calcula tudo se vier da API
 
-# --- 4. RESULTADOS (FLUXO CASCATA) ---
+# --- 4. RESULTADOS (CASCATA VERTICAL) ---
 if not execute or not m_sel:
     st.markdown("<div style='text-align:center; padding-top:180px;'><h1 style='opacity:0.1; font-size:4rem;'>ORACLE V140</h1><p style='color:#64748B;'>Escolhe a liga e o jogo. O robô fará todo o trabalho pesado.</p></div>", unsafe_allow_html=True)
 else:
@@ -161,7 +157,6 @@ else:
     
     st.markdown(f"<h2 style='margin-bottom:25px; font-size:3.5rem; letter-spacing:-2px;'>{m_sel['teams']['home']['name'].upper()} <span style='color:#475569; font-weight:300;'>vs</span> {m_sel['teams']['away']['name'].upper()}</h2>", unsafe_allow_html=True)
 
-    # 1. Agrupar todos os mercados automáticos e manuais
     all_mkts = [
         ("Vencedor Casa", res["Vencedor Casa"], o_1), ("Empate (X)", res["Empate (X)"], o_x), ("Vencedor Fora", res["Vencedor Fora"], o_2),
         ("Mais de 1.5 Golos", res["Mais de 1.5 Golos"], auto_odds["O15"]), ("Menos de 1.5 Golos", res["Menos de 1.5 Golos"], auto_odds["U15"]),
@@ -176,12 +171,21 @@ else:
     valid_mkts = [(n,p,b,(p*b)-1) for n,p,b in all_mkts if b > 1.05]
     
     if len(valid_mkts) > 0:
-        # A MÁGICA DE ESCOLHER A MELHOR APOSTA: Filtrar lucro > 2% e escolher a MAIS PROVÁVEL
-        value_bets = [m for m in valid_mkts if m[3] > 0.02]
+        # A MÁGICA DO "SWEET SPOT" (Ponto Rebuçado)
+        value_bets = [m for m in valid_mkts if m[3] > 0.02] # Tem de ter lucro extra > 2%
+        
         if value_bets:
-            best = sorted(value_bets, key=lambda x: x[1], reverse=True)[0] # Ordena pela maior probabilidade
+            # Filtra apostas com odds aceitáveis para o risco (entre 1.50 e 3.00)
+            sweet_spot = [m for m in value_bets if 1.50 <= m[2] <= 3.00]
+            if sweet_spot:
+                # Se houver apostas no sweet spot, escolhe a de maior lucro extra (Edge)
+                best = sorted(sweet_spot, key=lambda x: x[3], reverse=True)[0]
+            else:
+                # Se não houver, volta a escolher o maior lucro extra possível
+                best = sorted(value_bets, key=lambda x: x[3], reverse=True)[0]
         else:
-            best = sorted(valid_mkts, key=lambda x: x[1], reverse=True)[0] # Fallback se não houver valor
+            # Se a casa não errou em nada, escolhe o cenário mais provável para não perder dinheiro à toa
+            best = sorted(valid_mkts, key=lambda x: x[1], reverse=True)[0]
             
         edge = best[3]; kelly = max(0, (edge/(best[2]-1)) * 0.50) 
         odd_justa = 1/best[1]
@@ -189,10 +193,10 @@ else:
         # 1. TOPO: RECOMENDAÇÃO (LARGA E LIMPA)
         st.markdown(f"""
         <div class="top-recommendation">
-            <div><div class="top-rec-title">A Mais Segura com Valor</div><div class="top-rec-value">{best[0]}</div></div>
-            <div><div class="top-rec-title">A Nossa Certeza</div><div class="top-rec-value">{best[1]:.1%}</div></div>
+            <div><div class="top-rec-title">Aposta de Ouro (Sweet Spot)</div><div class="top-rec-value">{best[0]}</div></div>
+            <div><div class="top-rec-title">Odd da Casa</div><div class="top-rec-odd">{best[2]:.2f}</div></div>
             <div><div class="top-rec-title">Lucro Extra (Vantagem)</div><div class="top-rec-edge">{edge:+.1%}</div></div>
-            <div><div class="top-rec-title">Valor Seguro a Apostar</div><div class="top-rec-value" style="font-family:'JetBrains Mono'; color:#00FF88;">{bankroll*kelly:.2f}€</div></div>
+            <div><div class="top-rec-title">Valor a Apostar</div><div class="top-rec-value" style="font-family:'JetBrains Mono'; color:#00FF88;">{bankroll*kelly:.2f}€</div></div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -200,36 +204,23 @@ else:
         apostas_ouro = len([m for m in valid_mkts if m[3] > 0.10])
         apostas_verdes = len([m for m in valid_mkts if 0.02 < m[3] <= 0.10])
         
-        texto_ia = f"Para este jogo, o robô encontrou <b>{len(valid_mkts)} mercados disponíveis</b> com as odds automáticas.<br>"
-        texto_ia += f"Recomendei <b>'{best[0]}'</b> porque é o cenário mais provável ({best[1]:.1%}) que <u>ainda tem um erro a nosso favor</u>. "
-        texto_ia += f"A casa de apostas paga {best[2]:.2f}, mas as probabilidades reais mandam pagar apenas {odd_justa:.2f}. "
-        if apostas_ouro > 0: texto_ia += f"<br>⚠️ <b>Nota:</b> Encontrei mais {apostas_ouro} apostas com falhas massivas (Ouro) na tabela abaixo."
-        elif apostas_verdes > 0: texto_ia += f"<br>✅ <b>Nota:</b> Existem mais {apostas_verdes} opções viáveis (Verdes) na tabela."
+        texto_ia = f"Processámos <b>{len(valid_mkts)} mercados disponíveis</b> para o jogo.<br>"
+        if edge > 0.02:
+            texto_ia += f"Recomendei <b>'{best[0]}' a odd {best[2]:.2f}</b> porque é o ponto de equilíbrio perfeito entre o risco e o teu retorno. "
+            texto_ia += f"A matemática diz que esta odd deveria estar a pagar apenas {odd_justa:.2f}, o que significa que o teu lucro a longo prazo é garantido se respeitares a stake de {bankroll*kelly:.2f}€. "
+        else:
+            texto_ia += f"⚠️ <b>CUIDADO:</b> Não encontrei valor/erros neste jogo. A recomendação '{best[0]}' é apenas a opção menos má."
+            
+        if apostas_ouro > 0: texto_ia += f"<br><br>🚨 Tens {apostas_ouro} apostas com erros massivos (Ouro) na tabela abaixo."
 
         st.markdown(f"""
         <div class="ai-box">
-            <h4 style="margin:0 0 8px 0; color:#00FF88; font-size:1.1rem; text-transform:uppercase;">🤖 Assistente de Inteligência (Resumo do Jogo)</h4>
+            <h4 style="margin:0 0 8px 0; color:#00FF88; font-size:1.1rem; text-transform:uppercase;">🤖 Visão do Analista (Oracle)</h4>
             <p style="color:#E2E8F0; font-size:0.95rem; margin:0; line-height:1.5;">{texto_ia}</p>
         </div>
         """, unsafe_allow_html=True)
 
-        # 3. GRÁFICO (REMODELADO E POR BAIXO DA IA)
-        st.markdown("<div class='chart-box'>", unsafe_allow_html=True)
-        xr = np.arange(7)
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=xr, y=mtx.sum(axis=1), name="Ataque Casa", mode='lines+markers', fill='tozeroy', line=dict(color='#00FF88', width=3), marker=dict(size=8, color='#00FF88')))
-        fig.add_trace(go.Scatter(x=xr, y=mtx.sum(axis=0), name="Ataque Fora", mode='lines+markers', fill='tozeroy', line=dict(color='#3B82F6', width=3), marker=dict(size=8, color='#3B82F6')))
-        fig.update_layout(
-            title=dict(text="📊 DISTRIBUIÇÃO DE GOLOS ESPERADOS (QUEM VAI DOMINAR?)", font=dict(color="#94A3B8", size=14)),
-            height=280, margin=dict(l=20,r=20,t=40,b=20), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-            xaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', title="Número de Golos", color="#64748B"),
-            yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', title="Probabilidade", color="#64748B", tickformat=".0%"),
-            legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1)
-        )
-        st.plotly_chart(fig, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        # 4. A TABELA (TOTAL WIDTH)
+        # 3. A TABELA (TOTAL WIDTH)
         st.markdown("<h3 style='margin-top:0px; font-size:1.4rem; letter-spacing:-1px;'>📋 TODAS AS APOSTAS AVALIADAS</h3>", unsafe_allow_html=True)
         
         df = pd.DataFrame(valid_mkts, columns=["Aposta", "Certeza", "OddCasa", "Vantagem"])
@@ -255,17 +246,37 @@ else:
         fig_t.update_layout(margin=dict(l=0,r=0,t=0,b=0), height=(len(df)*40)+50, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_t, use_container_width=True)
 
-        # 5. GUIA EXPLÍCITO DEBAIXO DA TABELA
-        st.markdown(f"""
-        <div class="help-box">
-            <b style="color:#FFF; font-size:1.1rem;">📚 GUIA RÁPIDO DO APOSTADOR</b><hr style="border-color:#1E293B; margin: 10px 0;">
-            <div style="display:flex; flex-direction:column; gap:10px; font-size:0.9rem; color:#94A3B8;">
-                <div><b style="color:#FFD700;">● Ouro (>10% Lucro Extra):</b> Erros massivos da casa de apostas. São raros. Aposta forte (usando a stake segura).</div>
-                <div><b style="color:#00FF88;">● Verde (>2% Lucro Extra):</b> Valor sólido. A probabilidade diz-nos que a longo prazo vamos sacar dinheiro.</div>
-                <div><b style="color:#EF4444;">● Vermelho (<0% Lucro Extra):</b> Armadilha pura. A casa de apostas está a pagar menos do que o evento realmente vale.</div>
-                <div style="margin-top: 10px;"><b>Odd Real (Correta):</b> É a odd matemática pura. Regra de Ouro: Só apostas quando a <span style="color:#FFF;">Odd da Casa for MAIOR do que a Odd Real</span>.</div>
+        # 4. SECÇÃO INFERIOR: GUIA E GRÁFICO LADO A LADO
+        col_help, col_chart = st.columns([1, 1])
+        
+        with col_help:
+            st.markdown(f"""
+            <div class="help-box">
+                <b style="color:#FFF; font-size:1.1rem;">📚 GUIA RÁPIDO DO APOSTADOR</b><hr style="border-color:#1E293B; margin: 10px 0;">
+                <div style="display:flex; flex-direction:column; gap:10px; font-size:0.9rem; color:#94A3B8;">
+                    <div><b style="color:#FFD700;">● Ouro (>10% Lucro Extra):</b> Erros massivos da casa de apostas. Aposta com confiança.</div>
+                    <div><b style="color:#00FF88;">● Verde (>2% Lucro Extra):</b> Valor sólido a longo prazo.</div>
+                    <div><b style="color:#EF4444;">● Vermelho (<0% Lucro Extra):</b> Foge. A casa paga menos do que o justo.</div>
+                    <div style="margin-top: 5px;"><b>A Regra Principal:</b> Compara a "Odd Real" com a "Odd da Casa". Só apostamos se a Casa nos oferecer uma odd MAIOR do que a real.</div>
+                </div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+            
+        with col_chart:
+            st.markdown("<div class='chart-box'>", unsafe_allow_html=True)
+            xr = np.arange(7)
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=xr, y=mtx.sum(axis=1), name="Ataque Casa", mode='lines+markers', fill='tozeroy', line=dict(color='#00FF88', width=3), marker=dict(size=8, color='#00FF88')))
+            fig.add_trace(go.Scatter(x=xr, y=mtx.sum(axis=0), name="Ataque Fora", mode='lines+markers', fill='tozeroy', line=dict(color='#3B82F6', width=3), marker=dict(size=8, color='#3B82F6')))
+            fig.update_layout(
+                title=dict(text="📊 DISTRIBUIÇÃO DE GOLOS", font=dict(color="#94A3B8", size=14)),
+                height=220, margin=dict(l=20,r=20,t=40,b=20), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+                xaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', color="#64748B"),
+                yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', color="#64748B", tickformat=".0%"),
+                legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1)
+            )
+            st.plotly_chart(fig, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+            
     else:
-        st.warning("O robô não encontrou odds na API. Vai ao menu lateral (Opção: Inserção Manual) e coloca as odds do teu site de apostas.")
+        st.warning("O robô não encontrou odds na API. Vai ao menu lateral (Opção: Inserção Manual) e coloca as odds.")
