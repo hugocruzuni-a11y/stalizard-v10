@@ -5,7 +5,6 @@ import pandas as pd
 import plotly.graph_objects as go
 import requests
 from datetime import date
-import textwrap
 
 # --- 1. CONFIGURAÇÃO DE DESIGN (ULTRA PREMIUM) ---
 st.set_page_config(page_title="ORACLE V140 - ELITE", layout="wide", initial_sidebar_state="expanded")
@@ -24,6 +23,8 @@ st.markdown("""
     .ia-insight-card { background: rgba(0, 255, 136, 0.05); border-radius: 10px; padding: 20px; border-left: 4px solid #00FF88; margin-top: 20px; font-size: 0.95rem; line-height: 1.6; color: #E2E8F0; }
     .help-card { background: #0B0F19; border-radius: 12px; padding: 20px; border: 1px solid #1E293B; border-left: 4px solid #3B82F6; margin-bottom: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
     
+    .ai-assistant-table { background: linear-gradient(90deg, rgba(15, 23, 42, 0.8) 0%, rgba(2, 6, 23, 0.9) 100%); border-radius: 12px; padding: 20px; border: 1px solid rgba(0, 255, 136, 0.2); margin-top: 15px; border-left: 4px solid #00FF88;}
+
     .stNumberInput label, .stSelectbox label { font-size: 0.75rem !important; color: #94A3B8 !important; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
     div.stButton > button { background: linear-gradient(90deg, #00FF88 0%, #00BD63 100%) !important; color: #000000 !important; font-weight: 800 !important; height: 3.8rem !important; border-radius: 10px !important; border: none !important; width: 100%; text-transform: uppercase; letter-spacing: 2px; transition: transform 0.2s, box-shadow 0.2s; }
     div.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0, 255, 136, 0.3) !important; }
@@ -122,7 +123,7 @@ with st.sidebar:
     st.markdown("<br>", unsafe_allow_html=True)
     execute = st.button("🔍 PROCURAR DINHEIRO FÁCIL")
 
-# --- 4. RESULTADOS (ESTÉTICA DE LUXO) ---
+# --- 4. RESULTADOS ---
 if not execute or not m_sel:
     st.markdown("<div style='text-align:center; padding-top:180px;'><h1 style='opacity:0.1; font-size:5rem;'>ORACLE V140</h1><p style='color:#64748B; font-size:1.2rem;'>Escolhe o jogo. O robô preenche as odds sozinho.</p></div>", unsafe_allow_html=True)
 else:
@@ -148,36 +149,36 @@ else:
         color = "#00FF88" if edge > 0.08 else "#FFD700" if edge > 0.02 else "#EF4444"
         odd_justa = 1/best[1]
         
-        html_card = f"""
-        <div class="pro-card" style="border-left-color: {color};">
-            <span style="color:#94A3B8; font-size:0.8rem; font-weight:800; letter-spacing:1px;">A MELHOR APOSTA DETETADA</span>
-            <p class="bet-name">{best[0]}</p>
-            <div style="display:flex; gap:30px; margin:20px 0;">
-                <div><span style="color:#64748B; font-size:0.75rem; font-weight:700;">VANTAGEM (ERRO DA CASA)</span><br><span class="edge-value" style="color:{color};">{edge:+.1%}</span></div>
-                <div><span style="color:#64748B; font-size:0.75rem; font-weight:700;">VALOR SEGURO A APOSTAR</span><br><b style="font-size:1.6rem; font-family:'JetBrains Mono';">{bankroll*kelly:.2f}€</b></div>
-            </div>
-            
-            <div class="ia-insight-card">
-                <b>🗣️ O QUE ISTO SIGNIFICA EM PORTUGUÊS:</b><br><br>
-                A casa de apostas está a oferecer uma odd de <b style="color:#FFF;">{best[2]}</b>. Mas o nosso algoritmo cruzou a força de ataque e defesa destas equipas e descobriu que a Odd Real devia ser só <b style="color:#FFF;">{odd_justa:.2f}</b>.<br><br>
-                Apostar nisto a longo prazo é garantido. É como se a casa estivesse a vender uma nota de 10€ por 8€. Usa a stake recomendada acima para proteger o teu saldo.
-            </div>
-        </div>
-        """
-        with col_res: st.markdown(textwrap.dedent(html_card), unsafe_allow_html=True)
+        # O HTML AQUI AGORA ESTÁ ENCOSTADO À MARGEM ESQUERDA PARA EVITAR O BUG DO STREAMLIT
+        st.markdown(f"""
+<div class="pro-card" style="border-left-color: {color};">
+    <span style="color:#94A3B8; font-size:0.8rem; font-weight:800; letter-spacing:1px;">A MELHOR APOSTA DETETADA</span>
+    <p class="bet-name">{best[0]}</p>
+    <div style="display:flex; gap:30px; margin:20px 0;">
+        <div><span style="color:#64748B; font-size:0.75rem; font-weight:700;">VANTAGEM (ERRO DA CASA)</span><br><span class="edge-value" style="color:{color};">{edge:+.1%}</span></div>
+        <div><span style="color:#64748B; font-size:0.75rem; font-weight:700;">VALOR SEGURO A APOSTAR</span><br><b style="font-size:1.6rem; font-family:'JetBrains Mono';">{bankroll*kelly:.2f}€</b></div>
+    </div>
+    
+    <div class="ia-insight-card">
+        <b>🗣️ O QUE ISTO SIGNIFICA EM PORTUGUÊS:</b><br><br>
+        A casa de apostas está a oferecer uma odd de <b style="color:#FFF;">{best[2]:.2f}</b>. Mas o nosso algoritmo cruzou a força de ataque e defesa destas equipas e descobriu que a Odd Real devia ser só <b style="color:#FFF;">{odd_justa:.2f}</b>.<br><br>
+        Apostar nisto a longo prazo é garantido. Usa a stake recomendada acima para proteger o teu saldo e crescer aos poucos.
+    </div>
+</div>
+        """, unsafe_allow_html=True)
     else:
-        with col_res: st.warning("O robô não encontrou odds automáticas. Insere os valores na barra lateral.")
+        st.warning("O robô não encontrou odds automáticas. Insere os valores na barra lateral.")
 
     with col_chart:
         st.markdown(f"""
-        <div class="help-card">
-            <b style="color:#FFF; font-size:1rem;">📚 GUIA RÁPIDO DO APOSTADOR</b><br>
-            <span style="font-size:0.85rem; color:#94A3B8; line-height:1.6;"><br>
-            <b>• Vantagem (Lucro Extra):</b> O nível de "cegueira" da casa de apostas. +10% significa lucro limpo a longo prazo.<br>
-            <b>• Odd Real (Certa):</b> O preço real sem o roubo/margem da casa. Apostar numa odd maior do que esta é ouro.<br>
-            <b>• Gráfico de Golos:</b> Mostra visualmente que equipa tem mais probabilidade de esmagar o adversário.
-            </span>
-        </div>
+<div class="help-card">
+    <b style="color:#FFF; font-size:1rem;">📚 GUIA RÁPIDO DO APOSTADOR</b><br>
+    <span style="font-size:0.85rem; color:#94A3B8; line-height:1.6;"><br>
+    <b>• Vantagem (Lucro Extra):</b> O nível de "cegueira" da casa de apostas. +10% significa lucro limpo a longo prazo.<br>
+    <b>• Odd Real (Certa):</b> O preço real sem o roubo/margem da casa. Apostar numa odd MAIOR do que esta é encontrar ouro.<br>
+    <b>• Gráfico de Golos:</b> Mostra visualmente que equipa tem mais probabilidade de esmagar o adversário.
+    </span>
+</div>
         """, unsafe_allow_html=True)
 
         xr = np.arange(7)
@@ -187,8 +188,17 @@ else:
         fig.update_layout(height=200, margin=dict(l=0,r=0,t=10,b=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", showlegend=False, xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
         st.plotly_chart(fig, use_container_width=True)
 
-    # --- A TABELA "ÚLTIMA BOLACHA DO PACOTE" ---
+    # --- A TABELA E O ASSISTENTE DE IA ---
     st.markdown("<h3 style='margin-top:20px; letter-spacing:-1px;'>📋 TODAS AS APOSTAS AVALIADAS</h3>", unsafe_allow_html=True)
+    
+    # LEGENDA CLARA ANTES DA TABELA
+    st.markdown("""
+    <div style='display: flex; gap: 20px; margin-bottom: 15px; font-size: 0.85rem; color: #94A3B8;'>
+        <div><span style='color:#FFD700; font-size: 1.2rem; vertical-align: middle;'>●</span> <b style="color:white;">OURO (>10%)</b>: Erro grave da casa. Aposta excelente.</div>
+        <div><span style='color:#00FF88; font-size: 1.2rem; vertical-align: middle;'>●</span> <b style="color:white;">VERDE (>2%)</b>: Valor sólido para crescimento consistente.</div>
+        <div><span style='color:#EF4444; font-size: 1.2rem; vertical-align: middle;'>●</span> <b style="color:white;">VERMELHO (<0%)</b>: Armadilha da casa. Fica longe.</div>
+    </div>
+    """, unsafe_allow_html=True)
     
     if len(valid_mkts) > 0:
         df = pd.DataFrame(valid_mkts, columns=["Aposta", "Certeza", "OddCasa", "Vantagem"])
@@ -202,7 +212,7 @@ else:
             columnorder = [1,2,3,4,5],
             columnwidth = [250, 120, 120, 120, 150],
             header=dict(
-                values=['<b>A TUA APOSTA</b>', '<b>A NOSSA CERTEZA</b>', '<b>ODD REAL (CORRETA)</b>', '<b>ODD DA CASA</b>', '<b>LUCRO EXTRA</b>'], 
+                values=['<b>A TUA APOSTA</b>', '<b>A NOSSA CERTEZA</b>', '<b>ODD REAL (Certa)</b>', '<b>ODD DA CASA</b>', '<b>LUCRO EXTRA</b>'], 
                 fill_color='#020617', 
                 align=['left', 'center', 'center', 'center', 'center'], 
                 font=dict(color='#64748B', size=11, family='Inter'), 
@@ -228,7 +238,28 @@ else:
                 height=45
             )
         )])
-        
-        # Fundo totalmente transparente para fundir com a App
         fig_t.update_layout(margin=dict(l=0,r=0,t=0,b=0), height=(len(df)*45)+60, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_t, use_container_width=True)
+
+        # --- ASSISTENTE IA DA TABELA (NOVO) ---
+        apostas_ouro = len(df[df['Vantagem'] > 0.10])
+        apostas_verdes = len(df[(df['Vantagem'] > 0.02) & (df['Vantagem'] <= 0.10)])
+        apostas_lixo = len(df[df['Vantagem'] < 0])
+        
+        texto_ia = f"Analisei os {len(df)} mercados disponíveis para este jogo. "
+        if apostas_ouro > 0:
+            texto_ia += f"Atenção máxima: encontrei <b style='color:#FFD700;'>{apostas_ouro} oportunidades de OURO</b> (erros graves da casa). Foca-te nelas! "
+        elif apostas_verdes > 0:
+            texto_ia += f"Temos <b style='color:#00FF88;'>{apostas_verdes} apostas de valor sólido (Verdes)</b> para construirmos lucro a longo prazo. "
+        else:
+            texto_ia += "Infelizmente as casas de apostas foram espertas e não há grande valor neste jogo. Eu protegeria a banca. "
+            
+        if apostas_lixo > 0:
+            texto_ia += f"Mais importante ainda: Cuidado com os <b style='color:#EF4444;'>{apostas_lixo} mercados onde a casa está a tentar enganar-te</b> (Vermelhos). Foge deles."
+
+        st.markdown(f"""
+        <div class="ai-assistant-table">
+            <h4 style="margin-top:0; color:#00FF88; font-size:1rem;">🤖 RESUMO INTELIGENTE DA TABELA</h4>
+            <p style="color:#E2E8F0; font-size:0.95rem; line-height:1.6; margin-bottom:0;">{texto_ia}</p>
+        </div>
+        """, unsafe_allow_html=True)
