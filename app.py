@@ -381,12 +381,15 @@ with st.sidebar:
     
     # 2. Seleção de Liga e Mercado
     l_map = {
-        "Portugal 🇵🇹": 94, 
-        "England 🏴󠁧󠁢󠁥󠁮󠁧󠁿": 39, 
-        "Spain 🇪🇸": 140, 
-        "Italy 🇮🇹": 135, 
-        "Champions League 🇪🇺": 2
-    }
+    "Amigáveis Seleções 🌍": 10,     # ID 10: Friendly International
+    "WC Qualification 🏆": 1,        # ID 1: World Cup
+    "Premier League 🏴󠁧󠁢󠁥󠁮󠁧󠁿": 39,
+    "La Liga 🇪🇸": 140,
+    "Primeira Liga 🇵🇹": 94,
+    "Serie A 🇮🇹": 135,
+    "Bundesliga 🇩🇪": 78,
+    "Ligue 1 🇫🇷": 61
+}
     ln = st.selectbox("⚽ SELECIONAR LIGA", list(l_map.keys()))
     
     # Busca de jogos com Cache para poupar créditos da API
