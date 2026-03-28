@@ -407,8 +407,8 @@ with st.sidebar:
     ln = st.selectbox("⚽ SELECIONAR LIGA", list(l_map.keys()))
     
     # Busca de jogos com Cache para poupar créditos da API
-    fix_data = fetch_today_fixtures(l_map[ln])
-    
+fix_data = fetch_fixtures(l_map[ln], target_date=sel_date)
+
     if fix_data:
         m_map = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}": i for i, f in enumerate(fix_data)}
         m_display = st.selectbox("🎯 JOGO EM FOCO (Deep Dive)", list(m_map.keys()))
