@@ -362,34 +362,48 @@ def run_master_math(lh, la, rho, boost, zip_factor):
 # --- 3. SIDEBAR (CONTROLO DO PILOTO) ---
 # --- FUNÇÃO AUXILIAR PARA CACHE DE JOGOS ---
 @st.cache_data(ttl=3600)
-def fetch_today_fixtures(league_id, season="2025"):
+def fetch_fixtures(league_id, season="2025", target_date=None):
+    # Se não passarmos data, ele assume hoje por padrão
+    if target_date is None:
+        target_date = date.today()
+    
+    formatted_date = target_date.strftime('%Y-%m-%d')
+    
     try:
-        params = {"date": date.today().strftime('%Y-%m-%d'), "league": league_id, "season": season}
-        r = requests.get(f"https://{API_HOST}/fixtures", headers=HEADERS, params=params).json()
-        return r.get('response', [])
-    except:
+        url = f"https://{api_host}/fixtures"
+        params = {"date": formatted_date, "league": league_id, "season": season}
+        response = requests.get(url, headers=headers, params=params).json()
+        return response.get('response', [])
+    except Exception as e:
+        st.error(f"Erro na API: {e}")
         return []
 
 with st.sidebar:
     st.markdown("<h2 style='color:#00FF88; margin:0;'>🏛️ ORACLE V140</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:0.7rem; color:#64748B;'>APEX QUANTITATIVE TERMINAL</p>", unsafe_allow_html=True)
     
-    # 1. Gestão de Capital
-    bankroll = st.number_input("💰 BANCA TOTAL (€)", value=1000.0, step=50.0, help="Define o capital total para cálculo de stake (Kelly).")
-    
+    bankroll = st.number_input("💰 BANCA TOTAL (€)", value=1000.0, step=50.0)
+
+    # --- NOVO SELETOR DE DATA ---
     st.markdown("---")
+    data_consulta = st.date_input("📅 DATA DA ANÁLISE", value=date.today(), min_value=date.today())
     
-    # 2. Seleção de Liga e Mercado
+    # --- DICIONÁRIO EXPANDIDO (AMIGÁVEIS E SELEÇÕES) ---
     l_map = {
-    "Amigáveis Seleções 🌍": 10,     # ID 10: Friendly International
-    "WC Qualification 🏆": 1,        # ID 1: World Cup
-    "Premier League 🏴󠁧󠁢󠁥󠁮󠁧󠁿": 39,
-    "La Liga 🇪🇸": 140,
-    "Primeira Liga 🇵🇹": 94,
-    "Serie A 🇮🇹": 135,
-    "Bundesliga 🇩🇪": 78,
-    "Ligue 1 🇫🇷": 61
-}
+        "Amigáveis Seleções 🌍": 10,
+        "Premier League 🏴󠁧󠁢󠁥󠁮󠁧󠁿": 39, 
+        "La Liga 🇪🇸": 140, 
+        "Primeira Liga 🇵🇹": 94, 
+        "Serie A 🇮🇹": 135,
+        "Champions League 🇪🇺": 2,
+        "Qualificação Mundial 🏆": 1
+    }
+    ln = st.selectbox("⚽ LIGA / COMPETIÇÃO", list(l_map.keys()))
+
+    # Lógica de Temporada Dinâmica (Amigáveis usam o ano civil 2026)
+    target_season = "2026" if l_map[ln] in [1, 10] else "2025"
+
+    # CHAMADA ATUALIZADA COM DATA DINÂMICA
+    fix_data = fetch_fixtures(l_map[ln], season=target_season, target_date=data_consulta)
     ln = st.selectbox("⚽ SELECIONAR LIGA", list(l_map.keys()))
     
     # Busca de jogos com Cache para poupar créditos da API
