@@ -380,13 +380,11 @@ def fetch_fixtures(league_id, season="2025", target_date=None):
 
 with st.sidebar:
     st.markdown("<h2 style='color:#00FF88; margin:0;'>🏛️ ORACLE V140</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:0.7rem; color:#64748B; margin-bottom:20px;'>APEX QUANTITATIVE BUILD</p>", unsafe_allow_html=True)
     
     bankroll = st.number_input("💰 BANCA TOTAL (€)", value=1000.0, step=50.0, key="main_bankroll")
 
     st.divider()
     
-    # Seletor de Data
     data_analise = st.date_input("📅 DATA DA ANÁLISE", value=date.today(), min_value=date.today(), key="calendar_select")
     
     l_map = {
@@ -402,79 +400,50 @@ with st.sidebar:
 
     target_season = "2026" if l_map[ln] in [1, 10] else "2025"
 
-    # CHAMADA DA API (Certifica-te que api_host e headers foram definidos no topo)
+    # Forçar definição das variáveis da API para evitar o erro "not defined"
+    api_host = "v3.football.api-sports.io"
+    
+    # Busca de jogos
     fix_data = fetch_fixtures(l_map[ln], season=target_season, target_date=data_analise)
     
     m_sel = None
-    # Odds seguras por defeito
-    auto_odds = {k: 1.01 for k in ["1","X","2","O15","U15","O25","U25","O35","U35","BTTS_Y","BTTS_N"]}
+    # Dicionário padrão seguro para evitar KeyError
+    auto_odds = {k: 1.01 for k in ["1","X","2","O15","U15","O25","U25","O35","U35","BTTS_Y","BTTS_N","AH_P15","AH_P05","AH_00","AH_M05","AH_M10","AH_M15"]}
 
     if fix_data:
         m_map = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}": i for i, f in enumerate(fix_data)}
         m_display = st.selectbox("🎯 JOGO EM FOCO", list(m_map.keys()), key="match_select")
         m_sel = fix_data[m_map[m_display]]
         
-        with st.spinner('Sincronizando Odds Apex...'):
-            auto_odds = get_auto_odds(m_sel['fixture']['id'])
+        with st.spinner('Sincronizando Odds...'):
+            # Tenta carregar as odds reais
+            api_odds = get_auto_odds(m_sel['fixture']['id'])
+            auto_odds.update(api_odds) # Só atualiza o que a API encontrar
     else:
-        st.warning("Nenhum jogo encontrado para esta data/liga.")
+        st.warning("Nenhum jogo encontrado.")
 
     st.divider()
     
-    st.markdown("<p style='font-size:0.75rem; color:#00FF88; font-weight:800;'>🛠️ CALIBRAÇÃO TÁTICA</p>", unsafe_allow_html=True)
     use_auto_xg = st.toggle("🧠 MODO AUTO-xG", value=True, key="xg_toggle")
-    
     zip_factor = st.slider("⚡ FATOR 0-0", 0.80, 1.30, 1.05, 0.05, key="zip_slider")
     
     execute = st.button("🚀 INICIAR ALPHA SCAN", key="btn_execute")
 
-    # Override de Odds com Chaves Únicas (Resolve o DuplicateElementId)
+    # Override de Odds SEGURO (Usando .get para evitar KeyError)
     with st.expander("⚙️ ODDS MANUAIS"):
-        c1, c2, c3 = st.columns(3)
-        o_1 = c1.number_input("Odd Casa (1)", value=float(auto_odds.get("1", 1.01)), step=0.01, key="manual_1")
-        o_x = c2.number_input("Odd Empate (X)", value=float(auto_odds.get("X", 1.01)), step=0.01, key="manual_x")
-        o_2 = c3.number_input("Odd Fora (2)", value=float(auto_odds.get("2", 1.01)), step=0.01, key="manual_2")
-    
-    # 3. Calibração Tática (O Cérebro)
-    st.markdown("<p style='font-size:0.75rem; color:#00FF88; font-weight:800;'>🛠️ AJUSTE DO ALGORITMO</p>", unsafe_allow_html=True)
-    
-    use_auto_xg = st.toggle("🧠 AUTO-xG ENGINE", value=True, help="Usa médias de ataque/defesa e momentum em vez de resultados históricos brutos.")
-    
-    zip_factor = st.slider(
-        "⚡ FATOR DE COMPRESSÃO (0-0)", 
-        0.80, 1.30, 1.05, 0.05,
-        help="Ajusta a probabilidade de empate sem golos. Use >1.10 para equipas defensivas (estilo Simeone) ou finais de taça."
-    )
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🚀 INICIAR ALPHA SCAN", use_container_width=True):
-        st.toast("Matriz de Poisson atualizada!", icon="🔥")
-
-    # 4. Odds Manuais (Sobrescrita de Emergência)
-    with st.expander("⚙️ OVERRIDE DE ODDS"):
-        st.caption("Ajuste manual se a API estiver desatualizada.")
-        col_win = st.columns(3)
-        o_1 = col_win[0].number_input("1", value=auto_odds["1"], step=0.01)
-        o_x = col_win[1].number_input("X", value=auto_odds["X"], step=0.01)
-        o_2 = col_win[2].number_input("2", value=auto_odds["2"], step=0.01)
+        col_1x2 = st.columns(3)
+        o_1 = col_1x2[0].number_input("Casa", value=float(auto_odds.get("1", 1.01)), key="m_1")
+        o_x = col_1x2[1].number_input("Empate", value=float(auto_odds.get("X", 1.01)), key="m_x")
+        o_2 = col_1x2[2].number_input("Fora", value=float(auto_odds.get("2", 1.01)), key="m_2")
         
-        st.divider()
-        col_g = st.columns(2)
-        o_o15 = col_g[0].number_input("Over 1.5", value=auto_odds["O15"], step=0.01)
-        o_u15 = col_g[1].number_input("Under 1.5", value=auto_odds["U15"], step=0.01)
-        o_o25 = col_g[0].number_input("Over 2.5", value=auto_odds["O25"], step=0.01)
-        o_u25 = col_g[1].number_input("Under 2.5", value=auto_odds["U25"], step=0.01)
+        col_gls = st.columns(2)
+        o_o25 = col_gls[0].number_input("Over 2.5", value=float(auto_odds.get("O25", 1.01)), key="m_o25")
+        o_u25 = col_gls[1].number_input("Under 2.5", value=float(auto_odds.get("U25", 1.01)), key="m_u25")
         
-        st.divider()
         col_ah = st.columns(2)
-        o_btts_y = col_ah[0].number_input("BTTS Sim", value=auto_odds["BTTS_Y"], step=0.01)
-        o_btts_n = col_ah[1].number_input("BTTS Não", value=auto_odds["BTTS_N"], step=0.01)
-        o_ah_00 = col_ah[0].number_input("DNB (0.0)", value=auto_odds["AH_00"], step=0.01)
-        o_ah_m10 = col_ah[1].number_input("AH -1.0", value=auto_odds["AH_M10"], step=0.01)
-        # Inserir outros AH conforme necessário...
-        o_ah_p15 = auto_odds["AH_P15"]; o_ah_p05 = auto_odds["AH_P05"]
-        o_ah_m05 = auto_odds["AH_M05"]; o_ah_m15 = auto_odds["AH_M15"]; o_o35 = auto_odds["O35"]; o_u35 = auto_odds["U35"]
-
+        # O .get("AH_00", 1.01) garante que se a chave não existir, a app não crasha
+        o_ah_00 = col_ah[0].number_input("DNB (0.0)", value=float(auto_odds.get("AH_00", 1.01)), key="m_ah00")
+        o_btts_y = col_ah[1].number_input("BTTS Sim", value=float(auto_odds.get("BTTS_Y", 1.01)), key="m_btts")
 # --- Inicialização das Tabs ---
 tab1, tab2, tab3 = st.tabs(["🔬 DEEP DIVE", "🌍 ALPHA SCANNER", "🏦 CAIXA FORTE"])
 
