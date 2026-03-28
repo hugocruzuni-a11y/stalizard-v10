@@ -22,7 +22,7 @@ if 'bet_history' not in st.session_state:
         "Data", "Jogo", "Aposta", "Odd Comprada", "Odd Real", "Stake (€)", "Lucro Extra", "Estado"
     ])
 
-# Engine de Estilo (CSS Injection)
+# Engine de Estilo (CSS Injection Corrigido)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@500;700&display=swap');
@@ -39,6 +39,11 @@ st.markdown("""
     .top-rec-value { font-size: 2rem; font-weight: 800; color: #FFFFFF; margin: 0; line-height: 1.1; }
     .top-rec-odd { font-size: 2.2rem; font-weight: 700; color: #FFD700; font-family: 'JetBrains Mono', monospace; }
     
+    /* CSS em falta adicionado para a Tab 3 (Caixa Forte) */
+    .metric-card { background: rgba(11, 17, 32, 0.8); border: 1px solid #1E293B; border-radius: 12px; padding: 20px; text-align: center; border-bottom: 3px solid #3B82F6; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+    .metric-title { font-size: 0.75rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 600; }
+    .metric-value { font-size: 1.9rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+
     .ai-box { background: rgba(0, 255, 136, 0.02); border-radius: 12px; padding: 24px; border: 1px solid rgba(0, 255, 136, 0.15); border-top: 4px solid #00FF88; }
     .chart-box { background: #0B1120; border-radius: 12px; padding: 20px; border: 1px solid #1E293B; border-top: 4px solid #3B82F6; }
     
@@ -49,7 +54,8 @@ st.markdown("""
 # ==========================================
 # 2. MOTOR DE DADOS E ALGORITMOS
 # ==========================================
-API_KEY = "8171043bf0a322286bb127947dbd4041" # Idealmente deves colocar em st.secrets no futuro
+# Idealmente usar st.secrets["API_KEY"], fallback para a chave pública para testes
+API_KEY = st.secrets.get("API_KEY", "8171043bf0a322286bb127947dbd4041") 
 API_HOST = "v3.football.api-sports.io"
 HEADERS = {
     "x-apisports-key": API_KEY,
@@ -59,7 +65,7 @@ HEADERS = {
 def safe_float(val, default=1.0):
     try: 
         if val is None: return default
-        return float(val)
+        return max(float(val), 0.1) # Piso de 0.1 para evitar colapso de divisões ou multiplicações por zero
     except (ValueError, TypeError): 
         return default
 
@@ -78,6 +84,7 @@ def calculate_auto_xg(s_h, s_a):
     def get_momentum_factor(form_str):
         if not form_str or form_str == 'N/A': return 1.0
         recent = form_str[-5:]
+        if not recent: return 1.0
         pts = sum([3 if c=='W' else 1 if c=='D' else 0 for c in recent])
         max_pts = len(recent) * 3
         return 0.90 + ((pts / max_pts) * 0.20) if max_pts > 0 else 1.0
@@ -91,7 +98,7 @@ def get_pro_stats(team_id, league_id, season="2025"):
     try:
         url = f"https://{API_HOST}/teams/statistics"
         params = {"league": league_id, "season": season, "team": team_id}
-        r = requests.get(url, headers=HEADERS, params=params).json()
+        r = requests.get(url, headers=HEADERS, params=params, timeout=10).json()
         stats = r.get('response', {})
         goals = stats.get('goals', {})
         fixtures = stats.get('fixtures', {})
@@ -104,7 +111,7 @@ def get_pro_stats(team_id, league_id, season="2025"):
             "form": stats.get('form', 'N/A'),
             "cs_pct": safe_float(stats.get('clean_sheet', {}).get('total', 0)) / safe_float(fixtures.get('played', {}).get('total', 1), 1.0)
         }
-    except:
+    except Exception as e:
         return {"h_f": 1.5, "h_a": 1.1, "a_f": 1.2, "a_a": 1.4, "form": "N/A", "cs_pct": 0.1}
 
 @st.cache_data(ttl=1800)
@@ -112,7 +119,7 @@ def get_auto_odds(fixture_id, bookmaker_id=8):
     odds = {k: 0.0 for k in ["1","X","2","O15","U15","O25","U25","O35","U35","BTTS_Y","BTTS_N","AH_P15","AH_P05","AH_00","AH_M05","AH_M10","AH_M15"]}
     try:
         url = f"https://{API_HOST}/odds"
-        r = requests.get(url, headers=HEADERS, params={"fixture": fixture_id, "bookmaker": bookmaker_id}).json()
+        r = requests.get(url, headers=HEADERS, params={"fixture": fixture_id, "bookmaker": bookmaker_id}, timeout=10).json()
         if not r.get('response'): return odds
         
         bookmakers = r['response'][0].get('bookmakers', [])
@@ -127,7 +134,8 @@ def get_auto_odds(fixture_id, bookmaker_id=8):
                 odds["O25"], odds["U25"] = vals.get('Over 2.5', 0), vals.get('Under 2.5', 0)
             elif name == 'Both Teams Score': odds["BTTS_Y"], odds["BTTS_N"] = vals.get('Yes', 0), vals.get('No', 0)
             elif name == 'Asian Handicap':
-                odds["AH_P15"], odds["AH_00"] = vals.get('Home +1.5', 0), vals.get('Home +0.0', vals.get('Home 0.0', 0))
+                odds["AH_P15"] = vals.get('Home +1.5', 0)
+                odds["AH_00"] = vals.get('Home +0.0', vals.get('Home 0.0', 0))
                 odds["AH_M10"] = vals.get('Home -1.0', 0)
     except: pass
     return odds
@@ -138,7 +146,7 @@ def fetch_fixtures(league_id, season="2025", target_date=None):
     try:
         url = f"https://{API_HOST}/fixtures"
         params = {"date": target_date.strftime('%Y-%m-%d'), "league": league_id, "season": season}
-        r = requests.get(url, headers=HEADERS, params=params).json()
+        r = requests.get(url, headers=HEADERS, params=params, timeout=10).json()
         return r.get('response', [])
     except: return []
 
@@ -147,12 +155,16 @@ def run_master_math(lh, la, rho, boost, zip_factor):
     max_g = 12 
     prob_mtx = np.outer(poisson.pmf(np.arange(max_g), lh), poisson.pmf(np.arange(max_g), la))
     
+    # Aplicação Fator Dixon-Coles
     if rho != 0:
         prob_mtx[0,0] *= (1 - lh * la * rho); prob_mtx[0,1] *= (1 + lh * rho)
         prob_mtx[1,0] *= (1 + la * rho); prob_mtx[1,1] *= (1 - rho)
         
     prob_mtx[0,0] *= zip_factor 
-    prob_mtx /= prob_mtx.sum() 
+    # Prevenção rigorosa de matriz nula ou negativa
+    prob_mtx = np.clip(prob_mtx, 0, None)
+    prob_sum = prob_mtx.sum()
+    if prob_sum > 0: prob_mtx /= prob_sum 
     
     goals_sum = np.add.outer(np.arange(max_g), np.arange(max_g))
     diff_matrix = np.subtract.outer(np.arange(max_g), np.arange(max_g))
@@ -177,7 +189,7 @@ def run_master_math(lh, la, rho, boost, zip_factor):
 with st.sidebar:
     st.markdown("<h2 style='color:#00FF88;'>🏛️ ORACLE V140</h2>", unsafe_allow_html=True)
     
-    bankroll = st.number_input("💰 BANCA TOTAL (€)", value=1000.0, key="bk_pro")
+    bankroll = st.number_input("💰 BANCA TOTAL (€)", value=1000.0, step=100.0, key="bk_pro")
     data_consulta = st.date_input("📅 DATA DA ANÁLISE", value=date.today(), key="date_pro")
     
     l_map = {"Amigáveis Seleções 🌍": 10, "Premier League 🏴󠁧󠁢󠁥󠁮󠁧󠁿": 39, "La Liga 🇪🇸": 140, "Primeira Liga 🇵🇹": 94, "Champions League 🇪🇺": 2}
@@ -187,13 +199,12 @@ with st.sidebar:
     fix_data = fetch_fixtures(l_map[ln], season=target_season, target_date=data_consulta)
     
     m_sel = None
-    auto_odds = {} # Inicializa vazio para evitar quebras
+    auto_odds = {} 
     
     if fix_data:
         m_map = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}": i for i, f in enumerate(fix_data)}
         m_display = st.selectbox("🎯 JOGO", list(m_map.keys()), key="m_pro")
         m_sel = fix_data[m_map[m_display]]
-        # AQUI SIM! Puxamos as odds só DEPOIS de sabermos qual é o jogo!
         auto_odds = get_auto_odds(m_sel['fixture']['id'])
     else:
         st.warning("Nenhum jogo encontrado para esta data/liga.")
@@ -201,8 +212,7 @@ with st.sidebar:
     st.markdown("---")
     use_auto_xg = st.checkbox("🤖 Usar IA para xG Dinâmico", value=True)
     zip_factor = st.slider("Fator Tático (0-0)", 0.8, 1.5, 1.1)
-    execute = st.button("🚀 INICIAR ALPHA SCAN", key="exe_pro")
-
+    
     with st.expander("⚙️ ODDS MANUAIS / AJUSTES"):
         c1, c2, c3 = st.columns(3)
         o_1 = c1.number_input("Casa", value=float(auto_odds.get("1", 1.01) or 1.01))
@@ -281,7 +291,8 @@ with tab1:
             best = sorted(safe_bets, key=lambda x: x[4], reverse=True)[0] if safe_bets else sorted(value_bets, key=lambda x: x[4], reverse=True)[0]
             
             edge_final, odd_justa = best[4], best[5]
-            kelly_frac = max(0, (edge_final / (best[3] - 1)) * 0.20)
+            # Fractional Kelly restrito a 15% para proteger carteiras de subscritores
+            kelly_frac = max(0, min((edge_final / (best[3] - 1)) * 0.15, 0.05)) 
             stake_sugerida = bankroll * kelly_frac
             
             col_rec, col_btn = st.columns([3, 1])
@@ -304,7 +315,8 @@ with tab1:
                         "Aposta": best[0], "Odd Comprada": best[3], "Odd Real": round(odd_justa, 2), 
                         "Stake (€)": round(stake_sugerida, 2), "Lucro Extra": round(edge_final, 3), "Estado": "Pendente"
                     }])
-                    st.session_state.bet_history = pd.concat([st.session_state.bet_history, nova_aposta], ignore_index=True)
+                    if not nova_aposta.empty and not nova_aposta.isna().all().all():
+                         st.session_state.bet_history = pd.concat([st.session_state.bet_history, nova_aposta], ignore_index=True)
                     st.toast("Aposta gravada no histórico!", icon="✅")
         else:
             st.warning("Mercado Eficiente - Nenhuma margem de lucro (Edge) encontrada neste evento.")
@@ -323,7 +335,7 @@ with tab1:
         col_ai, col_chart = st.columns([1, 1])
         with col_ai:
             msg = f"O mercado de <b>{best[0]}</b> tem {edge_final:.1%} de vantagem." if value_bets else "Sem desvios estatísticos significativos."
-            st.markdown(f"<div class='ai-box'><h4 style='color:#00FF88;'>🤖 Analista Oracle</h4><p>{msg} Modelo Poisson Bivariado detetou convergência.</p></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='ai-box'><h4 style='color:#00FF88;'>🤖 Analista Oracle</h4><p>{msg} Modelo Poisson detetou convergência tática.</p></div>", unsafe_allow_html=True)
         with col_chart:
             xr = np.arange(7); fig = go.Figure()
             fig.add_trace(go.Scatter(x=xr, y=mtx.sum(axis=1), name=m_sel['teams']['home']['name'], mode='lines', fill='tozeroy', line=dict(color='#00FF88')))
@@ -345,25 +357,40 @@ with tab2:
                     home, away, fix_id = f['teams']['home']['name'], f['teams']['away']['name'], f['fixture']['id']
                     status_text.markdown(f"🔍 **Analisando:** {home} vs {away}...")
                     
-                    s_h, s_a, odds = get_pro_stats(f['teams']['home']['id'], l_map[ln]), get_pro_stats(f['teams']['away']['id'], l_map[ln]), get_auto_odds(fix_id)
+                    s_h, s_a = get_pro_stats(f['teams']['home']['id'], l_map[ln]), get_pro_stats(f['teams']['away']['id'], l_map[ln])
+                    odds = get_auto_odds(fix_id)
                     
                     if odds.get("1", 0) > 1.10:
                         lh, la = calculate_auto_xg(s_h, s_a) if use_auto_xg else ((s_h['h_f']*s_a['a_a'])**0.5, (s_a['a_f']*s_h['h_a'])**0.5)
                         res, _ = run_master_math(lh, la, -0.11, 0.0 if use_auto_xg else 0.12, zip_factor)
                         
+                        # Expandimos a lista de mercados scaneados para uma auditoria total do portfólio
                         scan_mkts = [
                             (f"{home} (Venc)", res["Vencedor Casa"], odds.get("1", 0)),
                             (f"{away} (Venc)", res["Vencedor Fora"], odds.get("2", 0)),
-                            (f"Over 2.5 ({home})", res["Mais de 2.5 Golos"], odds.get("O25", 0))
+                            (f"Empate (X)", res["Empate (X)"], odds.get("X", 0)),
+                            (f"Over 2.5", res["Mais de 2.5 Golos"], odds.get("O25", 0)),
+                            (f"Under 2.5", res["Menos de 2.5 Golos"], odds.get("U25", 0)),
+                            (f"BTTS (Sim)", res["Ambas Marcam (Sim)"], odds.get("BTTS_Y", 0))
                         ]
                         
                         for m_name, prob_data, odd in scan_mkts:
-                            p_win, p_void = prob_data[0] if isinstance(prob_data, tuple) else prob_data, prob_data[1] if isinstance(prob_data, tuple) else 0.0
-                            if 1.50 <= odd <= 4.00 and p_win > 0:
+                            p_win = prob_data[0] if isinstance(prob_data, tuple) else prob_data
+                            p_void = prob_data[1] if isinstance(prob_data, tuple) else 0.0
+                            
+                            if 1.40 <= odd <= 4.00 and p_win > 0:
                                 edge = (p_win * odd) + p_void - 1
-                                if edge > 0.045:
-                                    portfolio.append({"Jogo/Aposta": m_name, "Certeza": p_win, "Odd Real": (1 - p_void) / p_win, "Odd Casa": odd, "Lucro Extra": edge, "Kelly_Raw": max(0, (edge / (odd - 1)) * 0.125)})
-                except: continue
+                                if edge > 0.045: # Apenas mercados com mais de 4.5% de Edge
+                                    portfolio.append({
+                                        "Jogo": f"{home} vs {away}",
+                                        "Aposta": m_name, 
+                                        "Certeza": p_win, 
+                                        "Odd Real": (1 - p_void) / p_win, 
+                                        "Odd Casa": odd, 
+                                        "Lucro Extra": edge, 
+                                        "Kelly_Raw": max(0, (edge / (odd - 1)) * 0.125)
+                                    })
+                except Exception as e: continue
                 progress_bar.progress((i + 1) / len(fix_data))
             
             status_text.success("✅ Varredura Concluída!")
@@ -380,30 +407,31 @@ with tab2:
                 """, unsafe_allow_html=True)
                 
                 fig_port = go.Figure(data=[go.Table(
-                    columnorder = [1,2,3,4,5], columnwidth = [250, 100, 100, 100, 120],
+                    columnorder = [1,2,3,4,5,6], columnwidth = [200, 150, 80, 80, 80, 100],
                     header=dict(
-                        values=['<b>JOGO E APOSTA</b>', '<b>PROB.</b>', '<b>ODD CASA</b>', '<b>EDGE</b>', '<b>STAKE SUGERIDA</b>'],
+                        values=['<b>JOGO</b>', '<b>APOSTA</b>', '<b>PROB.</b>', '<b>ODD</b>', '<b>EDGE</b>', '<b>STAKE SUGERIDA</b>'],
                         fill_color='#020408', align='center', font=dict(color='#64748B', size=11), height=45
                     ),
                     cells=dict(
                         values=[
-                            df_port["Jogo/Aposta"], 
+                            df_port["Jogo"],
+                            df_port["Aposta"], 
                             df_port["Certeza"].map('{:.1%}'.format), 
                             df_port["Odd Casa"].map('{:.2f}'.format), 
                             df_port["Lucro Extra"].map('{:+.1%}'.format), 
                             df_port["Stake (€)"].map('{:.2f}€'.format)
                         ],
                         fill_color='#0B1120', align='center', 
-                        font=dict(color=['#FFFFFF', '#E2E8F0', '#E2E8F0', '#00FF88', '#FFD700'], size=13, family='JetBrains Mono'),
+                        font=dict(color=['#FFFFFF', '#FFFFFF', '#E2E8F0', '#E2E8F0', '#00FF88', '#FFD700'], size=13, family='JetBrains Mono'),
                         height=40
                     )
                 )])
                 fig_port.update_layout(margin=dict(l=0,r=0,t=0,b=0), height=300, paper_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_port, use_container_width=True)
                 
-                st.info("💡 Dica: Distribuir o risco por vários jogos com 'Edge' positivo é a única forma de vencer a variância estatística.")
+                st.info("💡 Dica: Distribuir o risco por vários jogos com 'Edge' positivo é a única forma de vencer a variância estatística a longo prazo.")
             else:
-                st.error("Varredura terminada. O mercado está 'eficiente' hoje (odds muito baixas ou muito precisas). Recomenda-se não apostar.")
+                st.error("Varredura terminada. O mercado está 'eficiente' hoje (odds muito baixas ou ajustadas pelas casas de apostas). Recomenda-se preservar a banca.")
                 
 # ====== TAB 3: CAIXA FORTE ======
 with tab3:
@@ -470,8 +498,8 @@ with tab3:
             st.markdown(f"""
             <div style='background: rgba(0, 255, 136, 0.05); border-radius: 12px; padding: 20px; border: 1px solid rgba(0, 255, 136, 0.2); height: 100%;'>
                 <h4 style='color: #00FF88; margin-top: 0;'>Análise do Oráculo</h4>
-                <p style='font-size: 0.9rem; color: #E2E8F0;'>O teu <b>Edge Médio de {avg_edge:.1%}</b> indica que estás a comprar odds com um desconto significativo em relação à probabilidade real.</p>
-                <p style='font-size: 0.9rem; color: #94A3B8;'>Matematicamente, se mantiveres este volume, a variância será anulada e o teu lucro real convergirá para os <b>{expected_profit:.2f}€</b> projetados.</p>
+                <p style='font-size: 0.9rem; color: #E2E8F0;'>O teu <b>Edge Médio de {avg_edge:.1%}</b> indica que estás a comprar odds com um desconto significativo em relação à probabilidade real do nosso modelo matemático.</p>
+                <p style='font-size: 0.9rem; color: #94A3B8;'>Se mantiveres este volume consistentemente, a variância estatística será esmagada e o teu lucro real convergirá progressivamente para os <b>{expected_profit:.2f}€</b> projetados a longo prazo.</p>
             </div>
             """, unsafe_allow_html=True)
 
@@ -510,5 +538,3 @@ with tab3:
             if st.button("🗑️ LIMPAR TUDO", use_container_width=True):
                 st.session_state.bet_history = pd.DataFrame(columns=["Data", "Jogo", "Aposta", "Odd Comprada", "Odd Real", "Stake (€)", "Lucro Extra", "Estado"])
                 st.rerun()
-        with c_exp:
-            st.write("") # Espaçador
