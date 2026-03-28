@@ -381,6 +381,9 @@ def fetch_fixtures(league_id, season="2025", target_date=None):
 with st.sidebar:
     st.markdown("<h2 style='color:#00FF88; margin:0;'>🏛️ ORACLE V140</h2>", unsafe_allow_html=True)
     
+    # 1. Definições Críticas (Redundância para evitar o erro 'not defined')
+    api_host = "v3.football.api-sports.io"
+    
     bankroll = st.number_input("💰 BANCA TOTAL (€)", value=1000.0, step=50.0, key="main_bankroll")
 
     st.divider()
@@ -393,34 +396,33 @@ with st.sidebar:
         "La Liga 🇪🇸": 140, 
         "Primeira Liga 🇵🇹": 94, 
         "Serie A 🇮🇹": 135,
-        "Qualificação Mundial 🏆": 1,
         "Champions League 🇪🇺": 2
     }
     ln = st.selectbox("⚽ SELECIONAR LIGA", list(l_map.keys()), key="league_select")
 
+    # Época dinâmica: Seleções em 2026, Clubes em 2025
     target_season = "2026" if l_map[ln] in [1, 10] else "2025"
 
-    # Forçar definição das variáveis da API para evitar o erro "not defined"
-    api_host = "v3.football.api-sports.io"
-    
-    # Busca de jogos
-    fix_data = fetch_fixtures(l_map[ln], season=target_season, target_date=data_analise)
+    # 2. Execução da Busca (Passamos o host explicitamente se necessário)
+    try:
+        fix_data = fetch_fixtures(l_map[ln], season=target_season, target_date=data_analise)
+    except NameError:
+        st.error("A função 'fetch_fixtures' não foi encontrada. Verifica se a definiste no Bloco 2!")
+        fix_data = []
     
     m_sel = None
-    # Dicionário padrão seguro para evitar KeyError
-    auto_odds = {k: 1.01 for k in ["1","X","2","O15","U15","O25","U25","O35","U35","BTTS_Y","BTTS_N","AH_P15","AH_P05","AH_00","AH_M05","AH_M10","AH_M15"]}
+    auto_odds = {k: 1.01 for k in ["1","X","2","O25","U25","BTTS_Y","BTTS_N"]}
 
     if fix_data:
         m_map = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}": i for i, f in enumerate(fix_data)}
         m_display = st.selectbox("🎯 JOGO EM FOCO", list(m_map.keys()), key="match_select")
         m_sel = fix_data[m_map[m_display]]
         
-        with st.spinner('Sincronizando Odds...'):
-            # Tenta carregar as odds reais
+        with st.spinner('A carregar dados Apex...'):
             api_odds = get_auto_odds(m_sel['fixture']['id'])
-            auto_odds.update(api_odds) # Só atualiza o que a API encontrar
+            auto_odds.update(api_odds)
     else:
-        st.warning("Nenhum jogo encontrado.")
+        st.info("Nenhum jogo encontrado para esta seleção.")
 
     st.divider()
     
