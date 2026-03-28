@@ -4,8 +4,8 @@ from scipy.stats import poisson
 import pandas as pd
 import plotly.graph_objects as go
 import requests
-from datetime import date
-import time
+from datetime import date, datetime
+import math
 
 # --- 1. CONFIGURAÇÃO DE DESIGN E BASE DE DADOS (APEX BUILD) ---
 import streamlit as st
@@ -163,7 +163,10 @@ st.markdown("""
 # Configurações de API
 API_KEY = "8171043bf0a322286bb127947dbd4041"
 API_HOST = "v3.football.api-sports.io"
-HEADERS = {"x-apisports-key": API_KEY}
+HEADERS = {
+    "x-apisports-key": api_key,
+    "x-apisports-host": api_host
+}
 
 def safe_float(val, default=1.0):
     try: 
@@ -363,73 +366,56 @@ def run_master_math(lh, la, rho, boost, zip_factor):
 # --- FUNÇÃO AUXILIAR PARA CACHE DE JOGOS ---
 @st.cache_data(ttl=3600)
 def fetch_fixtures(league_id, season="2025", target_date=None):
-    # Se não passarmos data, ele assume hoje por padrão
+    # Esta função agora substitui a antiga 'fetch_today_fixtures'
     if target_date is None:
         target_date = date.today()
     
-    formatted_date = target_date.strftime('%Y-%m-%d')
-    
+    date_str = target_date.strftime('%Y-%m-%d')
     try:
         url = f"https://{api_host}/fixtures"
-        params = {"date": formatted_date, "league": league_id, "season": season}
-        response = requests.get(url, headers=headers, params=params).json()
-        return response.get('response', [])
+        params = {"date": date_str, "league": league_id, "season": season}
+        r = requests.get(url, headers=headers, params=params).json()
+        return r.get('response', [])
     except Exception as e:
-        st.error(f"Erro na API: {e}")
         return []
 
-with st.sidebar:
-    st.markdown("<h2 style='color:#00FF88; margin:0;'>🏛️ ORACLE V140</h2>", unsafe_allow_html=True)
-    
-    # 1. Definições Críticas (Redundância para evitar o erro 'not defined')
-    api_host = "v3.football.api-sports.io"
-    
-    bankroll = st.number_input("💰 BANCA TOTAL (€)", value=1000.0, step=50.0, key="main_bankroll")
+# Criamos um "apelido" para o código antigo não crashar
+fetch_today_fixtures = fetch_fixtures 
 
-    st.divider()
+# --- 3. SIDEBAR APEX (SEM ERROS) ---
+with st.sidebar:
+    st.markdown("<h2 style='color:#00FF88;'>🏛️ ORACLE V140</h2>", unsafe_allow_html=True)
     
-    data_analise = st.date_input("📅 DATA DA ANÁLISE", value=date.today(), min_value=date.today(), key="calendar_select")
+    bankroll = st.number_input("💰 BANCA TOTAL (€)", value=1000.0, key="bk_pro")
+    
+    # Seletor de data (A funcionalidade que pediste)
+    data_consulta = st.date_input("📅 DATA DA ANÁLISE", value=date.today(), key="date_pro")
     
     l_map = {
         "Amigáveis Seleções 🌍": 10,
         "Premier League 🏴󠁧󠁢󠁥󠁮󠁧󠁿": 39, 
         "La Liga 🇪🇸": 140, 
         "Primeira Liga 🇵🇹": 94, 
-        "Serie A 🇮🇹": 135,
         "Champions League 🇪🇺": 2
     }
-    ln = st.selectbox("⚽ SELECIONAR LIGA", list(l_map.keys()), key="league_select")
-
-    # Época dinâmica: Seleções em 2026, Clubes em 2025
-    target_season = "2026" if l_map[ln] in [1, 10] else "2025"
-
-    # 2. Execução da Busca (Passamos o host explicitamente se necessário)
-    try:
-        fix_data = fetch_fixtures(l_map[ln], season=target_season, target_date=data_analise)
-    except NameError:
-        st.error("A função 'fetch_fixtures' não foi encontrada. Verifica se a definiste no Bloco 2!")
-        fix_data = []
+    ln = st.selectbox("⚽ LIGA", list(l_map.keys()), key="ln_pro")
     
-    m_sel = None
-    auto_odds = {k: 1.01 for k in ["1","X","2","O25","U25","BTTS_Y","BTTS_N"]}
-
+    # Define a season (2026 para amigáveis do mundial, 2025 para ligas atuais)
+    target_season = "2026" if l_map[ln] in [1, 10] else "2025"
+    
+    # CHAMADA SEGURA
+    fix_data = fetch_fixtures(l_map[ln], season=target_season, target_date=data_consulta)
+    
     if fix_data:
         m_map = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}": i for i, f in enumerate(fix_data)}
-        m_display = st.selectbox("🎯 JOGO EM FOCO", list(m_map.keys()), key="match_select")
+        m_display = st.selectbox("🎯 JOGO", list(m_map.keys()), key="m_pro")
         m_sel = fix_data[m_map[m_display]]
-        
-        with st.spinner('A carregar dados Apex...'):
-            api_odds = get_auto_odds(m_sel['fixture']['id'])
-            auto_odds.update(api_odds)
     else:
-        st.info("Nenhum jogo encontrado para esta seleção.")
+        st.warning("Nenhum jogo encontrado para esta data/liga.")
+        m_sel = None
 
-    st.divider()
-    
-    use_auto_xg = st.toggle("🧠 MODO AUTO-xG", value=True, key="xg_toggle")
-    zip_factor = st.slider("⚡ FATOR 0-0", 0.80, 1.30, 1.05, 0.05, key="zip_slider")
-    
-    execute = st.button("🚀 INICIAR ALPHA SCAN", key="btn_execute")
+    # Botão de Execução
+    execute = st.button("🚀 INICIAR ALPHA SCAN", key="exe_pro")
 
     # Override de Odds SEGURO (Usando .get para evitar KeyError)
     with st.expander("⚙️ ODDS MANUAIS"):
