@@ -382,15 +382,13 @@ with st.sidebar:
     st.markdown("<h2 style='color:#00FF88; margin:0;'>🏛️ ORACLE V140</h2>", unsafe_allow_html=True)
     st.markdown("<p style='font-size:0.7rem; color:#64748B; margin-bottom:20px;'>APEX QUANTITATIVE BUILD</p>", unsafe_allow_html=True)
     
-    # Gestão de Capital
-    bankroll = st.number_input("💰 BANCA TOTAL (€)", value=1000.0, step=50.0)
+    bankroll = st.number_input("💰 BANCA TOTAL (€)", value=1000.0, step=50.0, key="main_bankroll")
 
     st.divider()
     
-    # NOVO: Seletor de Data para vários dias
-    data_analise = st.date_input("📅 DATA DA ANÁLISE", value=date.today(), min_value=date.today())
+    # Seletor de Data
+    data_analise = st.date_input("📅 DATA DA ANÁLISE", value=date.today(), min_value=date.today(), key="calendar_select")
     
-    # Mapeamento de Ligas (Amigáveis incluídos)
     l_map = {
         "Amigáveis Seleções 🌍": 10,
         "Premier League 🏴󠁧󠁢󠁥󠁮󠁧󠁿": 39, 
@@ -400,21 +398,20 @@ with st.sidebar:
         "Qualificação Mundial 🏆": 1,
         "Champions League 🇪🇺": 2
     }
-    ln = st.selectbox("⚽ SELECIONAR LIGA", list(l_map.keys()))
+    ln = st.selectbox("⚽ SELECIONAR LIGA", list(l_map.keys()), key="league_select")
 
-    # Lógica de Temporada (2026 para seleções, 2025 para clubes)
     target_season = "2026" if l_map[ln] in [1, 10] else "2025"
 
-    # Busca de jogos usando a nossa nova função fetch_fixtures
+    # CHAMADA DA API (Certifica-te que api_host e headers foram definidos no topo)
     fix_data = fetch_fixtures(l_map[ln], season=target_season, target_date=data_analise)
     
-    # Variáveis de controle para evitar NameError mais à frente
     m_sel = None
-    auto_odds = {k: 1.01 for k in ["1","X","2","O15","U15","O25","U25","O35","U35","BTTS_Y","BTTS_N","AH_P15","AH_P05","AH_00","AH_M05","AH_M10","AH_M15"]}
+    # Odds seguras por defeito
+    auto_odds = {k: 1.01 for k in ["1","X","2","O15","U15","O25","U25","O35","U35","BTTS_Y","BTTS_N"]}
 
     if fix_data:
         m_map = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}": i for i, f in enumerate(fix_data)}
-        m_display = st.selectbox("🎯 JOGO EM FOCO", list(m_map.keys()))
+        m_display = st.selectbox("🎯 JOGO EM FOCO", list(m_map.keys()), key="match_select")
         m_sel = fix_data[m_map[m_display]]
         
         with st.spinner('Sincronizando Odds Apex...'):
@@ -424,25 +421,19 @@ with st.sidebar:
 
     st.divider()
     
-    # Calibração de Elite
     st.markdown("<p style='font-size:0.75rem; color:#00FF88; font-weight:800;'>🛠️ CALIBRAÇÃO TÁTICA</p>", unsafe_allow_html=True)
-    use_auto_xg = st.toggle("🧠 MODO AUTO-xG", value=True)
+    use_auto_xg = st.toggle("🧠 MODO AUTO-xG", value=True, key="xg_toggle")
     
-    zip_factor = st.slider(
-        "⚡ FATOR 0-0", 
-        0.80, 1.30, 1.05, 0.05,
-        help="0.90 para Amigáveis (mais golos). 1.15 para Finais (menos golos)."
-    )
+    zip_factor = st.slider("⚡ FATOR 0-0", 0.80, 1.30, 1.05, 0.05, key="zip_slider")
     
-    execute = st.button("🚀 INICIAR ALPHA SCAN")
+    execute = st.button("🚀 INICIAR ALPHA SCAN", key="btn_execute")
 
-    # Override de Odds (Expander)
+    # Override de Odds com Chaves Únicas (Resolve o DuplicateElementId)
     with st.expander("⚙️ ODDS MANUAIS"):
         c1, c2, c3 = st.columns(3)
-        o_1 = c1.number_input("1", value=float(auto_odds.get("1", 1.01)), step=0.01)
-        o_x = c2.number_input("X", value=float(auto_odds.get("X", 1.01)), step=0.01)
-        o_2 = c3.number_input("2", value=float(auto_odds.get("2", 1.01)), step=0.01)
-        # Outras odds podem ser adicionadas aqui seguindo o mesmo padrão
+        o_1 = c1.number_input("Odd Casa (1)", value=float(auto_odds.get("1", 1.01)), step=0.01, key="manual_1")
+        o_x = c2.number_input("Odd Empate (X)", value=float(auto_odds.get("X", 1.01)), step=0.01, key="manual_x")
+        o_2 = c3.number_input("Odd Fora (2)", value=float(auto_odds.get("2", 1.01)), step=0.01, key="manual_2")
     
     # 3. Calibração Tática (O Cérebro)
     st.markdown("<p style='font-size:0.75rem; color:#00FF88; font-weight:800;'>🛠️ AJUSTE DO ALGORITMO</p>", unsafe_allow_html=True)
