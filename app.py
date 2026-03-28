@@ -1,10 +1,10 @@
-import streamlit as st
+ import streamlit as st
 import numpy as np
 from scipy.stats import poisson
 import pandas as pd
 import plotly.graph_objects as go
 import requests
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import math
 
 # --- 1. CONFIGURAÇÃO DE DESIGN E BASE DE DADOS (APEX BUILD) ---
@@ -23,7 +23,6 @@ st.set_page_config(
 if 'bet_history' not in st.session_state:
     st.session_state.bet_history = pd.DataFrame(columns=[
         "Data", "Jogo", "Aposta", "Odd Comprada", "Odd Real", "Stake (€)", "Lucro Extra", "Estado"
-    ])
 
 # 3. Engine de Estilo (CSS Injection)
 st.markdown("""
