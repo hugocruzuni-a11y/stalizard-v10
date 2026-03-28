@@ -380,49 +380,69 @@ def fetch_fixtures(league_id, season="2025", target_date=None):
 
 with st.sidebar:
     st.markdown("<h2 style='color:#00FF88; margin:0;'>🏛️ ORACLE V140</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:0.7rem; color:#64748B; margin-bottom:20px;'>APEX QUANTITATIVE BUILD</p>", unsafe_allow_html=True)
     
+    # Gestão de Capital
     bankroll = st.number_input("💰 BANCA TOTAL (€)", value=1000.0, step=50.0)
 
-    # --- NOVO SELETOR DE DATA ---
-    st.markdown("---")
-    data_consulta = st.date_input("📅 DATA DA ANÁLISE", value=date.today(), min_value=date.today())
+    st.divider()
     
-    # --- DICIONÁRIO EXPANDIDO (AMIGÁVEIS E SELEÇÕES) ---
+    # NOVO: Seletor de Data para vários dias
+    data_analise = st.date_input("📅 DATA DA ANÁLISE", value=date.today(), min_value=date.today())
+    
+    # Mapeamento de Ligas (Amigáveis incluídos)
     l_map = {
         "Amigáveis Seleções 🌍": 10,
         "Premier League 🏴󠁧󠁢󠁥󠁮󠁧󠁿": 39, 
         "La Liga 🇪🇸": 140, 
         "Primeira Liga 🇵🇹": 94, 
         "Serie A 🇮🇹": 135,
-        "Champions League 🇪🇺": 2,
-        "Qualificação Mundial 🏆": 1
+        "Qualificação Mundial 🏆": 1,
+        "Champions League 🇪🇺": 2
     }
-    ln = st.selectbox("⚽ LIGA / COMPETIÇÃO", list(l_map.keys()))
+    ln = st.selectbox("⚽ SELECIONAR LIGA", list(l_map.keys()))
 
-    # Lógica de Temporada Dinâmica (Amigáveis usam o ano civil 2026)
+    # Lógica de Temporada (2026 para seleções, 2025 para clubes)
     target_season = "2026" if l_map[ln] in [1, 10] else "2025"
 
-    # CHAMADA ATUALIZADA COM DATA DINÂMICA
-    fix_data = fetch_fixtures(l_map[ln], season=target_season, target_date=data_consulta)
-    ln = st.selectbox("⚽ SELECIONAR LIGA", list(l_map.keys()))
+    # Busca de jogos usando a nossa nova função fetch_fixtures
+    fix_data = fetch_fixtures(l_map[ln], season=target_season, target_date=data_analise)
     
-    # Busca de jogos com Cache para poupar créditos da API
-fix_data = fetch_fixtures(l_map[ln], target_date=sel_date)
+    # Variáveis de controle para evitar NameError mais à frente
+    m_sel = None
+    auto_odds = {k: 1.01 for k in ["1","X","2","O15","U15","O25","U25","O35","U35","BTTS_Y","BTTS_N","AH_P15","AH_P05","AH_00","AH_M05","AH_M10","AH_M15"]}
 
     if fix_data:
         m_map = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}": i for i, f in enumerate(fix_data)}
-        m_display = st.selectbox("🎯 JOGO EM FOCO (Deep Dive)", list(m_map.keys()))
+        m_display = st.selectbox("🎯 JOGO EM FOCO", list(m_map.keys()))
         m_sel = fix_data[m_map[m_display]]
         
-        # Carregamento automático de Odds (Bet365 id: 8)
-        with st.spinner('Sincronizando Odds...'):
+        with st.spinner('Sincronizando Odds Apex...'):
             auto_odds = get_auto_odds(m_sel['fixture']['id'])
     else:
-        st.info("Nenhum jogo encontrado para hoje nesta liga.")
-        m_sel = None
-        auto_odds = {k: 0.0 for k in ["1","X","2","O15","U15","O25","U25","O35","U35","BTTS_Y","BTTS_N","AH_P15","AH_P05","AH_00","AH_M05","AH_M10","AH_M15"]}
+        st.warning("Nenhum jogo encontrado para esta data/liga.")
 
-    st.markdown("---")
+    st.divider()
+    
+    # Calibração de Elite
+    st.markdown("<p style='font-size:0.75rem; color:#00FF88; font-weight:800;'>🛠️ CALIBRAÇÃO TÁTICA</p>", unsafe_allow_html=True)
+    use_auto_xg = st.toggle("🧠 MODO AUTO-xG", value=True)
+    
+    zip_factor = st.slider(
+        "⚡ FATOR 0-0", 
+        0.80, 1.30, 1.05, 0.05,
+        help="0.90 para Amigáveis (mais golos). 1.15 para Finais (menos golos)."
+    )
+    
+    execute = st.button("🚀 INICIAR ALPHA SCAN")
+
+    # Override de Odds (Expander)
+    with st.expander("⚙️ ODDS MANUAIS"):
+        c1, c2, c3 = st.columns(3)
+        o_1 = c1.number_input("1", value=float(auto_odds.get("1", 1.01)), step=0.01)
+        o_x = c2.number_input("X", value=float(auto_odds.get("X", 1.01)), step=0.01)
+        o_2 = c3.number_input("2", value=float(auto_odds.get("2", 1.01)), step=0.01)
+        # Outras odds podem ser adicionadas aqui seguindo o mesmo padrão
     
     # 3. Calibração Tática (O Cérebro)
     st.markdown("<p style='font-size:0.75rem; color:#00FF88; font-weight:800;'>🛠️ AJUSTE DO ALGORITMO</p>", unsafe_allow_html=True)
