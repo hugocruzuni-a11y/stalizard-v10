@@ -50,7 +50,6 @@ st.markdown("""
     .ai-box { background: rgba(0, 255, 136, 0.02); border-radius: 12px; padding: 24px; border: 1px solid rgba(0, 255, 136, 0.15); border-top: 4px solid #00FF88; }
     .chart-box { background: #0B1120; border-radius: 12px; padding: 20px; border: 1px solid #1E293B; border-top: 4px solid #3B82F6; }
     
-    /* Botões personalizados Streamlit */
     div.stButton > button { background: linear-gradient(90deg, #00FF88 0%, #00BD63 100%) !important; color: #000000 !important; font-weight: 800 !important; height: 3.5rem !important; border-radius: 8px !important; border: none !important; text-transform: uppercase; letter-spacing: 1px; }
     div.stButton > button:hover { opacity: 0.9; border: 1px solid #FFFFFF !important; }
     </style>
@@ -126,7 +125,7 @@ def get_pro_stats(team_id, league_id, season="2025"):
             "form": stats.get('form', 'N/A'),
             "cs_pct": safe_float(stats.get('clean_sheet', {}).get('total', 0), 0) / safe_float(fixtures.get('played', {}).get('total', 1), 1.0)
         }
-    except Exception as e:
+    except Exception:
         return {"h_f": 1.35, "h_a": 1.35, "a_f": 1.35, "a_a": 1.35, "form": "N/A", "cs_pct": 0.0}
 
 @st.cache_data(ttl=1800)
@@ -217,7 +216,7 @@ def login_screen():
             submit = st.form_submit_button("Entrar no Sistema", use_container_width=True)
             
             if submit:
-                # Utilizador e password hardcoded para exemplo (Altera conforme necessites)
+                # Utilizador e password para exemplo
                 if username == "admin" and password == "apex123":
                     st.session_state.logged_in = True
                     st.session_state.username = username
@@ -232,7 +231,6 @@ def main_app():
     with st.sidebar:
         st.markdown(f"<h2 style='color:#00FF88;'>🏛️ ORACLE V140</h2><p style='color:#94A3B8; font-size:0.8rem;'>Piloto: {st.session_state.username.upper()}</p>", unsafe_allow_html=True)
         
-        # Banca dinâmica calculada pelo histórico
         banca_inicial = st.number_input("💰 BANCA INICIAL (€)", value=1000.0, step=100.0, key="bk_pro")
         data_consulta = st.date_input("📅 DATA DA ANÁLISE", value=date.today(), key="date_pro")
         
@@ -326,12 +324,19 @@ def main_app():
             </div>
             """, unsafe_allow_html=True)
 
+            # Aqui estava o erro sintático que causei! Foi devidamente corrigido com o fecho do parêntesis reto no "Empate (X)".
             raw_mkts = [
-                ("Vencedor Casa", res["Vencedor Casa"], o_1), ("Empate (X)", res["Empate (X)", o_x), ("Vencedor Fora", res["Vencedor Fora"], o_2),
-                ("Mais de 1.5 Golos", res["Mais de 1.5 Golos"], o_o15), ("Menos de 1.5 Golos", res["Menos de 1.5 Golos"], o_u15),
-                ("Mais de 2.5 Golos", res["Mais de 2.5 Golos"], o_o25), ("Menos de 2.5 Golos", res["Menos de 2.5 Golos"], o_u25),
-                ("Ambas Marcam (Sim)", res["Ambas Marcam (Sim)"], o_btts_y), ("Ambas Marcam (Não)", res["Ambas Marcam (Não)"], o_btts_n),
-                ("Empate Anula (Casa)", res["Empate Anula (Casa)"], o_ah_00), ("Handicap -1.0 (Casa)", res["Handicap -1.0 (Casa)"], o_ah_m10),
+                ("Vencedor Casa", res["Vencedor Casa"], o_1), 
+                ("Empate (X)", res["Empate (X)"], o_x), 
+                ("Vencedor Fora", res["Vencedor Fora"], o_2),
+                ("Mais de 1.5 Golos", res["Mais de 1.5 Golos"], o_o15), 
+                ("Menos de 1.5 Golos", res["Menos de 1.5 Golos"], o_u15),
+                ("Mais de 2.5 Golos", res["Mais de 2.5 Golos"], o_o25), 
+                ("Menos de 2.5 Golos", res["Menos de 2.5 Golos"], o_u25),
+                ("Ambas Marcam (Sim)", res["Ambas Marcam (Sim)"], o_btts_y), 
+                ("Ambas Marcam (Não)", res["Ambas Marcam (Não)"], o_btts_n),
+                ("Empate Anula (Casa)", res["Empate Anula (Casa)"], o_ah_00), 
+                ("Handicap -1.0 (Casa)", res["Handicap -1.0 (Casa)"], o_ah_m10),
                 ("Handicap +1.5 (Casa)", res["Handicap +1.5 (Casa)"], o_ah_p15)
             ]
             
@@ -433,7 +438,7 @@ def main_app():
                                             "Odd Real": (1 - p_void) / p_win, "Odd Casa": odd, "Lucro Extra": edge, 
                                             "Kelly_Raw": max(0, (edge / (odd - 1)) * 0.20)
                                         })
-                    except Exception as e: continue
+                    except Exception: continue
                     progress_bar.progress((i + 1) / len(fix_data))
                 
                 status_text.success("✅ Varredura Concluída!")
@@ -471,7 +476,6 @@ def main_app():
             st.markdown("<h3 style='margin-top:30px; font-size:1.2rem; color:#94A3B8;'>📋 ATUALIZE OS RESULTADOS ABAIXO</h3>", unsafe_allow_html=True)
             st.caption("Edite a coluna 'Estado' para calcular a sua banca real em tempo real.")
 
-            # Data Editor Interativo para gestão de vitórias/derrotas
             edited_df = st.data_editor(
                 df_hist,
                 use_container_width=True,
@@ -492,7 +496,7 @@ def main_app():
                 hide_index=True,
             )
 
-            # Verifica se o utilizador atualizou os resultados e salva
+            # Verifica e guarda as edições
             if not edited_df.equals(st.session_state.bet_history):
                 st.session_state.bet_history = edited_df
                 st.rerun()
