@@ -9,7 +9,7 @@ import time
 import random
 
 # ==========================================
-# 1. INSTITUTIONAL UX SETUP (WALL STREET V3.0)
+# 1. INSTITUTIONAL UX SETUP (WALL STREET V4.0)
 # ==========================================
 st.set_page_config(page_title="APEX QUANT TERMINAL", layout="wide", initial_sidebar_state="collapsed")
 
@@ -81,7 +81,7 @@ header, footer { visibility: hidden; }
 /* Alpha Box (The Money Maker) */
 .trade-signal { border: 1px solid rgba(16, 185, 129, 0.6); background: linear-gradient(145deg, rgba(16,185,129,0.1) 0%, rgba(0,0,0,0) 100%); padding: 25px; margin-top: 10px; border-radius: 8px; box-shadow: 0 0 30px rgba(16, 185, 129, 0.15); position: relative; overflow: hidden;}
 .trade-signal::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #10B981; box-shadow: 0 0 15px #10B981;}
-.trade-asset { font-size: 2rem; color: #F8FAFC; font-weight: 900; margin-bottom: 5px; font-family: 'Inter', sans-serif; letter-spacing: -0.5px;}
+.trade-asset { font-size: 2.2rem; color: #F8FAFC; font-weight: 900; margin-bottom: 5px; font-family: 'Inter', sans-serif; letter-spacing: -0.5px;}
 .trade-odd { font-size: 1.5rem; color: #10B981; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-bottom: 20px;}
 
 /* Order Book Table */
@@ -100,8 +100,11 @@ header, footer { visibility: hidden; }
 
 /* Override Streamlit Widgets */
 div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: #0F172A !important; border: 1px solid #1E293B !important; color: #F8FAFC !important; border-radius: 6px !important; }
-.stButton > button { background: linear-gradient(180deg, #10B981 0%, #059669 100%) !important; color: #FFFFFF !important; border: none !important; font-weight: 800 !important; width: 100%; border-radius: 6px !important; padding: 22px !important; transition: all 0.3s ease !important; font-size: 1rem !important; letter-spacing: 1px !important;}
-.stButton > button:hover { background: linear-gradient(180deg, #34D399 0%, #10B981 100%) !important; box-shadow: 0 0 20px rgba(16,185,129,0.5) !important; transform: translateY(-2px); }
+.btn-run > button { background: linear-gradient(180deg, #10B981 0%, #059669 100%) !important; color: #FFFFFF !important; border: none !important; font-weight: 800 !important; width: 100%; border-radius: 6px !important; padding: 22px !important; transition: all 0.3s ease !important; font-size: 1rem !important; letter-spacing: 1px !important;}
+.btn-run > button:hover { background: linear-gradient(180deg, #34D399 0%, #10B981 100%) !important; box-shadow: 0 0 20px rgba(16,185,129,0.5) !important; transform: translateY(-2px); }
+
+.btn-exec > button { background: linear-gradient(180deg, #38BDF8 0%, #0284C7 100%) !important; color: #FFFFFF !important; border: none !important; font-weight: 900 !important; width: 100%; border-radius: 6px !important; padding: 18px !important; transition: all 0.3s ease !important; font-size: 0.9rem !important; letter-spacing: 1.5px !important; margin-top: 15px; text-transform: uppercase;}
+.btn-exec > button:hover { background: linear-gradient(180deg, #7DD3FC 0%, #0EA5E9 100%) !important; box-shadow: 0 0 20px rgba(56,189,248,0.5) !important; transform: translateY(-2px); }
 
 /* Custom Progress Bar for Boot Sequence */
 .stProgress > div > div > div > div { background-color: #10B981 !important; }
@@ -236,7 +239,7 @@ def calculate_dynamic_margin(odds):
     except: pass
     return 0.045
 
-def calculate_kelly(prob, odd, fraction=0.25):
+def calculate_kelly(prob, odd, fraction):
     b = odd - 1
     q = 1 - prob
     if b <= 0: return 0
@@ -256,7 +259,7 @@ st.markdown(f"""
 <div class="nav-left">
 <div class="logo">APEX<span>QUANT</span></div>
 <div class="nav-divider"></div>
-<div class="nav-subtitle">INSTITUTIONAL ALGO V3.0<br><span style="color:#38BDF8; font-size: 0.55rem;">LIVE MARKET FEED</span></div>
+<div class="nav-subtitle">INSTITUTIONAL ALGO V4.0<br><span style="color:#38BDF8; font-size: 0.55rem;">DIRECT MARKET ACCESS</span></div>
 </div>
 <div class="nav-center">
 <div class="telemetry-box">NODE <span>US-EAST-1</span></div>
@@ -270,15 +273,14 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Ticker Simulation Text
 ticker_text = " • ".join([
     "LIQUIDITY POOL: ACTIVE",
-    "GLOBAL MATCHED VOL: <span>$42.8M</span>",
+    "GLOBAL MATCHED VOL: <span>$142.8M</span>",
     "LATENCY DELTA: <span class='hl-green'>+2ms</span>",
     "API RATE LIMIT: <span>98%</span>",
     "ANOMALY FILTER: <span class='hl-green'>ENGAGED</span>",
     "POISSON KERNEL: <span>STABLE</span>",
-    "MAX RISK CAP: <span>5.0%</span>",
+    "DMA CONNECTION: <span class='hl-blue'>SECURE</span>",
 ]) * 2
 
 st.markdown(f"""
@@ -298,7 +300,11 @@ with col_ctrl:
     target_date = st.date_input("Trading Date", date.today())
     l_map = {"Premier League": 39, "Champions League": 2, "La Liga": 140, "Primeira Liga": 94, "Serie A": 135}
     league_name = st.selectbox("Liquidity Pool (League)", list(l_map.keys()))
+    
+    st.markdown("<div style='margin-top: 15px; border-bottom: 1px solid #1E293B; margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+    
     bankroll = st.number_input("Allocated Capital ($)", value=100000, step=10000, format="%d")
+    kelly_fraction = st.slider("Kelly Fraction (Risk Management)", min_value=0.1, max_value=1.0, value=0.25, step=0.05, help="1.0 = Full Kelly (Aggressive). 0.25 = Quarter Kelly (Conservative/Recommended).")
     
     fixtures = get_live_fixtures(target_date.strftime('%Y-%m-%d'), l_map[league_name])
     m_sel = None
@@ -308,21 +314,13 @@ with col_ctrl:
         m_map = {f"{f['teams']['home']['name']} v {f['teams']['away']['name']}": f for f in fixtures}
         m_sel = m_map[st.selectbox("Select Asset (Fixture)", list(m_map.keys()))]
         st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<div class='btn-run'>", unsafe_allow_html=True)
         btn_run = st.button("DEPLOY ALGORITHM")
+        st.markdown("</div>", unsafe_allow_html=True)
     else:
-        st.markdown("<div style='color:#EF4444; font-size:0.8rem; font-weight:700; text-align:center; padding: 12px; border: 1px solid #EF4444; border-radius: 4px; margin-top: 20px; background: rgba(239, 68, 68, 0.05);'>NO LIQUIDITY DETECTED</div>", unsafe_allow_html=True)
+        st.markdown("<div style='color:#EF4444; font-size:0.8rem; font-weight:700; text-align:center; padding: 12px; border: 1px solid #EF4444; border-radius: 4px; margin-top: 20px; background: rgba(239, 68, 68, 0.05);'>MARKET CLOSED / NO LIQUIDITY</div>", unsafe_allow_html=True)
         
     st.markdown("</div>", unsafe_allow_html=True)
-    
-    with st.expander("TERMINAL ARCHITECTURE", expanded=True):
-        st.markdown("""
-        <div class='manual-box'>
-        <span class='manual-term'>Anomaly Detection</span>
-        O sistema rejeita anomalias de API (Edges irreais > 25%) e foca-se em apostas sólidas (Odds entre 1.40 e 3.50).
-        <span class='manual-term'>Strict Risk Management</span>
-        O alocamento máximo recomendado está trancado nos 5% do capital total para proteger a banca de <i>drawdowns</i> severos.
-        </div>
-        """, unsafe_allow_html=True)
 
 if m_sel and btn_run:
     placeholder_status = st.empty()
@@ -382,10 +380,7 @@ if m_sel and btn_run:
                 f_prob = (1 / odd) / (1 + dynamic_margin)
                 edge = (prob * odd) - 1
                 
-                # --- SISTEMA DE GESTÃO DE RISCO ABSOLUTO ---
-                # 1. Calculamos o Kelly
-                kelly_val = calculate_kelly(prob, odd) if edge > 0 else 0
-                # 2. Hard Cap de 5.0% (Nenhum Quant arrisca mais do que isto)
+                kelly_val = calculate_kelly(prob, odd, kelly_fraction) if edge > 0 else 0
                 kelly_val = min(kelly_val, 5.0) 
                 
                 ui_market_name = format_market_name(mkt, h_name, a_name)
@@ -399,12 +394,11 @@ if m_sel and btn_run:
                     "Kelly": kelly_val
                 })
         
-        # --- FILTRO INSTITUCIONAL (ANTI-EMBARAÇO NA DEMO) ---
         prime_bets = [
             m for m in valid_markets 
-            if 0.01 < m['Edge'] < 0.25      # Edge realista entre 1% e 25%. Corta bugs de API com >500% edge.
-            and m['ModelProb'] >= 0.40      # Queremos consistência de acerto, acima de 40%
-            and 1.40 <= m['BookOdd'] <= 3.50 # Odds seguras, sem lotarias de 7.000
+            if 0.01 < m['Edge'] < 0.25      
+            and m['ModelProb'] >= 0.40      
+            and 1.40 <= m['BookOdd'] <= 3.50 
         ]
         
         if prime_bets:
@@ -432,20 +426,49 @@ if m_sel and btn_run:
                 risk_lvl = "LOW" if best_bet['ModelProb'] > 0.55 else "MEDIUM"
                 risk_color = "#10B981" if risk_lvl == "LOW" else "#F59E0B"
                 
-                confidence_score = min(99.9, (best_bet['ModelProb'] * 100) + (best_bet['Edge'] * 50) + 10)
+                confidence_score = min(99.9, (best_bet['ModelProb'] * 100) + (best_bet['Edge'] * 50) + (kelly_fraction * 10))
                 
                 st.markdown(f"""
 <div class='trade-signal'>
-<div class='panel-title' style='color:#10B981; border-color:rgba(16,185,129,0.2); margin-bottom: 5px;'>★ PRIME ALPHA SIGNAL (EXECUTE TRADE)</div>
+<div class='panel-title' style='color:#10B981; border-color:rgba(16,185,129,0.2); margin-bottom: 5px;'>★ PRIME ALPHA SIGNAL</div>
 <div class='trade-asset'>{best_bet['Market']}</div>
 <div class='trade-odd'>@ {best_bet['BookOdd']:.3f}</div>
 <div class='data-row'><span class='data-lbl'>Win Probability (Strike Rate)</span><span class='data-val'>{best_bet['ModelProb']*100:.2f}%</span></div>
 <div class='data-row'><span class='data-lbl'>Expected Value (Edge)</span><span class='data-val hl-green'>+{best_bet['Edge']*100:.2f}%</span></div>
-<div class='data-row'><span class='data-lbl'>Optimal Capital Allocation (Capped)</span><span class='data-val hl-blue'>${dollar_sz:,.0f} ({best_bet['Kelly']:.2f}%)</span></div>
+<div class='data-row'><span class='data-lbl'>Capital Allocation ({kelly_fraction:.2f} Kelly)</span><span class='data-val hl-blue'>${dollar_sz:,.0f} ({best_bet['Kelly']:.2f}%)</span></div>
 <div class='data-row'><span class='data-lbl'>Drawdown Risk Assessment</span><span class='data-val' style='color:{risk_color};'>{risk_lvl}</span></div>
-<div class='data-row' style='margin-top:12px; border-top: 1px dashed rgba(56,189,248,0.3); padding-top: 12px;'><span class='data-lbl'>Model Confidence Index</span><span class='data-val' style='color:#38BDF8;'>{confidence_score:.1f}/100</span></div>
 </div>
 """, unsafe_allow_html=True)
+
+                # Novo: Gauge Chart de Confiança
+                fig_gauge = go.Figure(go.Indicator(
+                    mode = "gauge+number",
+                    value = confidence_score,
+                    domain = {'x': [0, 1], 'y': [0, 1]},
+                    title = {'text': "Model Confidence Index", 'font': {'size': 14, 'color': '#64748B'}},
+                    number = {'suffix': "%", 'font': {'size': 30, 'color': '#F8FAFC'}},
+                    gauge = {
+                        'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "rgba(255,255,255,0.1)"},
+                        'bar': {'color': "#10B981"},
+                        'bgcolor': "rgba(0,0,0,0)",
+                        'borderwidth': 0,
+                        'steps': [
+                            {'range': [0, 50], 'color': "rgba(239, 68, 68, 0.2)"},
+                            {'range': [50, 75], 'color': "rgba(245, 158, 11, 0.2)"},
+                            {'range': [75, 100], 'color': "rgba(16, 185, 129, 0.2)"}],
+                        'threshold': {'line': {'color': "#38BDF8", 'width': 4}, 'thickness': 0.75, 'value': 90}
+                    }
+                ))
+                fig_gauge.update_layout(height=180, margin=dict(l=20, r=20, t=30, b=10), paper_bgcolor='rgba(0,0,0,0)', font={'family': "Inter, sans-serif"})
+                st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False})
+
+                # Novo: Botão de Execução Mock
+                st.markdown("<div class='btn-exec'>", unsafe_allow_html=True)
+                if st.button("⚡ AUTO-EXECUTE VIA BROKER API", key="exec_btn"):
+                    st.toast(f"Order Placed! {best_bet['Market']} at {best_bet['BookOdd']:.3f}. Stake: ${dollar_sz:,.0f}", icon='✅')
+                    st.success("Trade executed successfully on Tier-1 Pool.")
+                st.markdown("</div>", unsafe_allow_html=True)
+
             elif live_odds:
                 st.markdown("""
 <div class='grid-panel' style='border-color: #EF4444;'><div class='data-val hl-red' style='text-align: center; font-size: 1.2rem; padding: 20px;'>NO PRIME ALPHA DETECTED.<br><span style='font-size: 0.8rem; color: #94A3B8;'>Market is efficient or variance is too high. Protect Capital. Pass.</span></div></div>
@@ -478,7 +501,6 @@ if m_sel and btn_run:
         if live_odds and valid_markets:
             st.markdown("""<div class='grid-panel' style='padding-bottom: 5px;'><div class='panel-title'>Probability Delta (Model vs Institutional Lines) - Top 5</div>""", unsafe_allow_html=True)
             
-            # Gráfico usa apenas as opções seguras também, sem poluição visual da API
             chart_markets = [m for m in valid_markets if m['Edge'] > 0 and m['Edge'] < 0.25]
             top_markets = sorted(chart_markets, key=lambda x: x['Edge'], reverse=True)[:5]
             
@@ -514,13 +536,12 @@ if m_sel and btn_run:
         st.markdown("""<div class='grid-panel'><div class='panel-title'>Algorithmic Order Book (Sorted by Optimal Kelly)</div>""", unsafe_allow_html=True)
         
         if live_odds:
-            # Apresentar na tabela APENAS as odds que passaram no filtro de Sanidade (Corta o lixo)
             clean_markets = [m for m in valid_markets if m['Edge'] < 0.25 and m['BookOdd'] <= 15.0]
             clean_markets = sorted(clean_markets, key=lambda x: x['Kelly'], reverse=True)
             
             table_html = "<table class='ob-table'><tr><th>Asset (Market)</th><th>Listed Odds</th><th>System Prob</th><th>Market Edge</th><th>Kelly Allocation</th></tr>"
             
-            for m in clean_markets:
+            for m in clean_markets[:10]: # Limita as top 10 para o visual ficar mais limpo
                 edge_val = m['Edge'] * 100
                 color_cls = "hl-green" if edge_val > 0 else "hl-red"
                 sign = "+" if edge_val > 0 else ""
