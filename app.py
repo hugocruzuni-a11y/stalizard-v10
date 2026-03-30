@@ -281,22 +281,20 @@ def poisson_pmf(lam, k):
 # ==========================================
 st.markdown("""
 <div class="top-nav">
-    <div class="nav-left">
-        <div class="logo">APEX<span>QUANT</span></div>
-        <div class="nav-divider"></div>
-        <div class="nav-subtitle">INSTITUTIONAL ALGO V2.4</div>
-    </div>
-    
-    <div class="nav-center">
-        <div>NODE: <span>US-EAST-1</span></div>
-        <div>LATENCY: <span style="color: #10B981;">14ms</span></div>
-        <div>MODEL: <span>POISSON+KELLY</span></div>
-    </div>
-    
-    <div class="nav-right">
-        <div class="nav-time">SYS: UTC-0</div>
-        <div class="sys-status"><span class="dot"></span> TIER-1 LIQUIDITY POOL</div>
-    </div>
+<div class="nav-left">
+<div class="logo">APEX<span>QUANT</span></div>
+<div class="nav-divider"></div>
+<div class="nav-subtitle">INSTITUTIONAL ALGO V2.4</div>
+</div>
+<div class="nav-center">
+<div>NODE: <span>US-EAST-1</span></div>
+<div>LATENCY: <span style="color: #10B981;">14ms</span></div>
+<div>MODEL: <span>POISSON+KELLY</span></div>
+</div>
+<div class="nav-right">
+<div class="nav-time">SYS: UTC-0</div>
+<div class="sys-status"><span class="dot"></span> TIER-1 LIQUIDITY POOL</div>
+</div>
 </div>
 """, unsafe_allow_html=True)
 
