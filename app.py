@@ -8,57 +8,69 @@ from datetime import date
 import time
 
 # ==========================================
-# 1. INSTITUTIONAL UX SETUP (READABLE + VISUAL)
+# 1. INSTITUTIONAL UX SETUP (WALL STREET TIER)
 # ==========================================
 st.set_page_config(page_title="APEX QUANT TERMINAL", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;500;600;800&display=swap');
 
-.stApp { background-color: #050505; color: #E0E0E0; font-family: 'Inter', sans-serif; }
+/* Base Theme */
+.stApp { background-color: #030712; color: #E2E8F0; font-family: 'Inter', sans-serif; }
 header, footer { visibility: hidden; }
 
-/* Top Nav */
-.top-nav { background: #000000; border-bottom: 1px solid #1E293B; padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; margin: -3rem -3rem 1.5rem -3rem; position: sticky; top: 0; z-index: 1000;}
-.logo { font-size: 1.4rem; font-weight: 800; color: #FFFFFF; font-family: 'JetBrains Mono', monospace; }
+/* Top Nav with Pulse Animation */
+.top-nav { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid #1E293B; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; margin: -3rem -3rem 2rem -3rem; position: sticky; top: 0; z-index: 1000;}
+.logo { font-size: 1.5rem; font-weight: 800; color: #FFFFFF; font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px; }
 .logo span { color: #10B981; }
-.sys-status { font-size: 0.75rem; font-weight: 600; color: #10B981; font-family: 'JetBrains Mono', monospace;}
 
-/* Grid Panels */
-.grid-panel { border: 1px solid #1E293B; background: #0B0F19; padding: 20px; margin-bottom: 15px; border-radius: 4px; }
-.panel-title { font-size: 0.75rem; color: #94A3B8; text-transform: uppercase; border-bottom: 1px solid #1E293B; padding-bottom: 8px; margin-bottom: 12px; font-weight: 800; letter-spacing: 1px; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+.sys-status { font-size: 0.75rem; font-weight: 600; color: #10B981; font-family: 'JetBrains Mono', monospace; display: flex; align-items: center; gap: 8px;}
+.dot { height: 8px; width: 8px; background-color: #10B981; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite; box-shadow: 0 0 8px #10B981;}
 
-/* Metrics */
-.data-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px; }
-.data-lbl { color: #94A3B8; font-weight: 600; }
-.data-val { color: #F8FAFC; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
-.hl-green { color: #10B981; }
-.hl-red { color: #EF4444; }
-.hl-blue { color: #38BDF8; }
-.hl-warn { color: #F59E0B; }
+/* Grid Panels (Sleeker Borders & Shadows) */
+.grid-panel { border: 1px solid #1E293B; background: linear-gradient(180deg, #0B0F19 0%, #030712 100%); padding: 22px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5); }
+.panel-title { font-size: 0.75rem; color: #64748B; text-transform: uppercase; border-bottom: 1px solid #1E293B; padding-bottom: 10px; margin-bottom: 15px; font-weight: 800; letter-spacing: 1.5px; }
+
+/* Metrics & Values */
+.data-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px; align-items: center;}
+.data-lbl { color: #94A3B8; font-weight: 500; }
+.data-val { color: #F8FAFC; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+/* Highlight Colors */
+.hl-green { color: #10B981 !important; text-shadow: 0 0 10px rgba(16,185,129,0.3); }
+.hl-red { color: #EF4444 !important; }
+.hl-blue { color: #38BDF8 !important; }
+.hl-warn { color: #F59E0B !important; }
+
+/* Alpha Box (The Money Maker) */
+.trade-signal { border: 1px solid rgba(16, 185, 129, 0.4); background: linear-gradient(145deg, rgba(16,185,129,0.05) 0%, rgba(0,0,0,0) 100%); padding: 25px; margin-top: 10px; border-radius: 8px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.1); position: relative; overflow: hidden;}
+.trade-signal::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #10B981; }
+.trade-asset { font-size: 2rem; color: #10B981; font-weight: 800; margin-bottom: 20px; font-family: 'JetBrains Mono', monospace; text-shadow: 0 0 15px rgba(16,185,129,0.4); }
 
 /* Order Book Table */
-.ob-table { width: 100%; font-size: 0.8rem; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; }
-.ob-table th { color: #64748B; text-align: right; font-weight: 700; border-bottom: 2px solid #1E293B; padding: 8px 0; font-family: 'Inter', sans-serif; font-size: 0.7rem; text-transform: uppercase; }
+.ob-table { width: 100%; font-size: 0.85rem; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; }
+.ob-table th { color: #64748B; text-align: right; font-weight: 700; border-bottom: 1px solid #334155; padding: 12px 8px; font-family: 'Inter', sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;}
 .ob-table th:first-child { text-align: left; }
-.ob-table td { text-align: right; padding: 10px 0; border-bottom: 1px solid #0F172A; }
-.ob-table td:first-child { text-align: left; color: #F8FAFC; font-weight: 700; font-family: 'Inter', sans-serif; }
-.ob-table tr:hover { background: #0F172A; }
+.ob-table td { text-align: right; padding: 12px 8px; border-bottom: 1px solid #0F172A; transition: background 0.2s; }
+.ob-table td:first-child { text-align: left; color: #E2E8F0; font-weight: 600; font-family: 'Inter', sans-serif; }
+.ob-table tr:hover td { background: rgba(30, 41, 59, 0.5); cursor: crosshair; }
 
-/* Alpha Box */
-.trade-signal { border: 1px solid #10B981; background: rgba(16, 185, 129, 0.05); padding: 20px; margin-top: 15px; border-radius: 4px; }
-.trade-asset { font-size: 1.8rem; color: #10B981; font-weight: 800; margin-bottom: 15px; }
+/* Sub-Metric Cards */
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+.metric-card { background: #0F172A; border: 1px solid #1E293B; border-radius: 6px; padding: 15px; text-align: center; }
+.metric-card-title { font-size: 0.7rem; color: #64748B; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-bottom: 5px;}
+.metric-card-val { font-size: 1.5rem; color: #F8FAFC; font-weight: 800; font-family: 'JetBrains Mono', monospace;}
 
-/* Override Widgets */
-div[data-baseweb="select"] > div { background-color: #0B0F19 !important; border: 1px solid #1E293B !important; color: #F8FAFC !important; }
-div[data-baseweb="input"] > div { background-color: #0B0F19 !important; border: 1px solid #1E293B !important; color: #F8FAFC !important; }
-.stButton > button { background: #1E293B !important; color: #F8FAFC !important; border: 1px solid #334155 !important; font-weight: 800 !important; width: 100%; transition: all 0.2s; }
-.stButton > button:hover { background: #10B981 !important; color: #000 !important; border-color: #10B981 !important; }
+/* Override Streamlit Widgets */
+div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: #0F172A !important; border: 1px solid #1E293B !important; color: #F8FAFC !important; border-radius: 6px !important; }
+.stButton > button { background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%) !important; color: #F8FAFC !important; border: 1px solid #334155 !important; font-weight: 700 !important; width: 100%; border-radius: 6px !important; padding: 20px !important; transition: all 0.3s ease !important; }
+.stButton > button:hover { background: #10B981 !important; color: #030712 !important; border-color: #10B981 !important; box-shadow: 0 0 15px rgba(16,185,129,0.4) !important; transform: translateY(-1px); }
 
 /* Insights Manual */
-.manual-box { font-size: 0.75rem; color: #94A3B8; border-left: 2px solid #38BDF8; padding-left: 12px; margin-top: 10px; line-height: 1.5; }
-.manual-term { color: #38BDF8; font-weight: 800; display: block; margin-top: 10px; text-transform: uppercase; }
+.manual-box { font-size: 0.75rem; color: #94A3B8; border-left: 2px solid #38BDF8; padding-left: 15px; margin-top: 10px; line-height: 1.6; background: rgba(56, 189, 248, 0.05); padding: 15px; border-radius: 0 6px 6px 0;}
+.manual-term { color: #38BDF8; font-weight: 700; display: block; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -142,7 +154,7 @@ def calculate_lambdas(h_stats, a_stats):
     return lam_h, lam_a
 
 def run_monte_carlo_sim(lam_h, lam_a, sims=50000):
-    np.random.seed(42) # Semente fixa para a apresentação
+    np.random.seed(42) 
     h_goals, a_goals = np.random.poisson(lam_h, sims), np.random.poisson(lam_a, sims)
     
     for i in range(sims):
@@ -192,7 +204,6 @@ def calculate_kelly(prob, odd, fraction=0.25):
     return max(0, (((b * prob) - q) / b) * fraction * 100)
 
 def poisson_pmf(lam, k):
-    """Calcula a probabilidade teórica para o gráfico"""
     return (lam**k * math.exp(-lam)) / math.factorial(k)
 
 # ==========================================
@@ -200,158 +211,126 @@ def poisson_pmf(lam, k):
 # ==========================================
 st.markdown("""
 <div class="top-nav">
-<div>APEX <span style="color:#10B981;">QUANT</span></div>
-<div class="sys-status">● TIER-1 LIQUIDITY POOL CONNECTED</div>
+<div class="logo">APEX <span style="color:#10B981;">QUANT</span></div>
+<div class="sys-status"><span class="dot"></span> TIER-1 LIQUIDITY POOL CONNECTED</div>
 </div>
 """, unsafe_allow_html=True)
 
 col_ctrl, col_exec = st.columns([1, 2.8], gap="large")
 
 with col_ctrl:
-    st.markdown("""
-<div class='grid-panel'>
-<div class='panel-title'>Model Setup</div>
-""", unsafe_allow_html=True)
+    st.markdown("""<div class='grid-panel'><div class='panel-title'>Model Setup</div>""", unsafe_allow_html=True)
     
     target_date = st.date_input("Match Date", date.today())
     l_map = {"Premier League": 39, "Champions League": 2, "La Liga": 140, "Primeira Liga": 94, "Serie A": 135}
     league_name = st.selectbox("Select League", list(l_map.keys()))
-    bankroll = st.number_input("Total Bankroll ($)", value=100000, step=10000)
+    bankroll = st.number_input("Total Bankroll ($)", value=100000, step=10000, format="%d")
     
     fixtures = get_live_fixtures(target_date.strftime('%Y-%m-%d'), l_map[league_name])
     m_sel = None
+    btn_run = False
+    
     if fixtures:
         m_map = {f"{f['teams']['home']['name']} v {f['teams']['away']['name']}": f for f in fixtures}
         m_sel = m_map[st.selectbox("Select Fixture", list(m_map.keys()))]
-        btn_run = st.button("Calculate Market Edge")
+        btn_run = st.button("EXECUTE QUANT MODEL")
     else:
+        st.markdown("<div style='color:#EF4444; font-size:0.8rem; font-weight:600; text-align:center; padding: 10px; border: 1px solid #EF4444; border-radius: 4px; margin-top: 15px;'>NO FIXTURES DETECTED</div>", unsafe_allow_html=True)
+        
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    with st.expander("TERMINAL DOCUMENTATION", expanded=True):
         st.markdown("""
-<div style='color:#EF4444; font-size:0.8rem; font-weight:600;'>No fixtures found for this date.</div>
-""", unsafe_allow_html=True)
+        <div class='manual-box'>
+        <span class='manual-term'>Interactive Plotting</span>
+        Dynamic visualizations of Poisson distributions and Market Deltas. Allows instant visual analysis of Risk vs Reward asymmetry.
+        <span class='manual-term'>Dynamic De-Vigging</span>
+        Proprietary model extracts exact Overround (bookmaker margin) from the 1X2 primary market and adjusts fair probabilities dynamically.
+        <span class='manual-term'>Expected Value (+EV)</span>
+        Indicates long-term theoretical profit margin by crossing system True Odds against institutional lines.
+        </div>
+        """, unsafe_allow_html=True)
+
+if m_sel and btn_run:
+    with st.spinner('Compiling data & running Monte Carlo simulations...'):
+        time.sleep(1) # Efeito dramático de processamento
         
-    st.markdown("""
-</div>
-""", unsafe_allow_html=True)
-    
-    st.markdown("""
-<div class='grid-panel'>
-<div class='panel-title'>Quant Insights</div>
-<div class='manual-box'>
-<span class='manual-term'>Interactive Plotting</span>
-Gráficos dinâmicos que materializam a distribuição de Poisson e o Delta do mercado, permitindo uma análise visual instantânea do Risco vs Recompensa.
-<span class='manual-term'>Dynamic De-Vigging</span>
-O modelo analisa o Overround exato (margem de lucro da casa) aplicado no mercado primário 1X2 e ajusta as probabilidades de pagamento.
-<span class='manual-term'>Expected Value (+EV)</span>
-Indica a margem de lucro teórico a longo prazo cruzando as True Odds do modelo com a linha da casa.
-</div>
-</div>
-""", unsafe_allow_html=True)
-
-if m_sel:
-    h_id, a_id = m_sel['teams']['home']['id'], m_sel['teams']['away']['id']
-    h_name = m_sel['teams']['home']['name']
-    a_name = m_sel['teams']['away']['name']
-    
-    h_stats, a_stats = get_real_stats(h_id, l_map[league_name]), get_real_stats(a_id, l_map[league_name])
-    lam_h, lam_a = calculate_lambdas(h_stats, a_stats)
-    true_probs = run_monte_carlo_sim(lam_h, lam_a, 50000)
-    live_odds = get_real_odds(m_sel['fixture']['id'])
-    
-    valid_markets = []
-    best_bet, max_edge = None, 0
-    dynamic_margin = calculate_dynamic_margin(live_odds)
-    
-    if live_odds:
-        for mkt, odd in live_odds.items():
-            prob = true_probs.get(mkt, 0)
-            if odd > 1.05 and prob > 0:
-                f_prob = (1 / odd) / (1 + dynamic_margin)
-                edge = (prob * odd) - 1
-                valid_markets.append({"Market": mkt, "BookOdd": odd, "ModelProb": prob, "Edge": edge, "TrueOdd": f_prob})
-                if edge > max_edge:
-                    max_edge, best_bet = edge, valid_markets[-1]
-    
-    with col_exec:
-        # Top Row: Alpha Signal & Goal Distribution Chart
-        col_alpha, col_chart = st.columns([1.2, 1])
+        h_id, a_id = m_sel['teams']['home']['id'], m_sel['teams']['away']['id']
+        h_name = m_sel['teams']['home']['name']
+        a_name = m_sel['teams']['away']['name']
         
-        with col_alpha:
-            if best_bet and best_bet["Edge"] > 0:
-                rec_kelly = calculate_kelly(best_bet['ModelProb'], best_bet['BookOdd'])
-                dollar_sz = (rec_kelly/100) * bankroll
-                
-                warning_html = ""
-                if best_bet["Edge"] > 0.30:
-                    warning_html = "<div style='color: #F59E0B; font-size: 0.75rem; margin-top: 15px; text-align: center; border: 1px dashed #F59E0B; padding: 5px;'>⚠️ ANOMALY ALERT: Edge > 30%. Verify late injuries/news before execution.</div>"
+        h_stats, a_stats = get_real_stats(h_id, l_map[league_name]), get_real_stats(a_id, l_map[league_name])
+        lam_h, lam_a = calculate_lambdas(h_stats, a_stats)
+        true_probs = run_monte_carlo_sim(lam_h, lam_a, 50000)
+        live_odds = get_real_odds(m_sel['fixture']['id'])
+        
+        valid_markets = []
+        best_bet, max_edge = None, 0
+        dynamic_margin = calculate_dynamic_margin(live_odds)
+        
+        if live_odds:
+            for mkt, odd in live_odds.items():
+                prob = true_probs.get(mkt, 0)
+                if odd > 1.05 and prob > 0:
+                    f_prob = (1 / odd) / (1 + dynamic_margin)
+                    edge = (prob * odd) - 1
+                    valid_markets.append({"Market": mkt, "BookOdd": odd, "ModelProb": prob, "Edge": edge, "TrueOdd": f_prob})
+                    if edge > max_edge:
+                        max_edge, best_bet = edge, valid_markets[-1]
+        
+        with col_exec:
+            # Match Context / Expected Goals
+            st.markdown(f"""
+            <div class='metric-grid'>
+                <div class='metric-card'>
+                    <div class='metric-card-title'>{h_name} Expected Goals (xG)</div>
+                    <div class='metric-card-val' style='color:#38BDF8;'>{lam_h:.2f}</div>
+                </div>
+                <div class='metric-card'>
+                    <div class='metric-card-title'>{a_name} Expected Goals (xG)</div>
+                    <div class='metric-card-val' style='color:#10B981;'>{lam_a:.2f}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-                st.markdown(f"""
-<div class='trade-signal'>
-<div class='panel-title' style='color:#10B981; border-color:#10B981;'>Highest Expected Value (+EV)</div>
-<div class='trade-asset'>{best_bet['Market']} @ {best_bet['BookOdd']:.3f}</div>
-<div class='data-row'><span class='data-lbl'>Model Probability</span><span class='data-val'>{best_bet['ModelProb']*100:.2f}%</span></div>
-<div class='data-row'><span class='data-lbl'>Expected Value (Edge)</span><span class='data-val hl-green'>+{best_bet['Edge']*100:.2f}%</span></div>
-<div class='data-row'><span class='data-lbl'>Rec. Bankroll Size (1/4 Kelly)</span><span class='data-val hl-blue'>${dollar_sz:,.0f} ({rec_kelly:.2f}%)</span></div>
-<div class='data-row' style='margin-top:8px;'><span class='data-lbl'>Detected Market Margin</span><span class='data-val hl-warn'>{dynamic_margin*100:.2f}%</span></div>
-{warning_html}
-</div>
-""", unsafe_allow_html=True)
-            elif live_odds:
-                st.markdown("""
-<div class='grid-panel'><div class='data-val hl-red'>Efficient Market Detected. Protect Capital. Pass.</div></div>
-""", unsafe_allow_html=True)
-
-        with col_chart:
-            # Gráfico Plotly: Distribuição de Poisson
-            st.markdown("""
-<div class='grid-panel' style='padding-bottom: 0;'>
-<div class='panel-title'>Goal Expectancy Distribution (Poisson)</div>
-""", unsafe_allow_html=True)
-            goals_range = list(range(6))
-            h_probs_chart = [poisson_pmf(lam_h, g)*100 for g in goals_range]
-            a_probs_chart = [poisson_pmf(lam_a, g)*100 for g in goals_range]
-
-            fig_dist = go.Figure(data=[
-                go.Bar(name=h_name, x=goals_range, y=h_probs_chart, marker_color='#38BDF8', opacity=0.85),
-                go.Bar(name=a_name, x=goals_range, y=a_probs_chart, marker_color='#10B981', opacity=0.85)
-            ])
-            fig_dist.update_layout(
-                barmode='group',
-                template='plotly_dark',
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                height=180,
-                margin=dict(l=0, r=0, t=10, b=0),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=10, color="#94A3B8")),
-                xaxis=dict(title="Goals", title_font=dict(size=10, color="#64748B"), tickfont=dict(size=10, color="#94A3B8"), gridcolor="rgba(255,255,255,0.05)"),
-                yaxis=dict(title="Probability (%)", title_font=dict(size=10, color="#64748B"), tickfont=dict(size=10, color="#94A3B8"), gridcolor="rgba(255,255,255,0.05)")
-            )
-            st.plotly_chart(fig_dist, use_container_width=True, config={'displayModeBar': False})
-            st.markdown("</div>", unsafe_allow_html=True)
-
-        # Gráfico Secundário (Visualização de Valor)
-        if live_odds and valid_markets:
-            st.markdown("""
-<div class='grid-panel' style='padding-bottom: 0;'>
-<div class='panel-title'>Probability Delta (Model vs Bookmaker) - Top 5 Markets</div>
-""", unsafe_allow_html=True)
+            col_alpha, col_chart = st.columns([1.2, 1])
             
-            # Pega nos 5 melhores mercados para o gráfico
-            top_markets = sorted([m for m in valid_markets if m['Edge'] > 0], key=lambda x: x['Edge'], reverse=True)[:5]
-            
-            if top_markets:
-                m_names = [m['Market'] for m in top_markets]
-                sys_probs = [m['ModelProb']*100 for m in top_markets]
-                book_probs = [m['TrueOdd']*100 for m in top_markets] # Usar a true odd da bookie para comparação justa
-                
-                fig_delta = go.Figure()
-                fig_delta.add_trace(go.Bar(
-                    y=m_names, x=book_probs, name='Bookie (No-Vig)', orientation='h', marker_color='#334155'
-                ))
-                fig_delta.add_trace(go.Bar(
-                    y=m_names, x=sys_probs, name='System Prob', orientation='h', marker_color='#10B981'
-                ))
-                
-                fig_delta.update_layout(
+            with col_alpha:
+                if best_bet and best_bet["Edge"] > 0:
+                    rec_kelly = calculate_kelly(best_bet['ModelProb'], best_bet['BookOdd'])
+                    dollar_sz = (rec_kelly/100) * bankroll
+                    
+                    warning_html = ""
+                    if best_bet["Edge"] > 0.30:
+                        warning_html = "<div style='color: #F59E0B; font-size: 0.75rem; margin-top: 20px; text-align: center; border: 1px dashed #F59E0B; padding: 8px; border-radius: 4px;'>⚠️ ANOMALY ALERT: Edge > 30%. Verify late injuries/news before execution.</div>"
+
+                    st.markdown(f"""
+    <div class='trade-signal'>
+    <div class='panel-title' style='color:#10B981; border-color:rgba(16,185,129,0.2);'>Highest Expected Value (+EV) Market</div>
+    <div class='trade-asset'>{best_bet['Market']} @ {best_bet['BookOdd']:.3f}</div>
+    <div class='data-row'><span class='data-lbl'>Model Probability</span><span class='data-val'>{best_bet['ModelProb']*100:.2f}%</span></div>
+    <div class='data-row'><span class='data-lbl'>Expected Value (Edge)</span><span class='data-val hl-green'>+{best_bet['Edge']*100:.2f}%</span></div>
+    <div class='data-row'><span class='data-lbl'>Rec. Bankroll Size (1/4 Kelly)</span><span class='data-val hl-blue'>${dollar_sz:,.0f} ({rec_kelly:.2f}%)</span></div>
+    <div class='data-row' style='margin-top:12px; border-top: 1px dashed #1E293B; padding-top: 12px;'><span class='data-lbl'>Detected Market Margin</span><span class='data-val hl-warn'>{dynamic_margin*100:.2f}%</span></div>
+    {warning_html}
+    </div>
+    """, unsafe_allow_html=True)
+                elif live_odds:
+                    st.markdown("""
+    <div class='grid-panel'><div class='data-val hl-red' style='text-align: center; font-size: 1.2rem; padding: 20px;'>EFFICIENT MARKET DETECTED. PROTECT CAPITAL. PASS.</div></div>
+    """, unsafe_allow_html=True)
+
+            with col_chart:
+                st.markdown("""<div class='grid-panel' style='padding-bottom: 5px;'><div class='panel-title'>Goal Expectancy Distribution (Poisson)</div>""", unsafe_allow_html=True)
+                goals_range = list(range(6))
+                h_probs_chart = [poisson_pmf(lam_h, g)*100 for g in goals_range]
+                a_probs_chart = [poisson_pmf(lam_a, g)*100 for g in goals_range]
+
+                fig_dist = go.Figure(data=[
+                    go.Bar(name=h_name, x=goals_range, y=h_probs_chart, marker_color='#38BDF8', opacity=0.9, hovertemplate="<b>%{x} Goals</b><br>Probability: %{y:.1f}%<extra></extra>"),
+                    go.Bar(name=a_name, x=goals_range, y=a_probs_chart, marker_color='#10B981', opacity=0.9, hovertemplate="<b>%{x} Goals</b><br>Probability: %{y:.1f}%<extra></extra>")
+                ])
+                fig_dist.update_layout(
                     barmode='group',
                     template='plotly_dark',
                     paper_bgcolor='rgba(0,0,0,0)',
@@ -359,44 +338,68 @@ if m_sel:
                     height=200,
                     margin=dict(l=0, r=0, t=10, b=0),
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=10, color="#94A3B8")),
-                    xaxis=dict(title="Probability (%)", title_font=dict(size=10, color="#64748B"), tickfont=dict(size=10, color="#94A3B8"), gridcolor="rgba(255,255,255,0.05)"),
-                    yaxis=dict(autorange="reversed", tickfont=dict(size=10, color="#F8FAFC"))
+                    xaxis=dict(title="Goals", title_font=dict(size=10, color="#64748B"), tickfont=dict(size=10, color="#94A3B8"), gridcolor="rgba(30,41,59,0.5)", zeroline=False),
+                    yaxis=dict(title="Probability (%)", title_font=dict(size=10, color="#64748B"), tickfont=dict(size=10, color="#94A3B8"), gridcolor="rgba(30,41,59,0.5)", zeroline=False)
                 )
-                st.plotly_chart(fig_delta, use_container_width=True, config={'displayModeBar': False})
-            else:
-                st.info("No +EV markets to chart.")
-            st.markdown("</div>", unsafe_allow_html=True)
+                st.plotly_chart(fig_dist, use_container_width=True, config={'displayModeBar': False})
+                st.markdown("</div>", unsafe_allow_html=True)
 
-        # Order Book Table (Em baixo)
-        st.markdown("""
-<div class='grid-panel'>
-<div class='panel-title'>Algorithmic Order Book (Full Range)</div>
-""", unsafe_allow_html=True)
-        
-        if live_odds:
-            valid_markets = sorted(valid_markets, key=lambda x: x['Edge'], reverse=True)
-            
-            table_html = "<table class='ob-table'><tr><th>Market</th><th>Book Odds</th><th>True Odds (No-Vig)</th><th>Model Prob</th><th>Edge (+EV)</th></tr>"
-            
-            for m in valid_markets:
-                edge_val = m['Edge'] * 100
-                color_cls = "hl-green" if edge_val > 0 else "hl-red"
-                sign = "+" if edge_val > 0 else ""
+            if live_odds and valid_markets:
+                st.markdown("""<div class='grid-panel' style='padding-bottom: 5px;'><div class='panel-title'>Probability Delta (Model vs Bookmaker) - Top 5 Markets</div>""", unsafe_allow_html=True)
                 
-                row = f"<tr><td>{m['Market']}</td><td>{m['BookOdd']:.3f}</td>"
-                row += f"<td>{m['TrueOdd']*100:.1f}%</td><td>{m['ModelProb']*100:.1f}%</td>"
-                row += f"<td class='{color_cls}'>{sign}{edge_val:.2f}%</td></tr>"
+                top_markets = sorted([m for m in valid_markets if m['Edge'] > 0], key=lambda x: x['Edge'], reverse=True)[:5]
                 
-                table_html += row
+                if top_markets:
+                    m_names = [m['Market'] for m in top_markets]
+                    sys_probs = [m['ModelProb']*100 for m in top_markets]
+                    book_probs = [m['TrueOdd']*100 for m in top_markets]
+                    
+                    fig_delta = go.Figure()
+                    fig_delta.add_trace(go.Bar(
+                        y=m_names, x=book_probs, name='Bookie (No-Vig)', orientation='h', marker_color='#334155', hovertemplate="Bookie: %{x:.1f}%<extra></extra>"
+                    ))
+                    fig_delta.add_trace(go.Bar(
+                        y=m_names, x=sys_probs, name='System Prob', orientation='h', marker_color='#10B981', hovertemplate="System: %{x:.1f}%<extra></extra>"
+                    ))
+                    
+                    fig_delta.update_layout(
+                        barmode='group',
+                        template='plotly_dark',
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        height=220,
+                        margin=dict(l=0, r=0, t=10, b=0),
+                        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=10, color="#94A3B8")),
+                        xaxis=dict(title="Probability (%)", title_font=dict(size=10, color="#64748B"), tickfont=dict(size=10, color="#94A3B8"), gridcolor="rgba(30,41,59,0.5)", zeroline=False),
+                        yaxis=dict(autorange="reversed", tickfont=dict(size=11, color="#E2E8F0"), gridcolor="rgba(0,0,0,0)")
+                    )
+                    st.plotly_chart(fig_delta, use_container_width=True, config={'displayModeBar': False})
+                else:
+                    st.info("No +EV markets to chart.")
+                st.markdown("</div>", unsafe_allow_html=True)
+
+            st.markdown("""<div class='grid-panel'><div class='panel-title'>Algorithmic Order Book (Full Range)</div>""", unsafe_allow_html=True)
+            
+            if live_odds:
+                valid_markets = sorted(valid_markets, key=lambda x: x['Edge'], reverse=True)
                 
-            table_html += "</table>"
-            
-            st.markdown(table_html, unsafe_allow_html=True)
-        else:
-            st.markdown("""
-<div class='data-lbl'>Waiting for market liquidity...</div>
-""", unsafe_allow_html=True)
-            
-        st.markdown("""
-</div>
-""", unsafe_allow_html=True)
+                table_html = "<table class='ob-table'><tr><th>Market</th><th>Book Odds</th><th>True Odds (No-Vig)</th><th>Model Prob</th><th>Edge (+EV)</th></tr>"
+                
+                for m in valid_markets:
+                    edge_val = m['Edge'] * 100
+                    color_cls = "hl-green" if edge_val > 0 else "hl-red"
+                    sign = "+" if edge_val > 0 else ""
+                    
+                    row = f"<tr><td>{m['Market']}</td><td>{m['BookOdd']:.3f}</td>"
+                    row += f"<td>{m['TrueOdd']*100:.1f}%</td><td>{m['ModelProb']*100:.1f}%</td>"
+                    row += f"<td class='{color_cls}'>{sign}{edge_val:.2f}%</td></tr>"
+                    
+                    table_html += row
+                    
+                table_html += "</table>"
+                
+                st.markdown(table_html, unsafe_allow_html=True)
+            else:
+                st.markdown("""<div class='data-lbl'>Waiting for market liquidity...</div>""", unsafe_allow_html=True)
+                
+            st.markdown("""</div>""", unsafe_allow_html=True)
