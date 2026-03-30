@@ -29,7 +29,7 @@ header, footer { visibility: hidden; }
 .sys-status { font-size: 0.75rem; font-weight: 600; color: #10B981; font-family: 'JetBrains Mono', monospace; display: flex; align-items: center; gap: 8px;}
 .dot { height: 8px; width: 8px; background-color: #10B981; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite; box-shadow: 0 0 8px #10B981;}
 
-/* Grid Panels (Sleeker Borders & Shadows) */
+/* Grid Panels */
 .grid-panel { border: 1px solid #1E293B; background: linear-gradient(180deg, #0B0F19 0%, #030712 100%); padding: 22px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5); }
 .panel-title { font-size: 0.75rem; color: #64748B; text-transform: uppercase; border-bottom: 1px solid #1E293B; padding-bottom: 10px; margin-bottom: 15px; font-weight: 800; letter-spacing: 1.5px; }
 
@@ -45,9 +45,9 @@ header, footer { visibility: hidden; }
 .hl-warn { color: #F59E0B !important; }
 
 /* Alpha Box (The Money Maker) */
-.trade-signal { border: 1px solid rgba(16, 185, 129, 0.4); background: linear-gradient(145deg, rgba(16,185,129,0.05) 0%, rgba(0,0,0,0) 100%); padding: 25px; margin-top: 10px; border-radius: 8px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.1); position: relative; overflow: hidden;}
-.trade-signal::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #10B981; }
-.trade-asset { font-size: 2rem; color: #10B981; font-weight: 800; margin-bottom: 20px; font-family: 'JetBrains Mono', monospace; text-shadow: 0 0 15px rgba(16,185,129,0.4); }
+.trade-signal { border: 1px solid rgba(16, 185, 129, 0.5); background: linear-gradient(145deg, rgba(16,185,129,0.08) 0%, rgba(0,0,0,0) 100%); padding: 25px; margin-top: 10px; border-radius: 8px; box-shadow: 0 0 25px rgba(16, 185, 129, 0.15); position: relative; overflow: hidden;}
+.trade-signal::before { content: ''; position: absolute; top: 0; left: 0; width: 5px; height: 100%; background: #10B981; }
+.trade-asset { font-size: 2.2rem; color: #10B981; font-weight: 800; margin-bottom: 20px; font-family: 'JetBrains Mono', monospace; text-shadow: 0 0 15px rgba(16,185,129,0.4); }
 
 /* Order Book Table */
 .ob-table { width: 100%; font-size: 0.85rem; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; }
@@ -201,7 +201,9 @@ def calculate_dynamic_margin(odds):
 def calculate_kelly(prob, odd, fraction=0.25):
     b = odd - 1
     q = 1 - prob
-    return max(0, (((b * prob) - q) / b) * fraction * 100)
+    if b <= 0: return 0
+    k = ((b * prob) - q) / b
+    return max(0, k * fraction * 100)
 
 def poisson_pmf(lam, k):
     return (lam**k * math.exp(-lam)) / math.factorial(k)
@@ -242,18 +244,16 @@ with col_ctrl:
     with st.expander("TERMINAL DOCUMENTATION", expanded=True):
         st.markdown("""
         <div class='manual-box'>
-        <span class='manual-term'>Interactive Plotting</span>
-        Dynamic visualizations of Poisson distributions and Market Deltas. Allows instant visual analysis of Risk vs Reward asymmetry.
+        <span class='manual-term'>Prime Alpha Signal</span>
+        O sistema ignora anomalias com baixa taxa de acerto. A recomendação principal foca-se no mercado com maior <b>Kelly Criterion</b> (probabilidade de acerto > 35% cruzada com a Edge do mercado).
         <span class='manual-term'>Dynamic De-Vigging</span>
         Proprietary model extracts exact Overround (bookmaker margin) from the 1X2 primary market and adjusts fair probabilities dynamically.
-        <span class='manual-term'>Expected Value (+EV)</span>
-        Indicates long-term theoretical profit margin by crossing system True Odds against institutional lines.
         </div>
         """, unsafe_allow_html=True)
 
 if m_sel and btn_run:
-    with st.spinner('Compiling data & running Monte Carlo simulations...'):
-        time.sleep(1) # Efeito dramático de processamento
+    with st.spinner('Compiling data & computing Risk-Adjusted Alpha...'):
+        time.sleep(1) 
         
         h_id, a_id = m_sel['teams']['home']['id'], m_sel['teams']['away']['id']
         h_name = m_sel['teams']['home']['name']
@@ -265,7 +265,7 @@ if m_sel and btn_run:
         live_odds = get_real_odds(m_sel['fixture']['id'])
         
         valid_markets = []
-        best_bet, max_edge = None, 0
+        best_bet = None
         dynamic_margin = calculate_dynamic_margin(live_odds)
         
         if live_odds:
@@ -274,12 +274,25 @@ if m_sel and btn_run:
                 if odd > 1.05 and prob > 0:
                     f_prob = (1 / odd) / (1 + dynamic_margin)
                     edge = (prob * odd) - 1
-                    valid_markets.append({"Market": mkt, "BookOdd": odd, "ModelProb": prob, "Edge": edge, "TrueOdd": f_prob})
-                    if edge > max_edge:
-                        max_edge, best_bet = edge, valid_markets[-1]
+                    kelly_val = calculate_kelly(prob, odd) if edge > 0 else 0
+                    
+                    valid_markets.append({
+                        "Market": mkt, 
+                        "BookOdd": odd, 
+                        "ModelProb": prob, 
+                        "Edge": edge, 
+                        "TrueOdd": f_prob,
+                        "Kelly": kelly_val
+                    })
+            
+            # FILTRO DE OURO: Apenas apostas com Edge Positivo E pelo menos 35% de probabilidade
+            prime_bets = [m for m in valid_markets if m['Edge'] > 0 and m['ModelProb'] >= 0.35]
+            
+            if prime_bets:
+                # Escolher a melhor aposta com base na alocação de capital ideal (Maior Kelly)
+                best_bet = max(prime_bets, key=lambda x: x['Kelly'])
         
         with col_exec:
-            # Match Context / Expected Goals
             st.markdown(f"""
             <div class='metric-grid'>
                 <div class='metric-card'>
@@ -296,28 +309,22 @@ if m_sel and btn_run:
             col_alpha, col_chart = st.columns([1.2, 1])
             
             with col_alpha:
-                if best_bet and best_bet["Edge"] > 0:
-                    rec_kelly = calculate_kelly(best_bet['ModelProb'], best_bet['BookOdd'])
-                    dollar_sz = (rec_kelly/100) * bankroll
+                if best_bet:
+                    dollar_sz = (best_bet['Kelly']/100) * bankroll
                     
-                    warning_html = ""
-                    if best_bet["Edge"] > 0.30:
-                        warning_html = "<div style='color: #F59E0B; font-size: 0.75rem; margin-top: 20px; text-align: center; border: 1px dashed #F59E0B; padding: 8px; border-radius: 4px;'>⚠️ ANOMALY ALERT: Edge > 30%. Verify late injuries/news before execution.</div>"
-
                     st.markdown(f"""
     <div class='trade-signal'>
-    <div class='panel-title' style='color:#10B981; border-color:rgba(16,185,129,0.2);'>Highest Expected Value (+EV) Market</div>
+    <div class='panel-title' style='color:#10B981; border-color:rgba(16,185,129,0.2);'>PRIME ALPHA SIGNAL (Risk-Adjusted)</div>
     <div class='trade-asset'>{best_bet['Market']} @ {best_bet['BookOdd']:.3f}</div>
-    <div class='data-row'><span class='data-lbl'>Model Probability</span><span class='data-val'>{best_bet['ModelProb']*100:.2f}%</span></div>
+    <div class='data-row'><span class='data-lbl'>Win Probability (Strike Rate)</span><span class='data-val'>{best_bet['ModelProb']*100:.2f}%</span></div>
     <div class='data-row'><span class='data-lbl'>Expected Value (Edge)</span><span class='data-val hl-green'>+{best_bet['Edge']*100:.2f}%</span></div>
-    <div class='data-row'><span class='data-lbl'>Rec. Bankroll Size (1/4 Kelly)</span><span class='data-val hl-blue'>${dollar_sz:,.0f} ({rec_kelly:.2f}%)</span></div>
+    <div class='data-row'><span class='data-lbl'>Optimal Stake (1/4 Kelly)</span><span class='data-val hl-blue'>${dollar_sz:,.0f} ({best_bet['Kelly']:.2f}%)</span></div>
     <div class='data-row' style='margin-top:12px; border-top: 1px dashed #1E293B; padding-top: 12px;'><span class='data-lbl'>Detected Market Margin</span><span class='data-val hl-warn'>{dynamic_margin*100:.2f}%</span></div>
-    {warning_html}
     </div>
     """, unsafe_allow_html=True)
                 elif live_odds:
                     st.markdown("""
-    <div class='grid-panel'><div class='data-val hl-red' style='text-align: center; font-size: 1.2rem; padding: 20px;'>EFFICIENT MARKET DETECTED. PROTECT CAPITAL. PASS.</div></div>
+    <div class='grid-panel'><div class='data-val hl-red' style='text-align: center; font-size: 1.2rem; padding: 20px;'>NO PRIME ALPHA DETECTED.<br><span style='font-size: 0.8rem; color: #94A3B8;'>Market is efficient or variance is too high. Protect Capital. Pass.</span></div></div>
     """, unsafe_allow_html=True)
 
             with col_chart:
@@ -347,6 +354,7 @@ if m_sel and btn_run:
             if live_odds and valid_markets:
                 st.markdown("""<div class='grid-panel' style='padding-bottom: 5px;'><div class='panel-title'>Probability Delta (Model vs Bookmaker) - Top 5 Markets</div>""", unsafe_allow_html=True)
                 
+                # Para o gráfico continuo a usar o Edge puro para visualizar as maiores disparidades
                 top_markets = sorted([m for m in valid_markets if m['Edge'] > 0], key=lambda x: x['Edge'], reverse=True)[:5]
                 
                 if top_markets:
@@ -378,12 +386,13 @@ if m_sel and btn_run:
                     st.info("No +EV markets to chart.")
                 st.markdown("</div>", unsafe_allow_html=True)
 
-            st.markdown("""<div class='grid-panel'><div class='panel-title'>Algorithmic Order Book (Full Range)</div>""", unsafe_allow_html=True)
+            st.markdown("""<div class='grid-panel'><div class='panel-title'>Algorithmic Order Book (Sorted by Kelly Criterion)</div>""", unsafe_allow_html=True)
             
             if live_odds:
-                valid_markets = sorted(valid_markets, key=lambda x: x['Edge'], reverse=True)
+                # Ordena a tabela toda pelo Kelly para refletir a nova prioridade do algoritmo
+                valid_markets = sorted(valid_markets, key=lambda x: x['Kelly'], reverse=True)
                 
-                table_html = "<table class='ob-table'><tr><th>Market</th><th>Book Odds</th><th>True Odds (No-Vig)</th><th>Model Prob</th><th>Edge (+EV)</th></tr>"
+                table_html = "<table class='ob-table'><tr><th>Market</th><th>Book Odds</th><th>Model Prob</th><th>Edge (+EV)</th><th>Kelly Rec.</th></tr>"
                 
                 for m in valid_markets:
                     edge_val = m['Edge'] * 100
@@ -391,8 +400,9 @@ if m_sel and btn_run:
                     sign = "+" if edge_val > 0 else ""
                     
                     row = f"<tr><td>{m['Market']}</td><td>{m['BookOdd']:.3f}</td>"
-                    row += f"<td>{m['TrueOdd']*100:.1f}%</td><td>{m['ModelProb']*100:.1f}%</td>"
-                    row += f"<td class='{color_cls}'>{sign}{edge_val:.2f}%</td></tr>"
+                    row += f"<td>{m['ModelProb']*100:.1f}%</td>"
+                    row += f"<td class='{color_cls}'>{sign}{edge_val:.2f}%</td>"
+                    row += f"<td style='color:#38BDF8;'>{m['Kelly']:.2f}%</td></tr>"
                     
                     table_html += row
                     
