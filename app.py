@@ -249,6 +249,33 @@ def run_master_math(lh, la, rho=-0.13, zip_factor=1.0):
     }, prob_mtx
 
 # ==========================================
+# CÁLCULO DINÂMICO DO BANKROLL (FIX)
+# ==========================================
+df_temp = st.session_state.bet_history
+lucro_real_total = 0.0
+
+# Verificação de segurança para evitar o KeyError
+cols_check = ['Estado', 'Stake (€)', 'Odd Comprada']
+if not df_temp.empty and all(c in df_temp.columns for c in cols_check):
+    # Usar vetorização do pandas é mais seguro que o iterrows() neste caso
+    vitorias = df_temp[df_temp['Estado'] == 'Ganha']
+    derrotas = df_temp[df_temp['Estado'] == 'Perdida']
+    
+    lucro_v = (vitorias['Stake (€)'] * (vitorias['Odd Comprada'] - 1)).sum()
+    prejuizo_d = derrotas['Stake (€)'].sum()
+    lucro_real_total = lucro_v - prejuizo_d
+
+bankroll_atual = banca_inicial + lucro_real_total
+
+# Mostrar o Bankroll no topo da Sidebar para nunca o perderes de vista
+st.sidebar.markdown(f"""
+    <div style="background: rgba(0,255,136,0.1); padding: 15px; border-radius: 10px; border: 1px solid #00FF88; margin-bottom: 20px;">
+        <p style="margin:0; color:#94A3B8; font-size:0.8rem; text-transform:uppercase;">Saldo Operacional</p>
+        <h2 style="margin:0; color:#00FF88;">{bankroll_atual:.2f} €</h2>
+    </div>
+""", unsafe_allow_html=True)
+
+# ==========================================
 # 3. SISTEMA DE LOGIN PRO
 # ==========================================
 def login_screen():
