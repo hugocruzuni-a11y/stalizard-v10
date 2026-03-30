@@ -327,7 +327,7 @@ def main_app():
             """, unsafe_allow_html=True)
 
             raw_mkts = [
-                ("Vencedor Casa", res["Vencedor Casa"], o_1), ("Empate (X)", res["Empate (X)", o_x), ("Vencedor Fora", res["Vencedor Fora"], o_2),
+                ("Vencedor Casa", res["Vencedor Casa"], o_1), ("Empate (X)", res["Empate (X)"], o_x), ("Vencedor Fora", res["Vencedor Fora"], o_2),
                 ("Mais de 1.5 Golos", res["Mais de 1.5 Golos"], o_o15), ("Menos de 1.5 Golos", res["Menos de 1.5 Golos"], o_u15),
                 ("Mais de 2.5 Golos", res["Mais de 2.5 Golos"], o_o25), ("Menos de 2.5 Golos", res["Menos de 2.5 Golos"], o_u25),
                 ("Ambas Marcam (Sim)", res["Ambas Marcam (Sim)"], o_btts_y), ("Ambas Marcam (Não)", res["Ambas Marcam (Não)"], o_btts_n),
