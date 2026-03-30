@@ -249,32 +249,36 @@ def run_master_math(lh, la, rho=-0.13, zip_factor=1.0):
     }, prob_mtx
 
 # ==========================================
-# CÁLCULO DINÂMICO DO BANKROLL (FIX)
+# 🛡️ CÁLCULO BLINDADO DO BANKROLL (FIX)
 # ==========================================
-df_temp = st.session_state.bet_history
+# Garantimos que estas variáveis existem SEMPRE, para não dar erro abaixo
 lucro_real_total = 0.0
+bankroll_atual = float(banca_inicial) 
 
-# Verificação de segurança para evitar o KeyError
-cols_check = ['Estado', 'Stake (€)', 'Odd Comprada']
-if not df_temp.empty and all(c in df_temp.columns for c in cols_check):
-    # Usar vetorização do pandas é mais seguro que o iterrows() neste caso
-    vitorias = df_temp[df_temp['Estado'] == 'Ganha']
-    derrotas = df_temp[df_temp['Estado'] == 'Perdida']
+# Só tentamos calcular se a tabela não estiver vazia
+if not st.session_state.bet_history.empty:
+    df_temp = st.session_state.bet_history
     
-    lucro_v = (vitorias['Stake (€)'] * (vitorias['Odd Comprada'] - 1)).sum()
-    prejuizo_d = derrotas['Stake (€)'].sum()
-    lucro_real_total = lucro_v - prejuizo_d
+    # Verificamos se as colunas necessárias existem mesmo (evita o KeyError)
+    cols_necessarias = ['Estado', 'Stake (€)', 'Odd Comprada']
+    if all(col in df_temp.columns for col in cols_necessarias):
+        try:
+            # Calculamos o lucro de forma segura, convertendo para numérico
+            ganhas = df_temp[df_temp['Estado'] == 'Ganha']
+            perdidas = df_temp[df_temp['Estado'] == 'Perdida']
+            
+            lucro_v = (pd.to_numeric(ganhas['Stake (€)']) * (pd.to_numeric(ganhas['Odd Comprada']) - 1)).sum()
+            prejuizo_p = pd.to_numeric(perdidas['Stake (€)']).sum()
+            
+            lucro_real_total = lucro_v - prejuizo_p
+            bankroll_atual = banca_inicial + lucro_real_total
+        except Exception as e:
+            # Se algo falhar na conversão, não crashamos a app
+            st.sidebar.error(f"Erro no cálculo: {e}")
 
-bankroll_atual = banca_inicial + lucro_real_total
-
-# Mostrar o Bankroll no topo da Sidebar para nunca o perderes de vista
-st.sidebar.markdown(f"""
-    <div style="background: rgba(0,255,136,0.1); padding: 15px; border-radius: 10px; border: 1px solid #00FF88; margin-bottom: 20px;">
-        <p style="margin:0; color:#94A3B8; font-size:0.8rem; text-transform:uppercase;">Saldo Operacional</p>
-        <h2 style="margin:0; color:#00FF88;">{bankroll_atual:.2f} €</h2>
-    </div>
-""", unsafe_allow_html=True)
-
+# Exibir o valor logo na barra lateral para teres a certeza que ele existe
+st.sidebar.metric("💰 BANKROLL OPERACIONAL", f"{bankroll_atual:.2f} €", f"{lucro_real_total:+.2f} €")
+# ==========================================
 # ==========================================
 # 3. SISTEMA DE LOGIN PRO
 # ==========================================
