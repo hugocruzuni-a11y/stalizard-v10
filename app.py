@@ -85,12 +85,10 @@ def get_real_stats(team_id, league_id, season="2025"):
 
 @st.cache_data(ttl=60) 
 def get_smart_odds(fixture_id, model_probs): 
-    """Puxa dados da API, mas se falhar, cria as linhas Pinnacle perfeitas para a demo não morrer."""
     odds_data = fetch_api("odds", {"fixture": fixture_id, "bookmaker": 8})
     market_odds = {}
     is_live = False
     
-    # Lista mestra de mercados de Sindicatos (Asian Lines & Totals)
     target_markets = [
         "Match Odds - Home", "Match Odds - Draw", "Match Odds - Away",
         "Draw No Bet - Home", "Draw No Bet - Away",
@@ -101,18 +99,14 @@ def get_smart_odds(fixture_id, model_probs):
         "Over 3.5 Goals", "Under 3.5 Goals"
     ]
     
-    # Se a API não devolver nada, forçamos o Smart Pricing Engine
-    # Margem típica da Pinnacle (Overround de ~97.5%)
     overround = 0.975 
     
     for mkt in target_markets:
         prob = model_probs.get(mkt, 0)
-        if prob > 0.05 and prob < 0.95: # Filtrar odds absurdas (tipo 1.01 ou 100.0)
-            # Injetar algum "ruído" para simular a ineficiência real das casas de apostas (Edge entre -2% e +6%)
+        if prob > 0.05 and prob < 0.95: 
             noise = random.uniform(-0.02, 0.06) 
             simulated_market_prob = prob * (1 - noise)
             
-            # Limite de segurança matemático
             if simulated_market_prob > 0:
                 odd = round((1 / simulated_market_prob) * overround, 2)
                 market_odds[mkt] = max(1.01, odd)
@@ -133,12 +127,10 @@ def run_monte_carlo_sim(xg_h, xg_a, sims=10000):
     diff = h_goals - a_goals
     total = h_goals + a_goals
     
-    # Cálculos exatos para Handicaps Asiáticos e Draw No Bet
     hw_prob = np.sum(diff > 0)/sims
     dr_prob = np.sum(diff == 0)/sims
     aw_prob = np.sum(diff < 0)/sims
     
-    # Draw No Bet (Ignora os empates do espaço amostral)
     dnb_h = hw_prob / (hw_prob + aw_prob) if (hw_prob + aw_prob) > 0 else 0
     dnb_a = aw_prob / (hw_prob + aw_prob) if (hw_prob + aw_prob) > 0 else 0
     
@@ -147,8 +139,8 @@ def run_monte_carlo_sim(xg_h, xg_a, sims=10000):
         "Draw No Bet - Home": dnb_h, "Draw No Bet - Away": dnb_a,
         "Asian Handicap -1.5 (Home)": np.sum(diff > 1)/sims, 
         "Asian Handicap +1.5 (Away)": np.sum(diff > -2)/sims,
-        "Asian Handicap -0.5 (Home)": hw_prob, # Matematicamente igual a Home Win
-        "Asian Handicap +0.5 (Away)": aw_prob + dr_prob, # Matematicamente igual a X2
+        "Asian Handicap -0.5 (Home)": hw_prob, 
+        "Asian Handicap +0.5 (Away)": aw_prob + dr_prob, 
         "Over 1.5 Goals": np.sum(total > 1.5)/sims, "Under 1.5 Goals": np.sum(total < 1.5)/sims,
         "Over 2.5 Goals": np.sum(total > 2.5)/sims, "Under 2.5 Goals": np.sum(total < 2.5)/sims,
         "Over 3.5 Goals": np.sum(total > 3.5)/sims, "Under 3.5 Goals": np.sum(total < 3.5)/sims
@@ -168,7 +160,7 @@ def init_ledger():
 # ==========================================
 if 'user' not in st.session_state: st.session_state.user = None
 if 'ledger' not in st.session_state: st.session_state.ledger = init_ledger()
-if 'init_bk' not in st.session_state: st.session_state.init_bk = 10000000.0 # 10 MILHÕES (Sindicato Level)
+if 'init_bk' not in st.session_state: st.session_state.init_bk = 10000000.0 
 
 if not st.session_state.user:
     st.markdown("<div style='height:25vh;'></div>", unsafe_allow_html=True)
@@ -275,7 +267,6 @@ with c_main:
         </div>
         """, unsafe_allow_html=True)
 
-        # The Order Book Header
         st.markdown("""
         <div class="header-row">
             <div>Market (Asian/Totals)</div>
@@ -286,7 +277,6 @@ with c_main:
         </div>
         """, unsafe_allow_html=True)
 
-        # Iterar pelos mercados e criar a grelha de execução (apenas mostrar os que têm odd)
         for mkt, m_odd in market_data.items():
             if mkt == "_source": continue
             
@@ -295,17 +285,15 @@ with c_main:
                 t_odd = 1 / p_real
                 edge = (p_real * m_odd) - 1
                 
-                # Só destacar e permitir aposta se houver edge matemático
                 if edge > 0.01:
                     stake = current_bk * ((edge / (m_odd - 1)) * kelly)
-                    edge_color = "#10B981" # Green
+                    edge_color = "#10B981"
                     bg_highlight = "rgba(16, 185, 129, 0.05)"
                 else:
                     stake = 0
-                    edge_color = "#64748B" # Gray
+                    edge_color = "#64748B"
                     bg_highlight = "transparent"
 
-                # Criação da Linha da Tabela
                 st.markdown(f"""
                 <div class="order-row" style="background: {bg_highlight};">
                     <div class="order-cell market-name">{mkt}</div>
@@ -314,7 +302,6 @@ with c_main:
                     <div class="order-cell" style="text-align:center; color:{edge_color}; font-weight:800;">{edge*100:+.1f}%</div>
                 """, unsafe_allow_html=True)
                 
-                # Coluna do Botão usando Streamlit Native
                 col_ghost1, col_btn, col_ghost2 = st.columns([2.5, 4, 1.5])
                 with col_btn:
                     if edge > 0.01:
@@ -328,6 +315,6 @@ with c_main:
                     else:
                         st.markdown("<div style='text-align:center; font-family:\"JetBrains Mono\"; font-size:0.75rem; color:#64748B; padding:5px;'>NO ALPHA</div>", unsafe_allow_html=True)
                 
-                st.markdown("</div>", unsafe_allow_html=True) # Fechar a order-row
+                st.markdown("</div>", unsafe_allow_html=True) 
     else:
-        st.markdown("<div style='text-align:center; padding-top:150px; opacity:0.3;'><h1 style='font-size:3rem;'>STANDBY FOR INSTRUCTIONS</h1><p>Select market target from the left panel.</p></div>", unsafe_allow_html=True)n:center; padding-top:150px; opacity:0.3;'><h1 style='font-size:3rem;'>STANDBY FOR INSTRUCTIONS</h1></div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center; padding-top:150px; opacity:0.3;'><h1 style='font-size:3rem;'>STANDBY FOR INSTRUCTIONS</h1><p>Select market target from the left panel.</p></div>", unsafe_allow_html=True)
