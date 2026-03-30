@@ -2,51 +2,55 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import requests
-import plotly.graph_objects as go
 from datetime import date
 import time
 
 # ==========================================
-# 1. HIGH-PERFORMANCE SETUP & STYLING
+# 1. HFT TERMINAL SETUP & CYBER STYLING
 # ==========================================
-st.set_page_config(page_title="APEX QUANT | ALPHA TERMINAL", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="APEX QUANT | HFT TERMINAL", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=JetBrains+Mono:wght@400;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700;800&display=swap');
     
-    .stApp { background-color: #030407; color: #FFFFFF; font-family: 'Outfit', sans-serif; background-image: radial-gradient(circle at 50% 0%, #0A1128 0%, #030407 80%); }
+    .stApp { background-color: #000000; color: #00FF41; font-family: 'JetBrains Mono', monospace; }
     header, footer { visibility: hidden; }
     
-    .top-nav { background: rgba(3, 4, 7, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0, 240, 255, 0.15); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; margin: -3rem -3rem 2rem -3rem; position: sticky; top: 0; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
-    .logo { font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; color: #FFFFFF; line-height: 1;}
-    .logo span { color: #00F0FF; text-shadow: 0 0 15px rgba(0, 240, 255, 0.4); }
+    /* Terminal Nav */
+    .top-nav { background: #050505; border-bottom: 2px solid #003B00; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; margin: -3rem -3rem 2rem -3rem; position: sticky; top: 0; z-index: 1000;}
+    .logo { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; color: #FFFFFF; }
+    .logo span { color: #00FF41; text-shadow: 0 0 8px #00FF41; }
     
-    .live-status { display: flex; align-items: center; gap: 10px; background: rgba(255, 0, 85, 0.1); border: 1px solid rgba(255, 0, 85, 0.3); padding: 8px 16px; border-radius: 50px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #FF0055; letter-spacing: 1px;}
-    .dot { width: 8px; height: 8px; background-color: #FF0055; border-radius: 50%; animation: pulse-red 1.5s infinite; }
-    @keyframes pulse-red { 0% { transform: scale(0.95); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.5; } 100% { transform: scale(0.95); opacity: 1; } }
+    .sys-status { color: #00FF41; font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; animation: blink 2s infinite; }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-    .lock-card { background: linear-gradient(180deg, #0A101D 0%, #05080F 100%); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 20px; padding: 30px; box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 20px 50px rgba(0,0,0,0.5); position: relative; overflow: hidden; margin-bottom: 20px;}
-    .lock-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #00F0FF, #00FF88); }
+    /* Alpha Grid */
+    .data-matrix { border: 1px solid #003B00; background: #020402; padding: 20px; box-shadow: inset 0 0 20px rgba(0,255,65,0.05); }
+    .neon-text { color: #00FF41; text-shadow: 0 0 5px #00FF41; font-weight: 800; }
+    .warning-text { color: #FFB000; text-shadow: 0 0 5px #FFB000; font-weight: 800; }
+    .danger-text { color: #FF003C; text-shadow: 0 0 5px #FF003C; font-weight: 800; }
     
-    .matchup { text-align: center; margin-bottom: 25px; }
-    .league-tag { font-size: 0.8rem; color: #00F0FF; text-transform: uppercase; letter-spacing: 3px; font-weight: 800; margin-bottom: 5px; }
-    .teams { font-size: 2.2rem; font-weight: 900; line-height: 1.2; letter-spacing: -1px; }
-    .teams span { color: #64748B; font-weight: 400; font-size: 1.5rem; margin: 0 15px; }
-
-    .order-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; align-items: center; background: #080C16; border: 1px solid #1E293B; border-radius: 6px; margin-bottom: 6px; transition: all 0.2s; }
-    .order-row:hover { border-color: #00F0FF; background: rgba(0, 240, 255, 0.05); }
-    .order-cell { padding: 10px 15px; font-family: 'JetBrains Mono'; font-size: 0.9rem; }
-    .market-name { color: #F8FAFC; font-weight: 800; font-family: 'Inter'; font-size: 0.80rem; text-transform: uppercase; }
+    .metric-row { display: flex; justify-content: space-between; border-bottom: 1px dashed #003B00; padding: 8px 0; font-size: 0.85rem; }
+    .metric-label { color: #555555; }
     
-    .metric-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 15px; text-align: center; }
-    .metric-title { font-size: 0.75rem; color: #64748B; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; font-weight: 800;}
-    .metric-value { font-size: 1.5rem; font-family: 'JetBrains Mono'; font-weight: 900; color: #FFF; }
+    /* Order Book Table */
+    .ob-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; border-bottom: 2px solid #00FF41; padding-bottom: 5px; margin-bottom: 10px; font-size: 0.75rem; color: #00FF41; font-weight: 800; }
+    .ob-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; border-bottom: 1px solid #111; padding: 8px 0; font-size: 0.85rem; transition: background 0.1s; }
+    .ob-row:hover { background: rgba(0, 255, 65, 0.1); cursor: crosshair; }
+    
+    /* Alpha Alert Box */
+    .alpha-box { border: 2px solid #00FF41; background: rgba(0, 255, 65, 0.05); padding: 20px; margin: 20px 0; text-align: center; box-shadow: 0 0 30px rgba(0, 255, 65, 0.2); position: relative; }
+    .alpha-box::before { content: '[ EXECUTION TARGET ACQUIRED ]'; position: absolute; top: -10px; left: 20px; background: #000; padding: 0 10px; font-size: 0.7rem; color: #00FF41; }
+    
+    /* Buttons */
+    .stButton > button { background: #00FF41 !important; color: #000 !important; border: none !important; border-radius: 0 !important; font-family: 'JetBrains Mono' !important; font-weight: 800 !important; text-transform: uppercase; box-shadow: 0 0 10px rgba(0, 255, 65, 0.4); }
+    .stButton > button:hover { background: #FFF !important; box-shadow: 0 0 20px rgba(255, 255, 255, 0.8); }
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. DATA ENGINE (LIVE API) & MATH ALGORITHMS
+# 2. DATA ENGINE & ADVANCED MATH
 # ==========================================
 API_KEY = st.secrets.get("API_KEY", "8171043bf0a322286bb127947dbd4041") 
 HEADERS = {"x-apisports-key": API_KEY, "x-apisports-host": "v3.football.api-sports.io"}
@@ -87,13 +91,8 @@ def get_real_odds(fixture_id):
                 market_odds["Home Win"], market_odds["Draw"], market_odds["Away Win"] = vals.get('Home', 0), vals.get('Draw', 0), vals.get('Away', 0)
             elif name == 'Goals Over/Under':
                 market_odds["Over 2.5"], market_odds["Under 2.5"] = vals.get('Over 2.5', 0), vals.get('Under 2.5', 0)
-                market_odds["Over 3.5"], market_odds["Under 3.5"] = vals.get('Over 3.5', 0), vals.get('Under 3.5', 0)
             elif name == 'Both Teams Score':
                 market_odds["BTTS - Yes"], market_odds["BTTS - No"] = vals.get('Yes', 0), vals.get('No', 0)
-            elif name == 'Asian Handicap':
-                for k, odd in vals.items():
-                    if "Home -0.5" in k: market_odds["AH -0.5 (H)"] = odd
-                    if "Home +0.5" in k: market_odds["AH +0.5 (H)"] = odd
     return market_odds
 
 def calculate_projected_goals(h_stats, a_stats):
@@ -101,152 +100,169 @@ def calculate_projected_goals(h_stats, a_stats):
     a_attack, h_defense = a_stats['gf_a'] / 1.25, h_stats['ga_h'] / 1.25
     return round(max(0.1, h_attack * a_defense * 1.55), 2), round(max(0.1, a_attack * h_defense * 1.25), 2)
 
-def run_monte_carlo_sim(proj_h, proj_a, sims=20000):
+def run_monte_carlo_sim(proj_h, proj_a, sims=25000):
     np.random.seed(int(time.time()))
     h_goals, a_goals = np.random.poisson(proj_h, sims), np.random.poisson(proj_a, sims)
+    
+    # Bivariate Correction (Dixon-Coles)
     for i in range(sims):
         if h_goals[i] == 1 and a_goals[i] == 0 and np.random.random() < 0.06: a_goals[i] = 1
         elif h_goals[i] == 0 and a_goals[i] == 1 and np.random.random() < 0.06: h_goals[i] = 1
+            
     diff, total = h_goals - a_goals, h_goals + a_goals
     hw, dr, aw = np.sum(diff > 0)/sims, np.sum(diff == 0)/sims, np.sum(diff < 0)/sims
     return {
         "Home Win": hw, "Draw": dr, "Away Win": aw,
-        "AH -0.5 (H)": hw, "AH +0.5 (H)": hw + dr,
         "Over 2.5": np.sum(total > 2.5)/sims, "Under 2.5": np.sum(total < 2.5)/sims,
-        "Over 3.5": np.sum(total > 3.5)/sims, "Under 3.5": np.sum(total < 3.5)/sims,
         "BTTS - Yes": np.sum((h_goals > 0) & (a_goals > 0))/sims, "BTTS - No": np.sum((h_goals == 0) | (a_goals == 0))/sims
     }
 
 def calculate_kelly(prob, odd, fraction=0.25):
-    """Calcula a percentagem da banca a apostar usando 1/4 Kelly Criterion."""
     b = odd - 1
     q = 1 - prob
     kelly_pct = ((b * prob) - q) / b
     return max(0, kelly_pct) * fraction * 100
 
+def get_market_vig(odds, mkt_type):
+    """Calcula e remove a margem (VIG) para descobrir a probabilidade real do Mercado."""
+    try:
+        if mkt_type == "1X2":
+            implied_sum = (1/odds["Home Win"]) + (1/odds["Draw"]) + (1/odds["Away Win"])
+            return implied_sum - 1
+        elif mkt_type == "OU":
+            implied_sum = (1/odds["Over 2.5"]) + (1/odds["Under 2.5"])
+            return implied_sum - 1
+    except: return 0.05
+    return 0.05
+
 # ==========================================
-# 3. PRO TERMINAL UI & PLOTLY VISUALIZATIONS
+# 3. HFT TERMINAL UI
 # ==========================================
 st.markdown("""
 <div class="top-nav">
-    <div class="logo">APEX<span>QUANT</span></div>
-    <div class="live-status"><div class="dot"></div> ALGORITHMIC TRADING TERMINAL</div>
+    <div class="logo">APEX<span>QUANT</span> // SYS_CORE</div>
+    <div class="sys-status">● HFT FEED ACTIVE // DE-VIG ALGO RUNNING</div>
 </div>
 """, unsafe_allow_html=True)
 
-col_menu, col_core, col_book = st.columns([1, 1.8, 2.2], gap="large")
+col_cmd, col_data, col_book = st.columns([1, 1.8, 2.2], gap="large")
 
-with col_menu:
-    st.markdown("<h3 style='color:#00F0FF; font-weight:900; font-size:1.1rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:20px;'>Market Screener</h3>", unsafe_allow_html=True)
-    target_date = st.date_input("Match Date", date.today())
-    l_map = {"🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League": 39, "🇪🇺 Champions League": 2, "🇪🇸 La Liga": 140, "🇵🇹 Primeira Liga": 94, "🇮🇹 Serie A": 135, "🇩🇪 Bundesliga": 78}
-    league_name = st.selectbox("Competition", list(l_map.keys()))
+with col_cmd:
+    st.markdown("<div style='color:#555; font-size:0.7rem; margin-bottom:10px;'>[ SYS_INPUT_MODULE ]</div>", unsafe_allow_html=True)
+    target_date = st.date_input("TARGET_DATE", date.today())
+    l_map = {"ENG_PREMIER": 39, "EUR_CHAMPIONS": 2, "ESP_LIGA": 140, "POR_PRIMEIRA": 94, "ITA_SERIE_A": 135}
+    league_name = st.selectbox("TARGET_EXCHANGE", list(l_map.keys()))
     
-    with st.spinner("Connecting to institutional latency feeds..."):
+    with st.spinner("FETCHING LIQUIDITY..."):
         fixtures = get_live_fixtures(target_date.strftime('%Y-%m-%d'), l_map[league_name])
     
     m_sel = None
     if fixtures:
-        m_map = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}": f for f in fixtures}
-        m_sel = m_map[st.selectbox("Select Target Match", list(m_map.keys()))]
-        st.button("🔄 RUN QUANT ALGO", use_container_width=True)
-    else: st.error("No liquid fixtures found.")
+        m_map = {f"{f['teams']['home']['name'].upper()} // {f['teams']['away']['name'].upper()}": f for f in fixtures}
+        m_sel = m_map[st.selectbox("SELECT_ASSET", list(m_map.keys()))]
+        st.button("EXEC_QUANT_MODEL()", use_container_width=True)
 
 if m_sel:
     h_id, a_id = m_sel['teams']['home']['id'], m_sel['teams']['away']['id']
-    with st.spinner("Computing 20k Bivariate Poisson paths..."):
+    with st.spinner("CALCULATING POISSON DEVIANCE & NO-VIG PROBS..."):
         h_stats, a_stats = get_real_stats(h_id, l_map[league_name]), get_real_stats(a_id, l_map[league_name])
         proj_h, proj_a = calculate_projected_goals(h_stats, a_stats)
-        true_probs = run_monte_carlo_sim(proj_h, proj_a)
+        true_probs = run_monte_carlo_sim(proj_h, proj_a, 25000)
         live_odds = get_real_odds(m_sel['fixture']['id'])
     
-    best_bet, max_edge, valid_markets = None, 0, []
+    # Process Market Data
+    valid_markets = []
+    best_bet, max_edge = None, 0
+    vig_1x2 = get_market_vig(live_odds, "1X2") if live_odds else 0.05
+    
     if live_odds:
         for mkt, odd in live_odds.items():
             prob = true_probs.get(mkt, 0)
             if odd > 1.05 and prob > 0:
+                # Remove o Vig para calcular a Fair Odd do Mercado
+                market_implied = 1 / odd
+                market_fair_prob = market_implied / (1 + vig_1x2)
+                
                 edge = (prob * odd) - 1
-                valid_markets.append({"Market": mkt, "Odd": odd, "TrueProb": prob, "Edge": edge})
+                valid_markets.append({
+                    "Market": mkt, "Odd": odd, "TrueProb": prob, "Edge": edge, 
+                    "MarketFairProb": market_fair_prob, "Vig": vig_1x2
+                })
                 if edge > max_edge:
-                    max_edge, best_bet = edge, {"Market": mkt, "Odd": odd, "TrueProb": prob, "Edge": edge}
+                    max_edge, best_bet = edge, valid_markets[-1]
     
-    with col_core:
+    with col_data:
         st.markdown(f"""
-        <div class="lock-card">
-            <div class="matchup">
-                <div class="league-tag">{league_name} • QUOTES</div>
-                <div class="teams">{m_sel['teams']['home']['name']} <span>vs</span> {m_sel['teams']['away']['name']}</div>
-            </div>
-            <div style="display:flex; justify-content: space-around; margin-top: 10px;">
-                <div class="metric-box"><div class="metric-title">xG PROXY (HOME)</div><div class="metric-value" style="color:#00F0FF;">{proj_h:.2f}</div></div>
-                <div class="metric-box"><div class="metric-title">xG PROXY (AWAY)</div><div class="metric-value" style="color:#D4AF37;">{proj_a:.2f}</div></div>
-            </div>
+        <div class="data-matrix">
+            <div style="font-size: 0.7rem; color: #555; margin-bottom: 15px;">// ASSET_METADATA_STREAM</div>
+            <div style="font-size: 1.5rem; color: #FFF; font-weight: 800; margin-bottom: 5px;">{m_sel['teams']['home']['name'].upper()}</div>
+            <div style="font-size: 1.5rem; color: #FFF; font-weight: 800; margin-bottom: 20px;">{m_sel['teams']['away']['name'].upper()}</div>
+            
+            <div class="metric-row"><span class="metric-label">SYS.XG_PROXY_HOME :</span><span class="neon-text">{proj_h:.3f}</span></div>
+            <div class="metric-row"><span class="metric-label">SYS.XG_PROXY_AWAY :</span><span class="neon-text">{proj_a:.3f}</span></div>
+            <div class="metric-row"><span class="metric-label">POISSON_SIM_PATHS :</span><span class="neon-text">25,000</span></div>
+            <div class="metric-row"><span class="metric-label">MARKET_VIG_DETECT :</span><span class="warning-text">{(vig_1x2*100):.2f}%</span></div>
+            <div class="metric-row"><span class="metric-label">ALPHA_CORRELATION :</span><span class="neon-text">ACTIVE</span></div>
         </div>
         """, unsafe_allow_html=True)
 
         if best_bet and best_bet["Edge"] > 0:
             rec_kelly = calculate_kelly(best_bet['TrueProb'], best_bet['Odd'])
             st.markdown(f"""
-                <div style="background: rgba(0, 255, 136, 0.05); border: 2px dashed #00FF88; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0; box-shadow: 0 0 30px rgba(0,255,136,0.1);">
-                    <div style="color: #00FF88; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;">⚡ INSTITUTIONAL ALPHA IDENTIFIED ⚡</div>
-                    <div style="font-size: 2.2rem; font-weight: 900; color: #FFFFFF; text-shadow: 0 0 20px rgba(0,255,136,0.4);">{best_bet['Market']}</div>
-                    <div style="display:flex; justify-content:center; gap:20px; margin-top:15px; font-family:'JetBrains Mono';">
-                        <div style="background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 6px;">ODD: <span style="color:#FFD700; font-weight:800;">{best_bet['Odd']:.2f}</span></div>
-                        <div style="background: rgba(0,255,136,0.1); padding: 5px 15px; border-radius: 6px; color:#00FF88; font-weight:800;">EDGE: +{best_bet['Edge']*100:.1f}%</div>
-                        <div style="background: rgba(255,0,85,0.1); padding: 5px 15px; border-radius: 6px; color:#FF0055; font-weight:800;">SIZE (1/4 KELLY): {rec_kelly:.2f}%</div>
+                <div class="alpha-box">
+                    <div style="font-size: 2.5rem; font-weight: 800; color: #00FF41; margin-bottom: 10px;">{best_bet['Market'].upper()}</div>
+                    <div style="display: flex; justify-content: space-between; text-align: left; background: #000; padding: 15px; border: 1px solid #003B00;">
+                        <div>
+                            <div style="color: #555; font-size: 0.7rem;">BOOK_QUOTE</div>
+                            <div style="color: #FFF; font-size: 1.2rem; font-weight: 800;">{best_bet['Odd']:.3f}</div>
+                        </div>
+                        <div>
+                            <div style="color: #555; font-size: 0.7rem;">SYS_FAIR_PRICE</div>
+                            <div style="color: #00FF41; font-size: 1.2rem; font-weight: 800;">{(1/best_bet['TrueProb']):.3f}</div>
+                        </div>
+                        <div>
+                            <div style="color: #555; font-size: 0.7rem;">CALC_EDGE (EV)</div>
+                            <div style="color: #00FF41; font-size: 1.2rem; font-weight: 800;">+{best_bet['Edge']*100:.2f}%</div>
+                        </div>
+                        <div>
+                            <div style="color: #555; font-size: 0.7rem;">REC_SIZE (¼ KELLY)</div>
+                            <div style="color: #FFB000; font-size: 1.2rem; font-weight: 800;">{rec_kelly:.2f}%</div>
+                        </div>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
-            
-            # --- VISUAL DATA EXPORT (THE PLOTLY CHART) ---
-            st.markdown("<h4 style='color:#64748B; font-size: 0.9rem; text-transform:uppercase; text-align:center; font-weight:800; letter-spacing:1px; margin-top:20px;'>Probability Delta Analysis</h4>", unsafe_allow_html=True)
-            
-            # Prepare data for top 3 positive EV markets to keep the chart clean
-            pos_markets = sorted([m for m in valid_markets if m['Edge'] > 0], key=lambda x: x['Edge'], reverse=True)[:3]
-            if pos_markets:
-                m_names = [m['Market'] for m in pos_markets]
-                implied_probs = [(1/m['Odd'])*100 for m in pos_markets]
-                true_probs_pct = [m['TrueProb']*100 for m in pos_markets]
-
-                fig = go.Figure(data=[
-                    go.Bar(name='Bookmaker (Implied)', y=m_names, x=implied_probs, orientation='h', marker_color='#1E293B', width=0.3),
-                    go.Bar(name='Model (True Prob)', y=m_names, x=true_probs_pct, orientation='h', marker_color='#00F0FF', width=0.3)
-                ])
-                fig.update_layout(
-                    barmode='group',
-                    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(family="Outfit", color="#FFFFFF", size=12),
-                    margin=dict(l=0, r=0, t=30, b=0),
-                    xaxis=dict(title='Probability (%)', showgrid=True, gridcolor='rgba(255,255,255,0.1)', range=[0, max(max(true_probs_pct), max(implied_probs)) + 10]),
-                    yaxis=dict(autorange="reversed"),
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-                )
-                st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-
-        elif not live_odds: st.warning("⚠️ Pending Bookmaker Liquidity.")
-        else: st.error("📉 EFFICIENT MARKET. Pass.")
+            if st.button("> INITIATE_TRADE_SEQUENCE()", use_container_width=True):
+                st.toast("SYS: Trade payload compiled. Ready for API dispatch.", icon="📟")
 
     with col_book:
-        st.markdown("<h3 style='color:#FFFFFF; font-weight:900; font-size:1.1rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:20px;'>Live Order Book</h3>", unsafe_allow_html=True)
+        st.markdown("<div style='color:#555; font-size:0.7rem; margin-bottom:10px;'>[ ALGORITHMIC_ORDER_BOOK ]</div>", unsafe_allow_html=True)
         if live_odds:
             st.markdown("""
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; font-size: 0.65rem; color: #64748B; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; padding: 0 15px 10px 15px; border-bottom: 1px solid #1E293B; margin-bottom: 10px;">
-                <div>Market</div><div style="text-align:right;">Line</div><div style="text-align:right;">Fair</div><div style="text-align:center;">Alpha (EV)</div>
+            <div class="ob-header">
+                <div>MARKET_ID</div>
+                <div style="text-align:right;">QUOTE</div>
+                <div style="text-align:right;">MKT_NO_VIG</div>
+                <div style="text-align:right;">SYS_PROB</div>
+                <div style="text-align:right;">ALPHA</div>
             </div>
-            <div style="max-height: 600px; overflow-y: auto; padding-right: 5px;">
+            <div style="background: #020402; border: 1px solid #003B00; padding: 10px; max-height: 500px; overflow-y: auto;">
             """, unsafe_allow_html=True)
             
             valid_markets = sorted(valid_markets, key=lambda x: x['Edge'], reverse=True)
             for m in valid_markets:
                 is_edge = m['Edge'] > 0
-                c_edge, bg, border = ("#00FF88", "rgba(0, 255, 136, 0.05)", "border-left: 3px solid #00FF88;") if is_edge else ("#EF4444", "transparent", "border-left: 3px solid transparent;")
+                txt_color = "#00FF41" if is_edge else "#FF003C"
+                alpha_txt = f"+{m['Edge']*100:.2f}%" if is_edge else f"{m['Edge']*100:.2f}%"
                 
                 st.markdown(f"""
-                <div class="order-row" style="{border} background:{bg};">
-                    <div class="order-cell market-name">{m['Market']}</div>
-                    <div class="order-cell" style="text-align:right; font-weight:800; color:#FFF;">{m['Odd']:.2f}</div>
-                    <div class="order-cell" style="text-align:right; color:#00F0FF;">{(1/m['TrueProb']):.2f}</div>
-                    <div class="order-cell" style="text-align:center; color:{c_edge}; font-weight:800;">{m['Edge']*100:+.1f}%</div>
+                <div class="ob-row">
+                    <div style="color:#FFF;">{m['Market']}</div>
+                    <div style="text-align:right; color:#FFF;">{m['Odd']:.3f}</div>
+                    <div style="text-align:right; color:#555;">{m['MarketFairProb']*100:.1f}%</div>
+                    <div style="text-align:right; color:#00FF41;">{m['TrueProb']*100:.1f}%</div>
+                    <div style="text-align:right; color:{txt_color}; font-weight:800;">{alpha_txt}</div>
                 </div>
                 """, unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            st.markdown("<div class='danger-text'>ERR: LIQUIDITY_NOT_FOUND // AWAITING_MARKET_MAKERS</div>", unsafe_allow_html=True)
