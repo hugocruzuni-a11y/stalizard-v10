@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import requests
 from datetime import date, timedelta
+import random  # <--- O CULPADO ESTAVA AQUI! Faltava esta linha!
 import time
 import uuid
 
@@ -49,11 +50,10 @@ st.markdown("""
 # ==========================================
 # 2. MOTOR DE DADOS REAIS (API-SPORTS)
 # ==========================================
-API_KEY = st.secrets.get("API_KEY", "8171043bf0a322286bb127947dbd4041") # A TUA API KEY REAL
+API_KEY = st.secrets.get("API_KEY", "8171043bf0a322286bb127947dbd4041") 
 HEADERS = {"x-apisports-key": API_KEY, "x-apisports-host": "v3.football.api-sports.io"}
 
 def fetch_api(endpoint, params):
-    """Função core para chamadas reais à API."""
     try:
         url = f"https://{HEADERS['x-apisports-host']}/{endpoint}"
         response = requests.get(url, headers=HEADERS, params=params, timeout=10)
@@ -61,19 +61,17 @@ def fetch_api(endpoint, params):
     except Exception as e:
         return []
 
-@st.cache_data(ttl=60) # Cache de 60s para não esgotar a API mas manter real-time
+@st.cache_data(ttl=60) 
 def get_live_fixtures(date_str, league_id, season="2025"):
     return fetch_api("fixtures", {"date": date_str, "league": league_id, "season": season})
 
 @st.cache_data(ttl=3600)
 def get_real_stats(team_id, league_id, season="2025"):
-    """Puxa estatísticas reais da equipa para alimentar o modelo."""
     stats = fetch_api("teams/statistics", {"team": team_id, "league": league_id, "season": season})
     if not stats: return None
     data = stats
     goals = data.get('goals', {})
     
-    # Extrair golos marcados/sofridos médios por jogo
     try:
         gf_h = float(goals.get('for', {}).get('average', {}).get('home', 1.35))
         ga_h = float(goals.get('against', {}).get('average', {}).get('home', 1.35))
@@ -83,8 +81,8 @@ def get_real_stats(team_id, league_id, season="2025"):
     except:
         return {"gf_h": 1.35, "ga_h": 1.35, "gf_a": 1.35, "ga_a": 1.35}
 
-@st.cache_data(ttl=60) # Atualização de odds a cada minuto
-def get_real_odds(fixture_id, bookmaker_id=8): # 8 = Bet365, podes mudar para Pinnacle (70)
+@st.cache_data(ttl=60) 
+def get_real_odds(fixture_id, bookmaker_id=8): 
     odds_data = fetch_api("odds", {"fixture": fixture_id, "bookmaker": bookmaker_id})
     if not odds_data: return {}
     
@@ -108,11 +106,9 @@ def get_real_odds(fixture_id, bookmaker_id=8): # 8 = Bet365, podes mudar para Pi
 # 3. MONTE CARLO ENGINE & LEDGER
 # ==========================================
 def calculate_real_xg(h_stats, a_stats):
-    """Calcula xG baseado nas médias reais da liga e das equipas."""
     league_avg = 1.35
     if not h_stats or not a_stats: return league_avg, league_avg
     
-    # Força de Ataque vs Defesa (Método Quant Clássico)
     h_attack = h_stats['gf_h'] / league_avg
     a_defense = a_stats['ga_a'] / league_avg
     a_attack = a_stats['gf_a'] / league_avg
@@ -142,7 +138,6 @@ def run_monte_carlo_sim(xg_h, xg_a, sims=10000):
     return {"Home Win": hw, "Draw": dr, "Away Win": aw, "Over 2.5": o25, "Under 2.5": u25}, x_axis, p
 
 def init_mock_ledger_for_pitch():
-    """Gera um histórico falso SÓ para os gráficos do portfólio não estarem vazios na demo."""
     np.random.seed(42)
     history = []
     start_d = date.today() - timedelta(days=90)
@@ -304,7 +299,6 @@ with c_main:
                             <div style="width: 150px;">
                         """, unsafe_allow_html=True)
                         
-                        # Botão único com chaves dinâmicas
                         if st.button(f"EXECUTE €{stake:,.0f}", key=f"exec_{mkt}", use_container_width=True):
                             new_trade = pd.DataFrame([{"ID": str(uuid.uuid4())[:8], "Date": date.today().strftime('%Y-%m-%d'), "Event": match_str, "Market": mkt, "Matched Odd": market_odd, "True Odd": round(true_odd, 2), "Stake (€)": round(stake, 2), "CLV": round(edge, 4), "Status": "Pending"}])
                             st.session_state.ledger = pd.concat([st.session_state.ledger, new_trade], ignore_index=True)
