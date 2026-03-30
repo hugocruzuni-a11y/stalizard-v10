@@ -1,16 +1,16 @@
 import streamlit as st
 import numpy as np
+from scipy.stats import norm
 import pandas as pd
 import plotly.graph_objects as go
-from datetime import date, timedelta
-import random
-import time
 import requests
+from datetime import date, timedelta
+import time
 
 # ==========================================
-# 1. SETUP CYBER-PREMIUM (GOD-TIER UI)
+# 1. SETUP DE ALTA PERFORMANCE (MODO REALIDADE)
 # ==========================================
-st.set_page_config(page_title="APEX AI | O TEU ALGORITMO", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="APEX QUANT | REAL-TIME", layout="wide", initial_sidebar_state="collapsed")
 
 def safe_rerun():
     try: st.rerun()
@@ -20,236 +20,267 @@ st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=JetBrains+Mono:wght@400;700;800&display=swap');
     
-    .stApp { background-color: #030407; color: #FFFFFF; font-family: 'Outfit', sans-serif; background-image: radial-gradient(circle at 50% 0%, #0D1326 0%, #030407 80%); }
+    .stApp { background-color: #030407; color: #FFFFFF; font-family: 'Outfit', sans-serif; background-image: radial-gradient(circle at 50% 0%, #0A1128 0%, #030407 80%); }
     header, footer { visibility: hidden; }
     
     /* Top Bar - Ultra Modern */
-    .top-nav { background: rgba(3, 4, 7, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0, 240, 255, 0.15); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; margin: -3rem -3rem 2rem -3rem; position: sticky; top: 0; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
-    .logo { font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; color: #FFFFFF; text-shadow: 0 0 20px rgba(0, 240, 255, 0.4); line-height: 1;}
-    .logo span { color: #00F0FF; }
+    .top-nav { background: rgba(3, 4, 7, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0, 240, 255, 0.15); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; margin: -3rem -3rem 2rem -3rem; position: sticky; top: 0; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
+    .logo { font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; color: #FFFFFF; line-height: 1;}
+    .logo span { color: #00F0FF; text-shadow: 0 0 15px rgba(0, 240, 255, 0.4); }
     
-    .live-status { display: flex; align-items: center; gap: 10px; background: rgba(0, 255, 136, 0.05); border: 1px solid rgba(0, 255, 136, 0.3); padding: 8px 16px; border-radius: 50px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #00FF88; letter-spacing: 1px; box-shadow: 0 0 15px rgba(0, 255, 136, 0.1); }
-    .dot { width: 8px; height: 8px; background-color: #00FF88; border-radius: 50%; animation: pulse-green 1.5s infinite; box-shadow: 0 0 10px #00FF88; }
-    @keyframes pulse-green { 0% { transform: scale(0.95); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.5; } 100% { transform: scale(0.95); opacity: 1; } }
+    .live-status { display: flex; align-items: center; gap: 10px; background: rgba(255, 0, 85, 0.1); border: 1px solid rgba(255, 0, 85, 0.3); padding: 8px 16px; border-radius: 50px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #FF0055; letter-spacing: 1px; box-shadow: 0 0 15px rgba(255, 0, 85, 0.15); }
+    .dot { width: 8px; height: 8px; background-color: #FF0055; border-radius: 50%; animation: pulse-red 1.5s infinite; box-shadow: 0 0 10px #FF0055; }
+    @keyframes pulse-red { 0% { transform: scale(0.95); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.5; } 100% { transform: scale(0.95); opacity: 1; } }
 
-    /* The Lock Card (Onde a Magia Acontece) */
+    /* The Alpha Card (Aposta Ouro) */
     .lock-card { background: linear-gradient(180deg, #0A101D 0%, #05080F 100%); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 20px; padding: 30px; box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 20px 50px rgba(0,0,0,0.5); position: relative; overflow: hidden; margin-bottom: 20px;}
-    .lock-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #00F0FF, #00FF88); box-shadow: 0 0 20px #00F0FF; }
+    .lock-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #00F0FF, #00FF88); }
     
     .matchup { text-align: center; margin-bottom: 25px; }
-    .league-tag { font-size: 0.8rem; color: #00F0FF; text-transform: uppercase; letter-spacing: 3px; font-weight: 800; margin-bottom: 5px; text-shadow: 0 0 10px rgba(0,240,255,0.4); }
+    .league-tag { font-size: 0.8rem; color: #00F0FF; text-transform: uppercase; letter-spacing: 3px; font-weight: 800; margin-bottom: 5px; }
     .teams { font-size: 2.2rem; font-weight: 900; line-height: 1.2; letter-spacing: -1px; }
     .teams span { color: #64748B; font-weight: 400; font-size: 1.5rem; margin: 0 15px; }
 
-    /* A Aposta Premium */
-    .premium-pick { background: rgba(0, 255, 136, 0.05); border: 2px dashed rgba(0, 255, 136, 0.5); border-radius: 16px; padding: 25px; text-align: center; margin: 25px 0; position: relative; transition: all 0.3s; }
-    .premium-pick:hover { background: rgba(0, 255, 136, 0.08); border-color: #00FF88; box-shadow: 0 0 30px rgba(0, 255, 136, 0.15); transform: scale(1.02); }
-    .pick-label { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #00FF88; color: #000; font-weight: 900; font-size: 0.75rem; padding: 4px 15px; border-radius: 20px; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 5px 15px rgba(0,255,136,0.4); }
-    .pick-market { font-size: 2.5rem; font-weight: 900; color: #FFFFFF; text-shadow: 0 0 20px rgba(0,255,136,0.3); margin-top: 10px; line-height: 1.1; }
-    .pick-odd { font-family: 'JetBrains Mono'; font-size: 1.8rem; color: #FFD700; font-weight: 800; margin-top: 10px; display: block; }
+    /* Order Book Matrix - Professional Markets */
+    .order-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; align-items: center; background: #080C16; border: 1px solid #1E293B; border-radius: 6px; margin-bottom: 6px; transition: all 0.2s; }
+    .order-row:hover { border-color: #00F0FF; background: rgba(0, 240, 255, 0.02); }
+    .order-cell { padding: 12px 15px; font-family: 'JetBrains Mono'; font-size: 0.9rem; }
+    .market-name { color: #F8FAFC; font-weight: 800; font-family: 'Inter'; font-size: 0.85rem; text-transform: uppercase; }
     
-    /* Botão Nuclear */
-    .btn-nuke div.stButton > button { background: linear-gradient(90deg, #00FF88, #00C86B) !important; color: #000 !important; font-weight: 900 !important; font-size: 1.2rem !important; text-transform: uppercase; letter-spacing: 1px; border: none !important; border-radius: 12px !important; padding: 15px !important; height: 60px !important; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3); width: 100%; }
-    .btn-nuke div.stButton > button:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 40px rgba(0, 255, 136, 0.5); }
-
-    /* Neural Bars */
-    .neural-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
-    .n-label { font-size: 0.75rem; color: #94A3B8; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; width: 120px; }
-    .n-bar-bg { flex-grow: 1; background: #1E293B; height: 8px; border-radius: 4px; margin: 0 15px; position: relative; overflow: hidden; }
-    .n-bar-fill { position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, #00F0FF, #00FF88); border-radius: 4px; box-shadow: 0 0 10px rgba(0,240,255,0.5); }
-    .n-value { font-family: 'JetBrains Mono'; font-size: 0.85rem; color: #FFF; font-weight: 800; width: 40px; text-align: right; }
-
-    /* Simulator Panel */
-    .sim-panel { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 25px; }
-    .sim-title { font-size: 1.2rem; font-weight: 800; color: #00F0FF; margin-bottom: 5px; }
-    .sim-profit { font-family: 'JetBrains Mono'; font-size: 2.8rem; font-weight: 900; color: #00FF88; line-height: 1; text-shadow: 0 0 20px rgba(0,255,136,0.3); margin: 15px 0; }
+    .btn-nuke div.stButton > button { background: linear-gradient(90deg, #00FF88, #00C86B) !important; color: #000 !important; font-weight: 900 !important; font-size: 1.1rem !important; text-transform: uppercase; border: none !important; border-radius: 8px !important; padding: 10px !important; height: 50px !important; transition: all 0.2s; box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3); width: 100%; }
+    .btn-nuke div.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 15px 40px rgba(0, 255, 136, 0.5); }
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. MOTOR DA IA (SIMULADO PARA EFEITO UAU)
+# 2. MOTOR DE DADOS REAIS (CONEXÃO DIRETA API)
 # ==========================================
-# Para o Pitch ao apostador, se a API falhar o ecrã não pode ficar vazio. 
-# Usamos dados de jogos míticos como Fallback.
+API_KEY = st.secrets.get("API_KEY", "8171043bf0a322286bb127947dbd4041")
+HEADERS = {"x-apisports-key": API_KEY, "x-apisports-host": "v3.football.api-sports.io"}
 
-def fetch_games_for_pitch():
-    """Gera uma lista de jogos premium para prender o apostador imediatamente."""
-    return [
-        {"id": 1, "h": "Real Madrid", "a": "Man City", "league": "Liga dos Campeões"},
-        {"id": 2, "h": "Arsenal", "a": "Liverpool", "league": "Premier League"},
-        {"id": 3, "h": "Benfica", "a": "Sporting CP", "league": "Primeira Liga"},
-        {"id": 4, "h": "Bayern Munique", "a": "B. Leverkusen", "league": "Bundesliga"},
-        {"id": 5, "h": "Inter Milão", "a": "Juventus", "league": "Serie A"}
-    ]
+def fetch_api(endpoint, params):
+    """Bate na porta da API Real e traz os dados."""
+    try:
+        r = requests.get(f"https://{HEADERS['x-apisports-host']}/{endpoint}", headers=HEADERS, params=params, timeout=10)
+        return r.json().get('response', [])
+    except:
+        return []
 
-def generate_ai_master_pick(h_name, a_name):
-    """A IA cria a 'Aposta Perfeita' e as métricas neurais."""
-    random.seed(int(time.time()) + len(h_name))
+@st.cache_data(ttl=60) 
+def get_live_fixtures(date_str, league_id, season="2025"):
+    return fetch_api("fixtures", {"date": date_str, "league": league_id, "season": season})
+
+@st.cache_data(ttl=3600)
+def get_real_stats(team_id, league_id, season="2025"):
+    """Puxa os GOLOS REAIS marcados e sofridos da equipa nesta época!"""
+    stats = fetch_api("teams/statistics", {"team": team_id, "league": league_id, "season": season})
+    if not stats: return {"gf_h": 1.35, "ga_h": 1.35, "gf_a": 1.35, "ga_a": 1.35}
+    try:
+        goals = stats.get('goals', {}) if isinstance(stats, dict) else stats[0].get('goals', {})
+        return {
+            "gf_h": float(goals.get('for', {}).get('average', {}).get('home', 1.35)),
+            "ga_h": float(goals.get('against', {}).get('average', {}).get('home', 1.35)),
+            "gf_a": float(goals.get('for', {}).get('average', {}).get('away', 1.35)),
+            "ga_a": float(goals.get('against', {}).get('average', {}).get('away', 1.35))
+        }
+    except: return {"gf_h": 1.35, "ga_h": 1.35, "gf_a": 1.35, "ga_a": 1.35}
+
+@st.cache_data(ttl=60)
+def get_real_odds(fixture_id):
+    """Puxa as odds que estão AGORA MESMO na casa de apostas."""
+    odds_data = fetch_api("odds", {"fixture": fixture_id, "bookmaker": 8}) # 8 = Bet365
+    market_odds = {}
     
-    confidence = random.randint(82, 98) # Confiança brutal
-    win_rate_hist = random.uniform(74.5, 89.2)
-    
-    mkts = [
-        (f"Vitória do {h_name}", round(random.uniform(1.70, 2.10), 2)),
-        ("Mais de 2.5 Golos", round(random.uniform(1.65, 1.95), 2)),
-        (f"{h_name} Handicap Asiático -1.0", round(random.uniform(2.10, 2.60), 2)),
-        ("Ambas Marcam e Mais de 2.5", round(random.uniform(1.85, 2.30), 2))
-    ]
-    pick = random.choice(mkts)
-    
-    # Métricas Neurais (O que a IA viu para decidir)
-    metrics = [
-        {"label": "Vantagem Tática", "val": random.randint(70, 95)},
-        {"label": "Poder Ofensivo", "val": random.randint(75, 99)},
-        {"label": "Fadiga Adversário", "val": random.randint(60, 90)},
-        {"label": "Dinheiro Sharp", "val": random.randint(80, 100)} # Onde os Pros apostam
-    ]
-    
-    reasons = [
-        f"O algoritmo analisou 14.500 simulações de Monte Carlo. O {h_name} vence em {confidence}% dos cenários.",
-        f"Foi detetada uma injeção de capital de sindicatos asiáticos (Sharp Money) nesta exata linha nas últimas 2h.",
-        f"A casa de apostas avalia a probabilidade em {round((1/pick[1])*100)}%, mas a nossa IA sabe que a probabilidade real é {confidence}%. Vantagem matemática garantida."
-    ]
-    
-    return pick, confidence, metrics, reasons, win_rate_hist
+    if odds_data and odds_data[0].get('bookmakers'):
+        for bet in odds_data[0]['bookmakers'][0].get('bets', []):
+            name = bet['name']
+            vals = {str(v['value']): float(v['odd']) for v in bet['values']}
+            
+            # Mapeamento para Mercados Profissionais
+            if name == 'Match Winner':
+                market_odds["Home Win"] = vals.get('Home', 0)
+                market_odds["Draw"] = vals.get('Draw', 0)
+                market_odds["Away Win"] = vals.get('Away', 0)
+            elif name == 'Goals Over/Under':
+                market_odds["Over 2.5"] = vals.get('Over 2.5', 0)
+                market_odds["Under 2.5"] = vals.get('Under 2.5', 0)
+            elif name == 'Asian Handicap':
+                # Procurar as linhas asiáticas principais na API
+                for val_key, odd in vals.items():
+                    if "Home -0.5" in val_key or "Home -0.5" == val_key: market_odds["Asian Handicap -0.5 (H)"] = odd
+                    if "Home +0.5" in val_key or "Home +0.5" == val_key: market_odds["Asian Handicap +0.5 (H)"] = odd
+    return market_odds
 
 # ==========================================
-# 3. A PLATAFORMA (UI/UX)
+# 3. A INTELIGÊNCIA ARTIFICIAL (MONTE CARLO)
+# ==========================================
+def calculate_real_xg(h_stats, a_stats):
+    """Calcula a Força Ofensiva/Defensiva real cruzando os dados."""
+    return round(max(0.5, (h_stats['gf_h']/1.35) * (a_stats['ga_a']/1.35) * 1.35), 2), round(max(0.5, (a_stats['gf_a']/1.35) * (h_stats['ga_h']/1.35) * 1.35), 2)
+
+def run_monte_carlo_sim(xg_h, xg_a, sims=10000):
+    np.random.seed(int(time.time()))
+    h_goals = np.random.poisson(xg_h, sims)
+    a_goals = np.random.poisson(xg_a, sims)
+    diff = h_goals - a_goals
+    total = h_goals + a_goals
+    
+    hw = np.sum(diff > 0)/sims
+    dr = np.sum(diff == 0)/sims
+    aw = np.sum(diff < 0)/sims
+    
+    return {
+        "Home Win": hw, "Draw": dr, "Away Win": aw,
+        "Asian Handicap -0.5 (H)": hw, "Asian Handicap +0.5 (H)": hw + dr,
+        "Over 2.5": np.sum(total > 2.5)/sims, "Under 2.5": np.sum(total < 2.5)/sims
+    }
+
+# ==========================================
+# 4. A INTERFACE (O FERRARI)
 # ==========================================
 
-# --- BARRA DE TOPO ---
 st.markdown("""
 <div class="top-nav">
-    <div class="logo">APEX<span>AI</span></div>
-    <div class="live-status"><div class="dot"></div> ALGORITMO A PROCESSAR 450+ LIGAS</div>
+    <div class="logo">APEX<span>QUANT</span></div>
+    <div class="live-status"><div class="dot"></div> FEED DE DADOS: TEMPO REAL</div>
 </div>
 """, unsafe_allow_html=True)
 
-# --- ESTRUTURA PRINCIPAL ---
-col_menu, col_core, col_sales = st.columns([1, 2.2, 1.2], gap="large")
+col_menu, col_core, col_book = st.columns([1, 1.8, 2.2], gap="large")
 
-# --- COLUNA 1: SELEÇÃO DE JOGO ---
+# --- ESQUERDA: O RADAR GLOBAL DE JOGOS REAIS ---
 with col_menu:
-    st.markdown("<h3 style='color:#00F0FF; font-weight:900; font-size:1.1rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:20px;'>Radar de Oportunidades</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color:#00F0FF; font-weight:900; font-size:1.1rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:20px;'>Radar Global</h3>", unsafe_allow_html=True)
     
-    games = fetch_games_for_pitch()
-    match_dict = {f"{g['h']} vs {g['a']}": g for g in games}
+    # Calendário Real - Se escolheres hoje e não houver liga dos campeões, ele não inventa. É real.
+    target_date = st.date_input("Data do Jogo", date.today())
     
-    m_str = st.selectbox("Selecione o Jogo Alvo", list(match_dict.keys()), label_visibility="collapsed")
-    m_sel = match_dict[m_str]
+    l_map = {
+        "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League": 39, "🇪🇺 Champions League": 2, "🇪🇸 La Liga": 140, 
+        "🇵🇹 Primeira Liga": 94, "🇮🇹 Serie A": 135, "🇩🇪 Bundesliga": 78
+    }
+    league_name = st.selectbox("Competição", list(l_map.keys()))
+    league_id = l_map[league_name]
     
-    st.button("🔄 PROCURAR NOVOS EDGES", use_container_width=True)
+    with st.spinner("A conectar à API-Sports..."):
+        fixtures = get_live_fixtures(target_date.strftime('%Y-%m-%d'), league_id)
     
-    # Live Ticker Falso para dar FOMO (Medo de perder)
-    st.markdown("""
-    <div style="margin-top: 30px; background: rgba(255,255,255,0.02); border-radius: 12px; padding: 15px;">
-        <div style="font-size: 0.75rem; color: #64748B; font-weight: 800; text-transform: uppercase; margin-bottom: 15px;">Apostas Validadas Agora</div>
-        <div style="border-left: 2px solid #00FF88; padding-left: 10px; margin-bottom: 10px;">
-            <div style="color: #FFF; font-weight: 600; font-size: 0.85rem;">Galatasaray vs Leipzig</div>
-            <div style="color: #00FF88; font-size: 0.75rem; font-weight: 800;">Over 2.5 @ 1.85 (Enviada há 2m)</div>
-        </div>
-        <div style="border-left: 2px solid #00F0FF; padding-left: 10px;">
-            <div style="color: #FFF; font-weight: 600; font-size: 0.85rem;">Lakers vs Celtics</div>
-            <div style="color: #00F0FF; font-size: 0.75rem; font-weight: 800;">Lakers -4.5 @ 1.90 (Enviada há 5m)</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    m_sel = None
+    if fixtures:
+        m_map = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}": f for f in fixtures}
+        match_str = st.selectbox("Selecione o Jogo Real", list(m_map.keys()))
+        m_sel = m_map[match_str]
+        st.button("🔄 SINCRONIZAR ODDS AGORA", use_container_width=True)
+    else:
+        st.error(f"Não há jogos programados na {league_name} para o dia {target_date.strftime('%d/%m/%Y')}. A API não mente. Escolhe outra data ou liga.")
 
-# --- COLUNA 2: O CORAÇÃO (A APOSTA DE OURO) ---
-with col_core:
-    pick, conf, neurals, reasons, wr = generate_ai_master_pick(m_sel['h'], m_sel['a'])
+# --- SE HOUVER UM JOGO SELECIONADO, A MAGIA ACONTECE ---
+if m_sel:
+    h_id, a_id = m_sel['teams']['home']['id'], m_sel['teams']['away']['id']
+    h_name, a_name = m_sel['teams']['home']['name'], m_sel['teams']['away']['name']
     
-    # 1. O MATCHUP CARD
-    st.markdown(f"""
-    <div class="lock-card">
-        <div class="matchup">
-            <div class="league-tag">{m_sel['league']}</div>
-            <div class="teams">{m_sel['h']} <span>vs</span> {m_sel['a']}</div>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    # Gauge (Velocímetro) e Neural Bars
-    c_gauge, c_bars = st.columns([1, 1.2])
-    with c_gauge:
-        fig = go.Figure(go.Indicator(
-            mode = "gauge+number", value = conf,
-            number = {'suffix': "%", 'font': {'size': 45, 'color': '#FFF', 'family': 'Outfit', 'weight': 900}},
-            title = {'text': "PROBABILIDADE IA", 'font': {'size': 12, 'color': '#00F0FF', 'family': 'Outfit'}},
-            gauge = {
-                'axis': {'range': [None, 100], 'visible': False},
-                'bar': {'color': "#00FF88", 'thickness': 0.85},
-                'bgcolor': "rgba(255,255,255,0.05)",
-                'borderwidth': 0,
-                'steps': [{'range': [0, 80], 'color': "rgba(0, 240, 255, 0.15)"}],
-            }
-        ))
-        fig.update_layout(height=200, margin=dict(l=0, r=0, t=10, b=0), paper_bgcolor='rgba(0,0,0,0)')
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+    with st.spinner("A processar Dados Reais e a varrer as Casas de Apostas..."):
+        h_stats = get_real_stats(h_id, league_id)
+        a_stats = get_real_stats(a_id, league_id)
+        xg_h, xg_a = calculate_real_xg(h_stats, a_stats)
         
-    with c_bars:
-        st.markdown("<div style='margin-top:20px;'>", unsafe_allow_html=True)
-        for n in neurals:
-            st.markdown(f"""
-            <div class="neural-row">
-                <div class="n-label">{n['label']}</div>
-                <div class="n-bar-bg"><div class="n-bar-fill" style="width: {n['val']}%;"></div></div>
-                <div class="n-value">{n['val']}</div>
+        true_probs = run_monte_carlo_sim(xg_h, xg_a)
+        live_odds = get_real_odds(m_sel['fixture']['id'])
+    
+    # Encontrar o Maior "Edge" (Aposta de Ouro Real)
+    best_bet = None
+    max_edge = 0
+    
+    valid_markets = []
+    if live_odds:
+        for mkt, odd in live_odds.items():
+            prob = true_probs.get(mkt, 0)
+            if odd > 1.05 and prob > 0:
+                edge = (prob * odd) - 1
+                valid_markets.append({"Market": mkt, "Odd": odd, "TrueProb": prob, "Edge": edge})
+                if edge > max_edge:
+                    max_edge = edge
+                    best_bet = {"Market": mkt, "Odd": odd, "TrueProb": prob, "Edge": edge}
+    
+    # --- CENTRO: A APOSTA DIAMANTE E AS MÉTRICAS ---
+    with col_core:
+        st.markdown(f"""
+        <div class="lock-card">
+            <div class="matchup">
+                <div class="league-tag">{league_name} • REAL DATA</div>
+                <div class="teams">{h_name} <span>vs</span> {a_name}</div>
             </div>
+        """, unsafe_allow_html=True)
+        
+        c_xg1, c_xg2 = st.columns(2)
+        c_xg1.markdown(f"<div style='text-align:center; font-family:\"JetBrains Mono\"; color:#00F0FF; font-size:1.2rem; font-weight:800;'>xG: {xg_h:.2f}</div>", unsafe_allow_html=True)
+        c_xg2.markdown(f"<div style='text-align:center; font-family:\"JetBrains Mono\"; color:#D4AF37; font-size:1.2rem; font-weight:800;'>xG: {xg_a:.2f}</div>", unsafe_allow_html=True)
+        
+        st.markdown("<hr style='border-color:rgba(255,255,255,0.1);'>", unsafe_allow_html=True)
+
+        if best_bet and best_bet["Edge"] > 0:
+            # Temos uma aposta com valor real!
+            conf = best_bet['TrueProb'] * 100
+            st.markdown(f"""
+                <div style="background: rgba(0, 255, 136, 0.05); border: 2px dashed #00FF88; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0; box-shadow: 0 0 30px rgba(0,255,136,0.1);">
+                    <div style="color: #00FF88; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;">⭐ APOSTA ALPHA (MATEMATICAMENTE COMPROVADA) ⭐</div>
+                    <div style="font-size: 2rem; font-weight: 900; color: #FFFFFF; text-shadow: 0 0 20px rgba(0,255,136,0.4); line-height: 1.1;">{best_bet['Market']}</div>
+                    <div style="display:flex; justify-content:center; gap:20px; margin-top:15px; font-family:'JetBrains Mono';">
+                        <div style="background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 6px;">Odd Mercado: <span style="color:#FFD700; font-weight:800;">{best_bet['Odd']:.2f}</span></div>
+                        <div style="background: rgba(0,255,136,0.1); padding: 5px 15px; border-radius: 6px; color:#00FF88; font-weight:800;">EDGE: +{best_bet['Edge']*100:.1f}%</div>
+                    </div>
+                </div>
             """, unsafe_allow_html=True)
+            
+            st.markdown("<div class='btn-nuke'>", unsafe_allow_html=True)
+            if st.button(f"🚀 COPIAR APOSTA PARA O BOLETIM", use_container_width=True):
+                st.toast("✅ Edge Matemático capturado!", icon="📈")
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+        elif not live_odds:
+            st.warning("⚠️ As casas de apostas (API) ainda não abriram as odds para este jogo. O evento pode estar muito longe no calendário.")
+        else:
+            st.error("📉 MERCADO EFICIENTE. As odds atuais da casa de apostas não oferecem nenhuma vantagem matemática (Edge > 0) para o apostador neste jogo. Protege o teu capital.")
+        
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # 2. A APOSTA RECOMENDADA
-    st.markdown(f"""
-        <div class="premium-pick">
-            <div class="pick-label">⭐ Aposta Diamante ⭐</div>
-            <div class="pick-market">{pick[0]}</div>
-            <div class="pick-odd">ODD: {pick[1]:.2f}</div>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("<div class='btn-nuke'>", unsafe_allow_html=True)
-    if st.button(f"🚀 DESBLOQUEAR E APOSTAR AGORA", use_container_width=True):
-        st.toast("✅ Aposta copiada e registada com sucesso! A IA está a monitorizar o jogo.", icon="🤖")
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    st.markdown("</div>", unsafe_allow_html=True) # Fecha lock-card
-
-    # 3. O PORQUÊ (Constrói Confiança)
-    st.markdown("<div style='background: rgba(0,240,255,0.05); border-left: 3px solid #00F0FF; padding: 15px 20px; border-radius: 0 8px 8px 0;'>", unsafe_allow_html=True)
-    st.markdown("<div style='font-size:0.8rem; color:#00F0FF; font-weight:800; text-transform:uppercase; margin-bottom:10px;'>🧠 INTELIGÊNCIA ARTIFICIAL:</div>", unsafe_allow_html=True)
-    for r in reasons:
-        st.markdown(f"<div style='margin-bottom:8px; font-size:0.95rem; color:#CBD5E1;'><span style='color:#00F0FF; margin-right:5px;'>▶</span> {r}</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# --- COLUNA 3: A MÁQUINA DE VENDAS (SIMULADOR DE LUCRO) ---
-with col_sales:
-    st.markdown("<div class='sim-panel'>", unsafe_allow_html=True)
-    st.markdown("<div class='sim-title'>Calculadora de Lucro APEX</div>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#94A3B8; font-size:0.85rem; margin-bottom:20px;'>Descobre quanto podes ganhar a seguir as previsões Diamante da nossa IA em 30 dias.</p>", unsafe_allow_html=True)
-    
-    stake = st.slider("Quanto apostas por jogo? (€)", min_value=10, max_value=200, value=50, step=10)
-    
-    # Matemática de Venda: (Stake * Odd média * Jogos Mês * Win Rate) - (Stake * Jogos Mês)
-    jogos_mes = 30
-    odd_media = 1.90
-    lucro_proj = (stake * odd_media * jogos_mes * (wr/100)) - (stake * jogos_mes * (1 - (wr/100)))
-    
-    st.markdown(f"""
-        <div style="text-align:center;">
-            <div style="color:#64748B; font-size:0.8rem; font-weight:800; text-transform:uppercase; margin-top:20px;">LUCRO LÍQUIDO PROJETADO (30 DIAS)</div>
-            <div class="sim-profit">€{max(0, lucro_proj):,.0f}</div>
-            <div style="display:inline-block; background:rgba(0,240,255,0.1); border:1px solid #00F0FF; color:#00F0FF; padding:4px 12px; border-radius:20px; font-size:0.75rem; font-weight:800;">
-                🔥 Win Rate Histórica: {wr:.1f}%
+    # --- DIREITA: O ORDER BOOK DOS PROFISSIONAIS ---
+    with col_book:
+        st.markdown("<h3 style='color:#FFFFFF; font-weight:900; font-size:1.1rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:20px;'>Mercados Profissionais (Live API)</h3>", unsafe_allow_html=True)
+        
+        if not live_odds:
+            st.info("A aguardar liquidez da casa de apostas.")
+        else:
+            st.markdown("""
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; font-size: 0.65rem; color: #64748B; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; padding: 0 15px 10px 15px; border-bottom: 1px solid #1E293B; margin-bottom: 10px;">
+                <div>Mercado</div><div style="text-align:right;">Odd Real</div><div style="text-align:right;">Odd Justa</div><div style="text-align:center;">Vantagem (Edge)</div>
             </div>
-        </div>
-        <hr style="border-color: rgba(255,255,255,0.1); margin: 25px 0;">
-        <div style="font-size:0.8rem; color:#94A3B8; text-align:center; line-height:1.4;">
-            Deixa de apostar por instinto. Junta-te a mais de 12.000 utilizadores que já usam a Matemática para bater as casas de apostas.
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<div class='btn-nuke'>", unsafe_allow_html=True)
-    st.button("💎 TORNAR-ME MEMBRO VIP", use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+            
+            # Ordenar mercados do maior Edge para o menor
+            valid_markets = sorted(valid_markets, key=lambda x: x['Edge'], reverse=True)
+            
+            for m in valid_markets:
+                mkt_name = m['Market']
+                m_odd = m['Odd']
+                t_prob = m['TrueProb']
+                edge = m['Edge']
+                t_odd = 1 / t_prob if t_prob > 0 else 0
+                
+                if edge > 0:
+                    edge_color = "#00FF88"
+                    bg_color = "rgba(0, 255, 136, 0.05)"
+                    border = "border-color: #00FF88;"
+                else:
+                    edge_color = "#EF4444"
+                    bg_color = "#080C16"
+                    border = ""
+
+                st.markdown(f"""
+                <div class="order-row" style="{border} background:{bg_color};">
+                    <div class="order-cell market-name">{mkt_name}</div>
+                    <div class="order-cell" style="text-align:right; font-weight:800; color:#FFF; font-size:1rem;">{m_odd:.2f}</div>
+                    <div class="order-cell" style="text-align:right; color:#00F0FF;">{t_odd:.2f}</div>
+                    <div class="order-cell" style="text-align:center; color:{edge_color}; font-weight:800;">{edge*100:+.1f}%</div>
+                </div>
+                """, unsafe_allow_html=True)
