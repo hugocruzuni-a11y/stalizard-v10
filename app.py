@@ -454,58 +454,138 @@ def main_app():
                     st.error("Varredura terminada. O mercado está eficiente. Nenhuma 'Edge' acentuada.")
 
     # ====== TAB 3: CAIXA FORTE ======
-    with tab3:
-        st.markdown("<h2 style='font-size:2.5rem; letter-spacing:-1px; color:#FFD700;'>🏦 CAIXA FORTE (AUDITORIA E RESULTADOS)</h2>", unsafe_allow_html=True)
-        
-        if st.session_state.bet_history.empty:
-            st.markdown("<div style='text-align:center; padding:100px 20px;'><h1 style='opacity:0.1; font-size:5rem;'>EMPTY</h1><h3 style='opacity:0.5; font-weight:300;'>Sem operações registadas. Vá ao 'Deep Dive' para validar valor.</h3></div>", unsafe_allow_html=True)
+with tab3:
+    st.markdown("<h2 style='font-size:2.5rem; letter-spacing:-1px; color:#FFD700;'>🏦 CAIXA FORTE (AUDITORIA REAL)</h2>", unsafe_allow_html=True)
+
+    if st.session_state.bet_history.empty:
+        st.markdown("<div style='text-align:center; padding:100px;'><h1 style='opacity:0.1;'>SEM DADOS</h1></div>", unsafe_allow_html=True)
+    else:
+        df = st.session_state.bet_history.copy()
+
+        # =========================
+        # CALCULAR RESULTADOS
+        # =========================
+        profit_list = []
+
+        for _, row in df.iterrows():
+            stake = row["Stake (€)"]
+            odd = row["Odd Comprada"]
+            estado = row["Estado"]
+
+            if estado == "Ganha":
+                profit = stake * (odd - 1)
+            elif estado == "Perdida":
+                profit = -stake
+            else:
+                profit = 0
+
+            profit_list.append(profit)
+
+        df["Resultado (€)"] = profit_list
+
+        # =========================
+        # MÉTRICAS
+        # =========================
+        total_bets = len(df)
+        total_staked = df["Stake (€)"].sum()
+        total_profit = df["Resultado (€)"].sum()
+
+        wins = len(df[df["Estado"] == "Ganha"])
+        losses = len(df[df["Estado"] == "Perdida"])
+
+        winrate = (wins / total_bets) * 100 if total_bets > 0 else 0
+        roi = (total_profit / total_staked) * 100 if total_staked > 0 else 0
+        yield_pct = roi  # mesma lógica
+
+        odd_media = df["Odd Comprada"].mean()
+        stake_media = df["Stake (€)"].mean()
+
+        # =========================
+        # AVALIAÇÃO DO MODELO
+        # =========================
+        if roi > 5:
+            rating = "🟢 MODELO LUCRATIVO"
+        elif roi > 0:
+            rating = "🟡 MODELO MARGINAL"
         else:
-            df_hist = st.session_state.bet_history
-            
-            c1, c2, c3, c4 = st.columns(4)
-            total_staked = df_hist['Stake (€)'].sum()
-            avg_edge = df_hist["Lucro Extra"].mean()
-            expected_profit = (df_hist['Stake (€)'] * df_hist['Lucro Extra']).sum()
-            total_bets = len(df_hist)
+            rating = "🔴 MODELO NEGATIVO"
 
-            with c1: st.markdown(f"<div class='metric-card'><div class='metric-title'>Banca Atual (Real)</div><div class='metric-value' style='color:#00FF88;'>{bankroll_atual:.2f}€</div></div>", unsafe_allow_html=True)
-            with c2: st.markdown(f"<div class='metric-card'><div class='metric-title'>Lucro Real (€)</div><div class='metric-value' style='color:{'#00FF88' if lucro_real_total > 0 else '#EF4444'};'>{lucro_real_total:+.2f}€</div></div>", unsafe_allow_html=True)
-            with c3: st.markdown(f"<div class='metric-card'><div class='metric-title'>Edge Médio (CLV)</div><div class='metric-value' style='color:#FFD700;'>{avg_edge:+.2%}</div></div>", unsafe_allow_html=True)
-            with c4: st.markdown(f"<div class='metric-card'><div class='metric-title'>Retorno Esperado (EV)</div><div class='metric-value' style='color:#94A3B8;'>+{expected_profit:.2f}€</div></div>", unsafe_allow_html=True)
+        # =========================
+        # DASHBOARD
+        # =========================
+        c1, c2, c3, c4 = st.columns(4)
 
-            st.markdown("<h3 style='margin-top:30px; font-size:1.2rem; color:#94A3B8;'>📋 ATUALIZE OS RESULTADOS ABAIXO</h3>", unsafe_allow_html=True)
-            st.caption("Edite a coluna 'Estado' para calcular a sua banca real em tempo real.")
+        with c1:
+            st.metric("💰 Lucro Total (€)", f"{total_profit:.2f}")
 
-            edited_df = st.data_editor(
-                df_hist,
-                use_container_width=True,
-                num_rows="dynamic",
-                column_config={
-                    "Estado": st.column_config.SelectboxColumn(
-                        "Estado da Aposta",
-                        help="Defina se a aposta foi ganha, perdida ou reembolsada.",
-                        width="medium",
-                        options=["Pendente", "Ganha", "Perdida", "Reembolsada"],
-                        required=True,
-                    ),
-                    "Odd Comprada": st.column_config.NumberColumn(format="%.2f"),
-                    "Odd Real": st.column_config.NumberColumn(format="%.2f"),
-                    "Stake (€)": st.column_config.NumberColumn(format="%.2f €"),
-                    "Lucro Extra": st.column_config.NumberColumn(format="%.3f"),
-                },
-                hide_index=True,
-            )
+        with c2:
+            st.metric("📊 ROI (%)", f"{roi:.2f}%")
 
-            # Verifica e guarda as edições
-            if not edited_df.equals(st.session_state.bet_history):
-                st.session_state.bet_history = edited_df
-                st.rerun()
+        with c3:
+            st.metric("🎯 Winrate (%)", f"{winrate:.2f}%")
 
-            c_del, c_exp = st.columns([1, 4])
-            with c_del:
-                if st.button("🗑️ LIMPAR TUDO", use_container_width=True):
-                    st.session_state.bet_history = pd.DataFrame(columns=["Data", "Jogo", "Aposta", "Odd Comprada", "Odd Real", "Stake (€)", "Lucro Extra", "Estado"])
-                    st.rerun()
+        with c4:
+            st.metric("📦 Total Apostas", total_bets)
+
+        c5, c6, c7 = st.columns(3)
+
+        with c5:
+            st.metric("📈 Yield (%)", f"{yield_pct:.2f}%")
+
+        with c6:
+            st.metric("🎲 Odd Média", f"{odd_media:.2f}")
+
+        with c7:
+            st.metric("💸 Stake Média", f"{stake_media:.2f}€")
+
+        st.markdown(f"### 📌 Avaliação do Sistema: {rating}")
+
+        # =========================
+        # CURVA DE BANCA
+        # =========================
+        df["Bankroll"] = df["Resultado (€)"].cumsum()
+
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            y=df["Bankroll"],
+            mode='lines+markers',
+            name="Bankroll"
+        ))
+
+        fig.update_layout(
+            title="📈 Evolução da Banca",
+            height=400
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        # =========================
+        # TABELA EDITÁVEL
+        # =========================
+        edited_df = st.data_editor(
+            df,
+            use_container_width=True,
+            column_config={
+                "Estado": st.column_config.SelectboxColumn(
+                    options=["Pendente", "Ganha", "Perdida", "Reembolsada"]
+                )
+            },
+            hide_index=True
+        )
+
+        if not edited_df.equals(st.session_state.bet_history):
+            st.session_state.bet_history = edited_df
+            st.rerun()
+
+        # =========================
+        # BOTÃO RESET
+        # =========================
+        if st.button("🗑️ Reset Histórico"):
+            st.session_state.bet_history = pd.DataFrame(columns=[
+                "Data", "Jogo", "Aposta", "Odd Comprada", "Odd Real",
+                "Stake (€)", "Lucro Extra", "Estado"
+            ])
+            st.rerun()
 
 # ==========================================
 # ENTRY POINT
