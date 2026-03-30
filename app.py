@@ -14,20 +14,88 @@ st.set_page_config(page_title="APEX QUANT TERMINAL", layout="wide", initial_side
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;500;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
 
 /* Base Theme */
 .stApp { background-color: #030712; color: #E2E8F0; font-family: 'Inter', sans-serif; }
 header, footer { visibility: hidden; }
 
-/* Top Nav with Pulse Animation */
-.top-nav { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid #1E293B; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; margin: -3rem -3rem 2rem -3rem; position: sticky; top: 0; z-index: 1000;}
-.logo { font-size: 1.5rem; font-weight: 800; color: #FFFFFF; font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px; }
-.logo span { color: #10B981; }
+/* Redesigned Top Nav - Wall Street HUD */
+.top-nav { 
+    background: linear-gradient(90deg, #020617 0%, #0B0F19 50%, #020617 100%); 
+    border-bottom: 1px solid #1E293B; 
+    border-top: 2px solid #10B981; 
+    padding: 12px 25px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin: -3rem -3rem 2rem -3rem; 
+    position: sticky; 
+    top: 0; 
+    z-index: 1000;
+    box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.8);
+}
 
-@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-.sys-status { font-size: 0.75rem; font-weight: 600; color: #10B981; font-family: 'JetBrains Mono', monospace; display: flex; align-items: center; gap: 8px;}
-.dot { height: 8px; width: 8px; background-color: #10B981; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite; box-shadow: 0 0 8px #10B981;}
+.nav-left { display: flex; align-items: center; gap: 15px; }
+
+.logo { 
+    font-size: 1.6rem; 
+    font-weight: 900; 
+    color: #F8FAFC; 
+    font-family: 'JetBrains Mono', monospace; 
+    letter-spacing: -1px; 
+    text-shadow: 0 0 10px rgba(255,255,255,0.05);
+}
+.logo span { 
+    color: #10B981; 
+    text-shadow: 0 0 12px rgba(16,185,129,0.4);
+}
+
+.nav-divider { width: 1px; height: 20px; background-color: #334155; }
+
+.nav-subtitle {
+    font-size: 0.65rem;
+    color: #64748B;
+    font-weight: 700;
+    letter-spacing: 2px;
+    font-family: 'Inter', sans-serif;
+    margin-top: 3px;
+}
+
+.nav-center { display: flex; gap: 20px; font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; color: #64748B; font-weight: 600;}
+.nav-center span { color: #E2E8F0; }
+
+.nav-right { display: flex; align-items: center; gap: 15px; }
+
+.nav-time {
+    font-size: 0.7rem;
+    color: #94A3B8;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    background: #0F172A;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid #1E293B;
+}
+
+.sys-status { 
+    font-size: 0.7rem; 
+    font-weight: 700; 
+    color: #10B981; 
+    font-family: 'JetBrains Mono', monospace; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px;
+    letter-spacing: 0.5px;
+    background: rgba(16, 185, 129, 0.05);
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    box-shadow: inset 0 0 10px rgba(16,185,129,0.05);
+}
+
+@keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.3); } 100% { opacity: 1; transform: scale(1); } }
+.dot { height: 6px; width: 6px; background-color: #10B981; border-radius: 50%; display: inline-block; animation: pulse 1.2s infinite; box-shadow: 0 0 8px #10B981;}
 
 /* Grid Panels */
 .grid-panel { border: 1px solid #1E293B; background: linear-gradient(180deg, #0B0F19 0%, #030712 100%); padding: 22px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5); }
@@ -213,8 +281,22 @@ def poisson_pmf(lam, k):
 # ==========================================
 st.markdown("""
 <div class="top-nav">
-<div class="logo">APEX <span style="color:#10B981;">QUANT</span></div>
-<div class="sys-status"><span class="dot"></span> TIER-1 LIQUIDITY POOL CONNECTED</div>
+    <div class="nav-left">
+        <div class="logo">APEX<span>QUANT</span></div>
+        <div class="nav-divider"></div>
+        <div class="nav-subtitle">INSTITUTIONAL ALGO V2.4</div>
+    </div>
+    
+    <div class="nav-center">
+        <div>NODE: <span>US-EAST-1</span></div>
+        <div>LATENCY: <span style="color: #10B981;">14ms</span></div>
+        <div>MODEL: <span>POISSON+KELLY</span></div>
+    </div>
+    
+    <div class="nav-right">
+        <div class="nav-time">SYS: UTC-0</div>
+        <div class="sys-status"><span class="dot"></span> TIER-1 LIQUIDITY POOL</div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
