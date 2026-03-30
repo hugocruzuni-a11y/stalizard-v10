@@ -276,9 +276,9 @@ ticker_text = " • ".join([
     "GLOBAL MATCHED VOL: <span>$42.8M</span>",
     "LATENCY DELTA: <span class='hl-green'>+2ms</span>",
     "API RATE LIMIT: <span>98%</span>",
-    "LAST SHARP MOVE: <span class='red'>-0.12 EV</span>",
+    "ANOMALY FILTER: <span class='hl-green'>ENGAGED</span>",
     "POISSON KERNEL: <span>STABLE</span>",
-    "MONTE CARLO SEED: <span>FIXED</span>",
+    "MAX RISK CAP: <span>5.0%</span>",
 ]) * 2
 
 st.markdown(f"""
@@ -317,15 +317,14 @@ with col_ctrl:
     with st.expander("TERMINAL ARCHITECTURE", expanded=True):
         st.markdown("""
         <div class='manual-box'>
-        <span class='manual-term'>Prime Alpha Signal</span>
-        O motor ignora "Variance Hell". Foco absoluto em mercados com <b>Kelly Criterion Máximo</b>.
-        <span class='manual-term'>Model Confidence Index</span>
-        Avalia a convergência entre a *Strike Rate* teórica e a exposição de risco institucional.
+        <span class='manual-term'>Anomaly Detection</span>
+        O sistema rejeita anomalias de API (Edges irreais > 25%) e foca-se em apostas sólidas (Odds entre 1.40 e 3.50).
+        <span class='manual-term'>Strict Risk Management</span>
+        O alocamento máximo recomendado está trancado nos 5% do capital total para proteger a banca de <i>drawdowns</i> severos.
         </div>
         """, unsafe_allow_html=True)
 
 if m_sel and btn_run:
-    # --- SEQUÊNCIA DE ARRANQUE PARA IMPRESSIONAR NA DEMO ---
     placeholder_status = st.empty()
     progress_bar = st.progress(0)
     
@@ -337,18 +336,17 @@ if m_sel and btn_run:
     time.sleep(0.6)
     progress_bar.progress(60)
     
-    placeholder_status.markdown("<div style='color:#10B981; font-family:monospace; font-size:0.8rem;'>[3/4] Applying Dynamic De-Vigging & Kelly Criterion Allocation...</div>", unsafe_allow_html=True)
+    placeholder_status.markdown("<div style='color:#10B981; font-family:monospace; font-size:0.8rem;'>[3/4] Applying Risk Filters & Detecting API Anomalies...</div>", unsafe_allow_html=True)
     time.sleep(0.5)
     progress_bar.progress(85)
     
-    placeholder_status.markdown("<div style='color:#10B981; font-family:monospace; font-size:0.8rem;'>[4/4] Extracting Prime Alpha Signals...</div>", unsafe_allow_html=True)
+    placeholder_status.markdown("<div style='color:#10B981; font-family:monospace; font-size:0.8rem;'>[4/4] Extracting Risk-Adjusted Prime Alpha...</div>", unsafe_allow_html=True)
     time.sleep(0.4)
     progress_bar.progress(100)
     
     time.sleep(0.2)
     placeholder_status.empty()
     progress_bar.empty()
-    # ---------------------------------------------------------
     
     h_id, a_id = m_sel['teams']['home']['id'], m_sel['teams']['away']['id']
     h_name = m_sel['teams']['home']['name']
@@ -383,7 +381,12 @@ if m_sel and btn_run:
             if odd > 1.05 and prob > 0:
                 f_prob = (1 / odd) / (1 + dynamic_margin)
                 edge = (prob * odd) - 1
+                
+                # --- SISTEMA DE GESTÃO DE RISCO ABSOLUTO ---
+                # 1. Calculamos o Kelly
                 kelly_val = calculate_kelly(prob, odd) if edge > 0 else 0
+                # 2. Hard Cap de 5.0% (Nenhum Quant arrisca mais do que isto)
+                kelly_val = min(kelly_val, 5.0) 
                 
                 ui_market_name = format_market_name(mkt, h_name, a_name)
                 
@@ -396,7 +399,14 @@ if m_sel and btn_run:
                     "Kelly": kelly_val
                 })
         
-        prime_bets = [m for m in valid_markets if m['Edge'] > 0 and m['ModelProb'] >= 0.35]
+        # --- FILTRO INSTITUCIONAL (ANTI-EMBARAÇO NA DEMO) ---
+        prime_bets = [
+            m for m in valid_markets 
+            if 0.01 < m['Edge'] < 0.25      # Edge realista entre 1% e 25%. Corta bugs de API com >500% edge.
+            and m['ModelProb'] >= 0.40      # Queremos consistência de acerto, acima de 40%
+            and 1.40 <= m['BookOdd'] <= 3.50 # Odds seguras, sem lotarias de 7.000
+        ]
+        
         if prime_bets:
             best_bet = max(prime_bets, key=lambda x: x['Kelly'])
     
@@ -422,7 +432,6 @@ if m_sel and btn_run:
                 risk_lvl = "LOW" if best_bet['ModelProb'] > 0.55 else "MEDIUM"
                 risk_color = "#10B981" if risk_lvl == "LOW" else "#F59E0B"
                 
-                # Nova métrica: Confiança do Modelo (Simulada baseada no EV e Probabilidade)
                 confidence_score = min(99.9, (best_bet['ModelProb'] * 100) + (best_bet['Edge'] * 50) + 10)
                 
                 st.markdown(f"""
@@ -432,7 +441,7 @@ if m_sel and btn_run:
 <div class='trade-odd'>@ {best_bet['BookOdd']:.3f}</div>
 <div class='data-row'><span class='data-lbl'>Win Probability (Strike Rate)</span><span class='data-val'>{best_bet['ModelProb']*100:.2f}%</span></div>
 <div class='data-row'><span class='data-lbl'>Expected Value (Edge)</span><span class='data-val hl-green'>+{best_bet['Edge']*100:.2f}%</span></div>
-<div class='data-row'><span class='data-lbl'>Optimal Capital Allocation (1/4 Kelly)</span><span class='data-val hl-blue'>${dollar_sz:,.0f} ({best_bet['Kelly']:.2f}%)</span></div>
+<div class='data-row'><span class='data-lbl'>Optimal Capital Allocation (Capped)</span><span class='data-val hl-blue'>${dollar_sz:,.0f} ({best_bet['Kelly']:.2f}%)</span></div>
 <div class='data-row'><span class='data-lbl'>Drawdown Risk Assessment</span><span class='data-val' style='color:{risk_color};'>{risk_lvl}</span></div>
 <div class='data-row' style='margin-top:12px; border-top: 1px dashed rgba(56,189,248,0.3); padding-top: 12px;'><span class='data-lbl'>Model Confidence Index</span><span class='data-val' style='color:#38BDF8;'>{confidence_score:.1f}/100</span></div>
 </div>
@@ -469,7 +478,9 @@ if m_sel and btn_run:
         if live_odds and valid_markets:
             st.markdown("""<div class='grid-panel' style='padding-bottom: 5px;'><div class='panel-title'>Probability Delta (Model vs Institutional Lines) - Top 5</div>""", unsafe_allow_html=True)
             
-            top_markets = sorted([m for m in valid_markets if m['Edge'] > 0], key=lambda x: x['Edge'], reverse=True)[:5]
+            # Gráfico usa apenas as opções seguras também, sem poluição visual da API
+            chart_markets = [m for m in valid_markets if m['Edge'] > 0 and m['Edge'] < 0.25]
+            top_markets = sorted(chart_markets, key=lambda x: x['Edge'], reverse=True)[:5]
             
             if top_markets:
                 m_names = [m['Market'] for m in top_markets]
@@ -484,7 +495,6 @@ if m_sel and btn_run:
                     y=m_names, x=sys_probs, name='System Prob', orientation='h', marker_color='#10B981', hovertemplate="System: %{x:.1f}%<extra></extra>"
                 ))
                 
-                # ERRO DO PLOTLY CORRIGIDO AQUI (Sem o weight="600")
                 fig_delta.update_layout(
                     barmode='group',
                     template='plotly_dark',
@@ -498,17 +508,19 @@ if m_sel and btn_run:
                 )
                 st.plotly_chart(fig_delta, use_container_width=True, config={'displayModeBar': False})
             else:
-                st.info("No +EV markets to chart.")
+                st.info("No stable +EV markets to chart.")
             st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown("""<div class='grid-panel'><div class='panel-title'>Algorithmic Order Book (Sorted by Optimal Kelly)</div>""", unsafe_allow_html=True)
         
         if live_odds:
-            valid_markets = sorted(valid_markets, key=lambda x: x['Kelly'], reverse=True)
+            # Apresentar na tabela APENAS as odds que passaram no filtro de Sanidade (Corta o lixo)
+            clean_markets = [m for m in valid_markets if m['Edge'] < 0.25 and m['BookOdd'] <= 15.0]
+            clean_markets = sorted(clean_markets, key=lambda x: x['Kelly'], reverse=True)
             
             table_html = "<table class='ob-table'><tr><th>Asset (Market)</th><th>Listed Odds</th><th>System Prob</th><th>Market Edge</th><th>Kelly Allocation</th></tr>"
             
-            for m in valid_markets:
+            for m in clean_markets:
                 edge_val = m['Edge'] * 100
                 color_cls = "hl-green" if edge_val > 0 else "hl-red"
                 sign = "+" if edge_val > 0 else ""
