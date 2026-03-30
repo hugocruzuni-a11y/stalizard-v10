@@ -1,14 +1,12 @@
 import streamlit as st
 import numpy as np
-from scipy.stats import norm
 import pandas as pd
-import plotly.graph_objects as go
 import requests
-from datetime import date, timedelta
+from datetime import date
 import time
 
 # ==========================================
-# 1. SETUP DE ALTA PERFORMANCE (MODO REALIDADE)
+# 1. HIGH-PERFORMANCE SETUP
 # ==========================================
 st.set_page_config(page_title="APEX QUANT | REAL-TIME", layout="wide", initial_sidebar_state="collapsed")
 
@@ -32,7 +30,7 @@ st.markdown("""
     .dot { width: 8px; height: 8px; background-color: #FF0055; border-radius: 50%; animation: pulse-red 1.5s infinite; box-shadow: 0 0 10px #FF0055; }
     @keyframes pulse-red { 0% { transform: scale(0.95); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.5; } 100% { transform: scale(0.95); opacity: 1; } }
 
-    /* The Alpha Card (Aposta Ouro) */
+    /* The Alpha Card */
     .lock-card { background: linear-gradient(180deg, #0A101D 0%, #05080F 100%); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 20px; padding: 30px; box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 20px 50px rgba(0,0,0,0.5); position: relative; overflow: hidden; margin-bottom: 20px;}
     .lock-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #00F0FF, #00FF88); }
     
@@ -41,7 +39,7 @@ st.markdown("""
     .teams { font-size: 2.2rem; font-weight: 900; line-height: 1.2; letter-spacing: -1px; }
     .teams span { color: #64748B; font-weight: 400; font-size: 1.5rem; margin: 0 15px; }
 
-    /* Order Book Matrix - Professional Markets */
+    /* Order Book Matrix */
     .order-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; align-items: center; background: #080C16; border: 1px solid #1E293B; border-radius: 6px; margin-bottom: 6px; transition: all 0.2s; }
     .order-row:hover { border-color: #00F0FF; background: rgba(0, 240, 255, 0.02); }
     .order-cell { padding: 12px 15px; font-family: 'JetBrains Mono'; font-size: 0.9rem; }
@@ -53,17 +51,22 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. MOTOR DE DADOS REAIS (CONEXÃO DIRETA API)
+# 2. DATA ENGINE (LIVE API CONNECTION)
 # ==========================================
-API_KEY = st.secrets.get("API_KEY", "8171043bf0a322286bb127947dbd4041")
+# SECURITY FIX: Do not hardcode API keys. Rely strictly on Streamlit Secrets.
+API_KEY = st.secrets.get("API_KEY", "") 
 HEADERS = {"x-apisports-key": API_KEY, "x-apisports-host": "v3.football.api-sports.io"}
 
 def fetch_api(endpoint, params):
-    """Bate na porta da API Real e traz os dados."""
+    if not API_KEY:
+        st.error("API Key is missing. Please configure your secrets.")
+        return []
     try:
         r = requests.get(f"https://{HEADERS['x-apisports-host']}/{endpoint}", headers=HEADERS, params=params, timeout=10)
+        r.raise_for_status()
         return r.json().get('response', [])
-    except:
+    except Exception as e:
+        st.warning(f"API Connection Error: {e}")
         return []
 
 @st.cache_data(ttl=60) 
@@ -72,22 +75,21 @@ def get_live_fixtures(date_str, league_id, season="2025"):
 
 @st.cache_data(ttl=3600)
 def get_real_stats(team_id, league_id, season="2025"):
-    """Puxa os GOLOS REAIS marcados e sofridos da equipa nesta época!"""
     stats = fetch_api("teams/statistics", {"team": team_id, "league": league_id, "season": season})
-    if not stats: return {"gf_h": 1.35, "ga_h": 1.35, "gf_a": 1.35, "ga_a": 1.35}
+    default_avg = 1.35
+    if not stats: return {"gf_h": default_avg, "ga_h": default_avg, "gf_a": default_avg, "ga_a": default_avg}
     try:
         goals = stats.get('goals', {}) if isinstance(stats, dict) else stats[0].get('goals', {})
         return {
-            "gf_h": float(goals.get('for', {}).get('average', {}).get('home', 1.35)),
-            "ga_h": float(goals.get('against', {}).get('average', {}).get('home', 1.35)),
-            "gf_a": float(goals.get('for', {}).get('average', {}).get('away', 1.35)),
-            "ga_a": float(goals.get('against', {}).get('average', {}).get('away', 1.35))
+            "gf_h": float(goals.get('for', {}).get('average', {}).get('home', default_avg)),
+            "ga_h": float(goals.get('against', {}).get('average', {}).get('home', default_avg)),
+            "gf_a": float(goals.get('for', {}).get('average', {}).get('away', default_avg)),
+            "ga_a": float(goals.get('against', {}).get('average', {}).get('away', default_avg))
         }
-    except: return {"gf_h": 1.35, "ga_h": 1.35, "gf_a": 1.35, "ga_a": 1.35}
+    except: return {"gf_h": default_avg, "ga_h": default_avg, "gf_a": default_avg, "ga_a": default_avg}
 
 @st.cache_data(ttl=60)
 def get_real_odds(fixture_id):
-    """Puxa as odds que estão AGORA MESMO na casa de apostas."""
     odds_data = fetch_api("odds", {"fixture": fixture_id, "bookmaker": 8}) # 8 = Bet365
     market_odds = {}
     
@@ -96,7 +98,6 @@ def get_real_odds(fixture_id):
             name = bet['name']
             vals = {str(v['value']): float(v['odd']) for v in bet['values']}
             
-            # Mapeamento para Mercados Profissionais
             if name == 'Match Winner':
                 market_odds["Home Win"] = vals.get('Home', 0)
                 market_odds["Draw"] = vals.get('Draw', 0)
@@ -105,23 +106,25 @@ def get_real_odds(fixture_id):
                 market_odds["Over 2.5"] = vals.get('Over 2.5', 0)
                 market_odds["Under 2.5"] = vals.get('Under 2.5', 0)
             elif name == 'Asian Handicap':
-                # Procurar as linhas asiáticas principais na API
                 for val_key, odd in vals.items():
                     if "Home -0.5" in val_key or "Home -0.5" == val_key: market_odds["Asian Handicap -0.5 (H)"] = odd
                     if "Home +0.5" in val_key or "Home +0.5" == val_key: market_odds["Asian Handicap +0.5 (H)"] = odd
     return market_odds
 
 # ==========================================
-# 3. A INTELIGÊNCIA ARTIFICIAL (MONTE CARLO)
+# 3. AI / QUANT MODEL (MONTE CARLO)
 # ==========================================
-def calculate_real_xg(h_stats, a_stats):
-    """Calcula a Força Ofensiva/Defensiva real cruzando os dados."""
-    return round(max(0.5, (h_stats['gf_h']/1.35) * (a_stats['ga_a']/1.35) * 1.35), 2), round(max(0.5, (a_stats['gf_a']/1.35) * (h_stats['ga_h']/1.35) * 1.35), 2)
+def calculate_projected_goals(h_stats, a_stats):
+    """Calculates Projected Goals (Proxy for xG) based on team averages."""
+    league_avg = 1.35
+    h_proj = max(0.5, (h_stats['gf_h']/league_avg) * (a_stats['ga_a']/league_avg) * league_avg)
+    a_proj = max(0.5, (a_stats['gf_a']/league_avg) * (h_stats['ga_h']/league_avg) * league_avg)
+    return round(h_proj, 2), round(a_proj, 2)
 
-def run_monte_carlo_sim(xg_h, xg_a, sims=10000):
+def run_monte_carlo_sim(proj_h, proj_a, sims=10000):
     np.random.seed(int(time.time()))
-    h_goals = np.random.poisson(xg_h, sims)
-    a_goals = np.random.poisson(xg_a, sims)
+    h_goals = np.random.poisson(proj_h, sims)
+    a_goals = np.random.poisson(proj_a, sims)
     diff = h_goals - a_goals
     total = h_goals + a_goals
     
@@ -136,62 +139,60 @@ def run_monte_carlo_sim(xg_h, xg_a, sims=10000):
     }
 
 # ==========================================
-# 4. A INTERFACE (O FERRARI)
+# 4. USER INTERFACE (THE TERMINAL)
 # ==========================================
 
 st.markdown("""
 <div class="top-nav">
     <div class="logo">APEX<span>QUANT</span></div>
-    <div class="live-status"><div class="dot"></div> FEED DE DADOS: TEMPO REAL</div>
+    <div class="live-status"><div class="dot"></div> LIVE DATA FEED ACTIVE</div>
 </div>
 """, unsafe_allow_html=True)
 
 col_menu, col_core, col_book = st.columns([1, 1.8, 2.2], gap="large")
 
-# --- ESQUERDA: O RADAR GLOBAL DE JOGOS REAIS ---
+# --- LEFT: GLOBAL RADAR ---
 with col_menu:
-    st.markdown("<h3 style='color:#00F0FF; font-weight:900; font-size:1.1rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:20px;'>Radar Global</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color:#00F0FF; font-weight:900; font-size:1.1rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:20px;'>Global Radar</h3>", unsafe_allow_html=True)
     
-    # Calendário Real - Se escolheres hoje e não houver liga dos campeões, ele não inventa. É real.
-    target_date = st.date_input("Data do Jogo", date.today())
+    target_date = st.date_input("Match Date", date.today())
     
     l_map = {
         "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League": 39, "🇪🇺 Champions League": 2, "🇪🇸 La Liga": 140, 
         "🇵🇹 Primeira Liga": 94, "🇮🇹 Serie A": 135, "🇩🇪 Bundesliga": 78
     }
-    league_name = st.selectbox("Competição", list(l_map.keys()))
+    league_name = st.selectbox("Competition", list(l_map.keys()))
     league_id = l_map[league_name]
     
-    with st.spinner("A conectar à API-Sports..."):
+    with st.spinner("Connecting to API-Sports..."):
         fixtures = get_live_fixtures(target_date.strftime('%Y-%m-%d'), league_id)
     
     m_sel = None
     if fixtures:
         m_map = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}": f for f in fixtures}
-        match_str = st.selectbox("Selecione o Jogo Real", list(m_map.keys()))
+        match_str = st.selectbox("Select Match", list(m_map.keys()))
         m_sel = m_map[match_str]
-        st.button("🔄 SINCRONIZAR ODDS AGORA", use_container_width=True)
+        st.button("🔄 SYNC LIVE ODDS", use_container_width=True)
     else:
-        st.error(f"Não há jogos programados na {league_name} para o dia {target_date.strftime('%d/%m/%Y')}. A API não mente. Escolhe outra data ou liga.")
+        st.error(f"No fixtures found for {league_name} on {target_date.strftime('%Y-%m-%d')}.")
 
-# --- SE HOUVER UM JOGO SELECIONADO, A MAGIA ACONTECE ---
+# --- CENTER/RIGHT: QUANT ANALYSIS ---
 if m_sel:
     h_id, a_id = m_sel['teams']['home']['id'], m_sel['teams']['away']['id']
     h_name, a_name = m_sel['teams']['home']['name'], m_sel['teams']['away']['name']
     
-    with st.spinner("A processar Dados Reais e a varrer as Casas de Apostas..."):
+    with st.spinner("Processing Model and Scanning Bookmakers..."):
         h_stats = get_real_stats(h_id, league_id)
         a_stats = get_real_stats(a_id, league_id)
-        xg_h, xg_a = calculate_real_xg(h_stats, a_stats)
+        proj_h, proj_a = calculate_projected_goals(h_stats, a_stats)
         
-        true_probs = run_monte_carlo_sim(xg_h, xg_a)
+        true_probs = run_monte_carlo_sim(proj_h, proj_a)
         live_odds = get_real_odds(m_sel['fixture']['id'])
     
-    # Encontrar o Maior "Edge" (Aposta de Ouro Real)
     best_bet = None
     max_edge = 0
-    
     valid_markets = []
+    
     if live_odds:
         for mkt, odd in live_odds.items():
             prob = true_probs.get(mkt, 0)
@@ -202,62 +203,59 @@ if m_sel:
                     max_edge = edge
                     best_bet = {"Market": mkt, "Odd": odd, "TrueProb": prob, "Edge": edge}
     
-    # --- CENTRO: A APOSTA DIAMANTE E AS MÉTRICAS ---
+    # --- CENTER: THE ALPHA TICKET ---
     with col_core:
         st.markdown(f"""
         <div class="lock-card">
             <div class="matchup">
-                <div class="league-tag">{league_name} • REAL DATA</div>
+                <div class="league-tag">{league_name} • QUANT PROJECTION</div>
                 <div class="teams">{h_name} <span>vs</span> {a_name}</div>
             </div>
         """, unsafe_allow_html=True)
         
         c_xg1, c_xg2 = st.columns(2)
-        c_xg1.markdown(f"<div style='text-align:center; font-family:\"JetBrains Mono\"; color:#00F0FF; font-size:1.2rem; font-weight:800;'>xG: {xg_h:.2f}</div>", unsafe_allow_html=True)
-        c_xg2.markdown(f"<div style='text-align:center; font-family:\"JetBrains Mono\"; color:#D4AF37; font-size:1.2rem; font-weight:800;'>xG: {xg_a:.2f}</div>", unsafe_allow_html=True)
+        c_xg1.markdown(f"<div style='text-align:center; font-family:\"JetBrains Mono\"; color:#00F0FF; font-size:1.2rem; font-weight:800;'>Proj Goals: {proj_h:.2f}</div>", unsafe_allow_html=True)
+        c_xg2.markdown(f"<div style='text-align:center; font-family:\"JetBrains Mono\"; color:#D4AF37; font-size:1.2rem; font-weight:800;'>Proj Goals: {proj_a:.2f}</div>", unsafe_allow_html=True)
         
         st.markdown("<hr style='border-color:rgba(255,255,255,0.1);'>", unsafe_allow_html=True)
 
         if best_bet and best_bet["Edge"] > 0:
-            # Temos uma aposta com valor real!
-            conf = best_bet['TrueProb'] * 100
             st.markdown(f"""
                 <div style="background: rgba(0, 255, 136, 0.05); border: 2px dashed #00FF88; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0; box-shadow: 0 0 30px rgba(0,255,136,0.1);">
-                    <div style="color: #00FF88; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;">⭐ APOSTA ALPHA (MATEMATICAMENTE COMPROVADA) ⭐</div>
+                    <div style="color: #00FF88; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;">⭐ +EV ALPHA BET IDENTIFIED ⭐</div>
                     <div style="font-size: 2rem; font-weight: 900; color: #FFFFFF; text-shadow: 0 0 20px rgba(0,255,136,0.4); line-height: 1.1;">{best_bet['Market']}</div>
                     <div style="display:flex; justify-content:center; gap:20px; margin-top:15px; font-family:'JetBrains Mono';">
-                        <div style="background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 6px;">Odd Mercado: <span style="color:#FFD700; font-weight:800;">{best_bet['Odd']:.2f}</span></div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 6px;">Bookie Odd: <span style="color:#FFD700; font-weight:800;">{best_bet['Odd']:.2f}</span></div>
                         <div style="background: rgba(0,255,136,0.1); padding: 5px 15px; border-radius: 6px; color:#00FF88; font-weight:800;">EDGE: +{best_bet['Edge']*100:.1f}%</div>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
             
             st.markdown("<div class='btn-nuke'>", unsafe_allow_html=True)
-            if st.button(f"🚀 COPIAR APOSTA PARA O BOLETIM", use_container_width=True):
-                st.toast("✅ Edge Matemático capturado!", icon="📈")
+            if st.button("🚀 EXECUTE VALUE BET", use_container_width=True):
+                st.toast("✅ Mathematical Edge captured!", icon="📈")
             st.markdown("</div>", unsafe_allow_html=True)
             
         elif not live_odds:
-            st.warning("⚠️ As casas de apostas (API) ainda não abriram as odds para este jogo. O evento pode estar muito longe no calendário.")
+            st.warning("⚠️ Bookmakers have not yet released liquid odds for this fixture.")
         else:
-            st.error("📉 MERCADO EFICIENTE. As odds atuais da casa de apostas não oferecem nenhuma vantagem matemática (Edge > 0) para o apostador neste jogo. Protege o teu capital.")
+            st.error("📉 EFFICIENT MARKET. Current bookmaker odds offer no mathematical advantage (+EV). Protect your bankroll and pass.")
         
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # --- DIREITA: O ORDER BOOK DOS PROFISSIONAIS ---
+    # --- RIGHT: PRO ORDER BOOK ---
     with col_book:
-        st.markdown("<h3 style='color:#FFFFFF; font-weight:900; font-size:1.1rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:20px;'>Mercados Profissionais (Live API)</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color:#FFFFFF; font-weight:900; font-size:1.1rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:20px;'>Live Order Book (API)</h3>", unsafe_allow_html=True)
         
         if not live_odds:
-            st.info("A aguardar liquidez da casa de apostas.")
+            st.info("Waiting for market liquidity...")
         else:
             st.markdown("""
             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; font-size: 0.65rem; color: #64748B; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; padding: 0 15px 10px 15px; border-bottom: 1px solid #1E293B; margin-bottom: 10px;">
-                <div>Mercado</div><div style="text-align:right;">Odd Real</div><div style="text-align:right;">Odd Justa</div><div style="text-align:center;">Vantagem (Edge)</div>
+                <div>Market</div><div style="text-align:right;">Book Odd</div><div style="text-align:right;">Fair Odd</div><div style="text-align:center;">Edge (EV)</div>
             </div>
             """, unsafe_allow_html=True)
             
-            # Ordenar mercados do maior Edge para o menor
             valid_markets = sorted(valid_markets, key=lambda x: x['Edge'], reverse=True)
             
             for m in valid_markets:
