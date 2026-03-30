@@ -11,44 +11,44 @@ import time
 st.set_page_config(page_title="APEX QUANT | PRO", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=JetBrains+Mono:wght@400;700;800&display=swap');
-    
-    .stApp { background-color: #030407; color: #FFFFFF; font-family: 'Outfit', sans-serif; background-image: radial-gradient(circle at 50% 0%, #0A1128 0%, #030407 80%); }
-    header, footer { visibility: hidden; }
-    
-    /* Premium Top Bar */
-    .top-nav { background: rgba(3, 4, 7, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0, 240, 255, 0.15); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; margin: -3rem -3rem 2rem -3rem; position: sticky; top: 0; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
-    .logo { font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; color: #FFFFFF; line-height: 1;}
-    .logo span { color: #00F0FF; text-shadow: 0 0 15px rgba(0, 240, 255, 0.4); }
-    
-    .live-status { display: flex; align-items: center; gap: 10px; background: rgba(0, 255, 136, 0.1); border: 1px solid rgba(0, 255, 136, 0.3); padding: 8px 16px; border-radius: 50px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #00FF88; letter-spacing: 1px; box-shadow: 0 0 15px rgba(0, 255, 136, 0.15); }
-    .dot { width: 8px; height: 8px; background-color: #00FF88; border-radius: 50%; animation: pulse-green 1.5s infinite; box-shadow: 0 0 10px #00FF88; }
-    @keyframes pulse-green { 0% { transform: scale(0.95); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.5; } 100% { transform: scale(0.95); opacity: 1; } }
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=JetBrains+Mono:wght@400;700;800&display=swap');
 
-    /* Match Card & Metrics */
-    .match-card { background: linear-gradient(180deg, #0A101D 0%, #05080F 100%); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 16px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); margin-bottom: 20px;}
-    .teams { font-size: 2rem; font-weight: 900; line-height: 1.2; letter-spacing: -1px; text-align: center; margin-bottom: 20px;}
-    .teams span { color: #64748B; font-weight: 400; font-size: 1.2rem; margin: 0 10px; }
-    
-    .metric-container { display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; margin-top: 15px;}
-    .metric-box { text-align: center; flex: 1; }
-    .metric-label { font-size: 0.75rem; color: #64748B; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; margin-bottom: 5px;}
-    .metric-value { font-size: 1.4rem; font-family: 'JetBrains Mono'; font-weight: 900; color: #F8FAFC;}
+.stApp { background-color: #030407; color: #FFFFFF; font-family: 'Outfit', sans-serif; background-image: radial-gradient(circle at 50% 0%, #0A1128 0%, #030407 80%); }
+header, footer { visibility: hidden; }
 
-    /* Order Book Matrix */
-    .order-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; align-items: center; background: #080C16; border: 1px solid #1E293B; border-radius: 6px; margin-bottom: 6px; transition: all 0.2s; }
-    .order-row:hover { border-color: #00F0FF; background: rgba(0, 240, 255, 0.02); }
-    .order-cell { padding: 12px 15px; font-family: 'JetBrains Mono'; font-size: 0.9rem; }
-    .market-name { color: #F8FAFC; font-weight: 800; font-family: 'Inter'; font-size: 0.85rem; }
-    
-    /* Alpha Signal Box */
-    .alpha-box { background: rgba(0, 255, 136, 0.05); border: 2px solid #00FF88; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 0 30px rgba(0,255,136,0.1); margin-top: 15px; }
-    .alpha-title { color: #00FF88; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
-    
-    .stButton > button { background: linear-gradient(90deg, #00F0FF, #0088FF) !important; color: #FFF !important; font-weight: 900 !important; font-size: 1.1rem !important; text-transform: uppercase; border: none !important; border-radius: 8px !important; padding: 10px !important; transition: all 0.2s; }
-    .stButton > button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0, 240, 255, 0.3); }
-    </style>
+/* Premium Top Bar */
+.top-nav { background: rgba(3, 4, 7, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0, 240, 255, 0.15); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; margin: -3rem -3rem 2rem -3rem; position: sticky; top: 0; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
+.logo { font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; color: #FFFFFF; line-height: 1;}
+.logo span { color: #00F0FF; text-shadow: 0 0 15px rgba(0, 240, 255, 0.4); }
+
+.live-status { display: flex; align-items: center; gap: 10px; background: rgba(0, 255, 136, 0.1); border: 1px solid rgba(0, 255, 136, 0.3); padding: 8px 16px; border-radius: 50px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #00FF88; letter-spacing: 1px; box-shadow: 0 0 15px rgba(0, 255, 136, 0.15); }
+.dot { width: 8px; height: 8px; background-color: #00FF88; border-radius: 50%; animation: pulse-green 1.5s infinite; box-shadow: 0 0 10px #00FF88; }
+@keyframes pulse-green { 0% { transform: scale(0.95); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.5; } 100% { transform: scale(0.95); opacity: 1; } }
+
+/* Match Card & Metrics */
+.match-card { background: linear-gradient(180deg, #0A101D 0%, #05080F 100%); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 16px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); margin-bottom: 20px;}
+.teams { font-size: 2rem; font-weight: 900; line-height: 1.2; letter-spacing: -1px; text-align: center; margin-bottom: 20px;}
+.teams span { color: #64748B; font-weight: 400; font-size: 1.2rem; margin: 0 10px; }
+
+.metric-container { display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; margin-top: 15px;}
+.metric-box { text-align: center; flex: 1; }
+.metric-label { font-size: 0.75rem; color: #64748B; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; margin-bottom: 5px;}
+.metric-value { font-size: 1.4rem; font-family: 'JetBrains Mono'; font-weight: 900; color: #F8FAFC;}
+
+/* Order Book Matrix */
+.order-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; align-items: center; background: #080C16; border: 1px solid #1E293B; border-radius: 6px; margin-bottom: 6px; transition: all 0.2s; }
+.order-row:hover { border-color: #00F0FF; background: rgba(0, 240, 255, 0.02); }
+.order-cell { padding: 12px 15px; font-family: 'JetBrains Mono'; font-size: 0.9rem; }
+.market-name { color: #F8FAFC; font-weight: 800; font-family: 'Inter'; font-size: 0.85rem; }
+
+/* Alpha Signal Box */
+.alpha-box { background: rgba(0, 255, 136, 0.05); border: 2px solid #00FF88; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 0 30px rgba(0,255,136,0.1); margin-top: 15px; }
+.alpha-title { color: #00FF88; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+
+.stButton > button { background: linear-gradient(90deg, #00F0FF, #0088FF) !important; color: #FFF !important; font-weight: 900 !important; font-size: 1.1rem !important; text-transform: uppercase; border: none !important; border-radius: 8px !important; padding: 10px !important; transition: all 0.2s; }
+.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0, 240, 255, 0.3); }
+</style>
 """, unsafe_allow_html=True)
 
 # ==========================================
@@ -93,7 +93,6 @@ def get_real_odds(fixture_id):
         bets = odds_data[0]['bookmakers'][0].get('bets', [])
         for bet in bets:
             name = bet.get('name', '')
-            # Extração segura dos valores
             vals = {}
             for v in bet.get('values', []):
                 val_key = str(v.get('value', ''))
@@ -121,7 +120,7 @@ def get_real_odds(fixture_id):
                     if "-1.5" in k and "Home" in k: market_odds["AH -1.5 (H)"] = odd
                     if "+1.5" in k and "Home" in k: market_odds["AH +1.5 (H)"] = odd
     except Exception as e:
-        pass # Falha segura se a API mudar a estrutura drasticamente
+        pass 
         
     return market_odds
 
@@ -169,8 +168,8 @@ def get_market_margin():
 # ==========================================
 st.markdown("""
 <div class="top-nav">
-    <div class="logo">APEX<span>QUANT</span></div>
-    <div class="live-status"><div class="dot"></div> LIVE MARKET FEED</div>
+<div class="logo">APEX<span>QUANT</span></div>
+<div class="live-status"><div class="dot"></div> LIVE MARKET FEED</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -223,26 +222,24 @@ if m_sel:
                     max_edge, best_bet = edge, valid_markets[-1]
     
     with col_core:
-        # STRIPPED HTML - No indentation to prevent white boxes
         st.markdown(f"""
 <div class="match-card">
-    <div style="font-size: 0.8rem; color: #00F0FF; text-transform: uppercase; letter-spacing: 3px; font-weight: 800; text-align: center; margin-bottom: 10px;">QUANT PROJECTION</div>
-    <div class="teams">{m_sel['teams']['home']['name']} <span>vs</span> {m_sel['teams']['away']['name']}</div>
-    
-    <div class="metric-container">
-        <div class="metric-box">
-            <div class="metric-label">Model xG (H)</div>
-            <div class="metric-value" style="color:#00F0FF;">{proj_h:.2f}</div>
-        </div>
-        <div class="metric-box" style="border-left: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05);">
-            <div class="metric-label">Simulations</div>
-            <div class="metric-value">25,000</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Model xG (A)</div>
-            <div class="metric-value" style="color:#FFD700;">{proj_a:.2f}</div>
-        </div>
-    </div>
+<div style="font-size: 0.8rem; color: #00F0FF; text-transform: uppercase; letter-spacing: 3px; font-weight: 800; text-align: center; margin-bottom: 10px;">QUANT PROJECTION</div>
+<div class="teams">{m_sel['teams']['home']['name']} <span>vs</span> {m_sel['teams']['away']['name']}</div>
+<div class="metric-container">
+<div class="metric-box">
+<div class="metric-label">Model xG (H)</div>
+<div class="metric-value" style="color:#00F0FF;">{proj_h:.2f}</div>
+</div>
+<div class="metric-box" style="border-left: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05);">
+<div class="metric-label">Simulations</div>
+<div class="metric-value">25,000</div>
+</div>
+<div class="metric-box">
+<div class="metric-label">Model xG (A)</div>
+<div class="metric-value" style="color:#FFD700;">{proj_a:.2f}</div>
+</div>
+</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -250,23 +247,22 @@ if m_sel:
             rec_kelly = calculate_kelly(best_bet['TrueProb'], best_bet['Odd'])
             st.markdown(f"""
 <div class="alpha-box">
-    <div class="alpha-title">⭐ ALPHA SIGNAL IDENTIFIED ⭐</div>
-    <div style="font-size: 2.2rem; font-weight: 900; color: #FFFFFF; text-shadow: 0 0 20px rgba(0,255,136,0.4); margin-bottom: 20px;">{best_bet['Market']}</div>
-    
-    <div style="display: flex; justify-content: space-around; font-family: 'JetBrains Mono';">
-        <div>
-            <div style="color: #64748B; font-size: 0.75rem; font-weight: 800;">BOOKIE LINE</div>
-            <div style="color: #FFD700; font-size: 1.3rem; font-weight: 900;">{best_bet['Odd']:.2f}</div>
-        </div>
-        <div>
-            <div style="color: #64748B; font-size: 0.75rem; font-weight: 800;">EXPECTED VALUE</div>
-            <div style="color: #00FF88; font-size: 1.3rem; font-weight: 900;">+{best_bet['Edge']*100:.1f}%</div>
-        </div>
-        <div>
-            <div style="color: #64748B; font-size: 0.75rem; font-weight: 800;">KELLY (1/4) SIZE</div>
-            <div style="color: #FFFFFF; font-size: 1.3rem; font-weight: 900;">{rec_kelly:.2f}%</div>
-        </div>
-    </div>
+<div class="alpha-title">⭐ ALPHA SIGNAL IDENTIFIED ⭐</div>
+<div style="font-size: 2.2rem; font-weight: 900; color: #FFFFFF; text-shadow: 0 0 20px rgba(0,255,136,0.4); margin-bottom: 20px;">{best_bet['Market']}</div>
+<div style="display: flex; justify-content: space-around; font-family: 'JetBrains Mono';">
+<div>
+<div style="color: #64748B; font-size: 0.75rem; font-weight: 800;">BOOKIE LINE</div>
+<div style="color: #FFD700; font-size: 1.3rem; font-weight: 900;">{best_bet['Odd']:.2f}</div>
+</div>
+<div>
+<div style="color: #64748B; font-size: 0.75rem; font-weight: 800;">EXPECTED VALUE</div>
+<div style="color: #00FF88; font-size: 1.3rem; font-weight: 900;">+{best_bet['Edge']*100:.1f}%</div>
+</div>
+<div>
+<div style="color: #64748B; font-size: 0.75rem; font-weight: 800;">KELLY (1/4) SIZE</div>
+<div style="color: #FFFFFF; font-size: 1.3rem; font-weight: 900;">{rec_kelly:.2f}%</div>
+</div>
+</div>
 </div>
 """, unsafe_allow_html=True)
         elif not live_odds:
@@ -279,15 +275,15 @@ if m_sel:
         
         if live_odds:
             st.markdown("""
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; font-size: 0.65rem; color: #64748B; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; padding: 0 15px 10px 15px; border-bottom: 1px solid #1E293B; margin-bottom: 10px;">
-                <div>MARKET</div>
-                <div style="text-align:right;">ODDS</div>
-                <div style="text-align:right;">NO-VIG</div>
-                <div style="text-align:right;">SYS PROB</div>
-                <div style="text-align:right;">EDGE</div>
-            </div>
-            <div style="max-height: 550px; overflow-y: auto; padding-right: 5px;">
-            """, unsafe_allow_html=True)
+<div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; font-size: 0.65rem; color: #64748B; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; padding: 0 15px 10px 15px; border-bottom: 1px solid #1E293B; margin-bottom: 10px;">
+<div>MARKET</div>
+<div style="text-align:right;">ODDS</div>
+<div style="text-align:right;">NO-VIG</div>
+<div style="text-align:right;">SYS PROB</div>
+<div style="text-align:right;">EDGE</div>
+</div>
+<div style="max-height: 550px; overflow-y: auto; padding-right: 5px;">
+""", unsafe_allow_html=True)
             
             valid_markets = sorted(valid_markets, key=lambda x: x['Edge'], reverse=True)
             for m in valid_markets:
@@ -297,12 +293,12 @@ if m_sel:
                 border = "border-left: 3px solid #00FF88;" if is_edge else "border-left: 3px solid transparent;"
                 
                 st.markdown(f"""
-                <div class="order-row" style="{border} background:{bg_col};">
-                    <div class="order-cell market-name">{m['Market']}</div>
-                    <div class="order-cell" style="text-align:right; font-weight:800; color:#FFF;">{m['Odd']:.2f}</div>
-                    <div class="order-cell" style="text-align:right; color:#64748B;">{m['FairMarketProb']*100:.1f}%</div>
-                    <div class="order-cell" style="text-align:right; color:#00F0FF;">{m['TrueProb']*100:.1f}%</div>
-                    <div class="order-cell" style="text-align:right; color:{txt_col}; font-weight:800;">{m['Edge']*100:+.1f}%</div>
-                </div>
-                """, unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+<div class="order-row" style="{border} background:{bg_col};">
+<div class="order-cell market-name">{m['Market']}</div>
+<div class="order-cell" style="text-align:right; font-weight:800; color:#FFF;">{m['Odd']:.2f}</div>
+<div class="order-cell" style="text-align:right; color:#64748B;">{m['FairMarketProb']*100:.1f}%</div>
+<div class="order-cell" style="text-align:right; color:#00F0FF;">{m['TrueProb']*100:.1f}%</div>
+<div class="order-cell" style="text-align:right; color:{txt_col}; font-weight:800;">{m['Edge']*100:+.1f}%</div>
+</div>
+""", unsafe_allow_html=True)
+            st.markdown("""</div>""", unsafe_allow_html=True)
