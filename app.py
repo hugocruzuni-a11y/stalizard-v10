@@ -43,11 +43,15 @@ header, footer { visibility: hidden; }
 .market-name { color: #F8FAFC; font-weight: 800; font-family: 'Inter'; font-size: 0.85rem; }
 
 /* Alpha Signal Box */
-.alpha-box { background: rgba(0, 255, 136, 0.05); border: 2px solid #00FF88; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 0 30px rgba(0,255,136,0.1); margin-top: 15px; }
+.alpha-box { background: rgba(0, 255, 136, 0.05); border: 2px solid #00FF88; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 0 30px rgba(0,255,136,0.1); margin-top: 15px; margin-bottom: 15px; }
 .alpha-title { color: #00FF88; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
 
-.stButton > button { background: linear-gradient(90deg, #00F0FF, #0088FF) !important; color: #FFF !important; font-weight: 900 !important; font-size: 1.1rem !important; text-transform: uppercase; border: none !important; border-radius: 8px !important; padding: 10px !important; transition: all 0.2s; }
+.stButton > button { background: linear-gradient(90deg, #00F0FF, #0088FF) !important; color: #FFF !important; font-weight: 900 !important; font-size: 1rem !important; text-transform: uppercase; border: none !important; border-radius: 8px !important; padding: 10px !important; transition: all 0.2s; }
 .stButton > button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0, 240, 255, 0.3); }
+
+/* Download Button specific style */
+.stDownloadButton > button { background: transparent !important; border: 1px solid #00FF88 !important; color: #00FF88 !important; }
+.stDownloadButton > button:hover { background: rgba(0, 255, 136, 0.1) !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -85,20 +89,12 @@ def get_real_stats(team_id, league_id, season="2025"):
 def get_real_odds(fixture_id):
     odds_data = fetch_api("odds", {"fixture": fixture_id, "bookmaker": 8})
     market_odds = {}
-    
-    if not odds_data or not odds_data[0].get('bookmakers'):
-        return market_odds
-        
+    if not odds_data or not odds_data[0].get('bookmakers'): return market_odds
     try:
         bets = odds_data[0]['bookmakers'][0].get('bets', [])
         for bet in bets:
             name = bet.get('name', '')
-            vals = {}
-            for v in bet.get('values', []):
-                val_key = str(v.get('value', ''))
-                odd_val = float(v.get('odd', 0.0))
-                vals[val_key] = odd_val
-                
+            vals = {str(v.get('value', '')): float(v.get('odd', 0.0)) for v in bet.get('values', [])}
             if name == 'Match Winner':
                 if 'Home' in vals: market_odds["Home Win"] = vals['Home']
                 if 'Draw' in vals: market_odds["Draw"] = vals['Draw']
@@ -119,9 +115,7 @@ def get_real_odds(fixture_id):
                     if "+0.5" in k and "Home" in k: market_odds["AH +0.5 (H)"] = odd
                     if "-1.5" in k and "Home" in k: market_odds["AH -1.5 (H)"] = odd
                     if "+1.5" in k and "Home" in k: market_odds["AH +1.5 (H)"] = odd
-    except Exception as e:
-        pass 
-        
+    except: pass 
     return market_odds
 
 # ==========================================
@@ -135,15 +129,11 @@ def calculate_projected_goals(h_stats, a_stats):
 def run_monte_carlo_sim(proj_h, proj_a, sims=25000):
     np.random.seed(int(time.time()))
     h_goals, a_goals = np.random.poisson(proj_h, sims), np.random.poisson(proj_a, sims)
-    
-    # Dixon-Coles Adjustment
     for i in range(sims):
         if h_goals[i] == 1 and a_goals[i] == 0 and np.random.random() < 0.06: a_goals[i] = 1
         elif h_goals[i] == 0 and a_goals[i] == 1 and np.random.random() < 0.06: h_goals[i] = 1
-            
     diff, total = h_goals - a_goals, h_goals + a_goals
     hw, dr, aw = np.sum(diff > 0)/sims, np.sum(diff == 0)/sims, np.sum(diff < 0)/sims
-    
     return {
         "Home Win": hw, "Draw": dr, "Away Win": aw,
         "AH -0.5 (H)": hw, "AH +0.5 (H)": hw + dr,
@@ -160,8 +150,7 @@ def calculate_kelly(prob, odd, fraction=0.25):
     kelly_pct = ((b * prob) - q) / b
     return max(0, kelly_pct) * fraction * 100
 
-def get_market_margin():
-    return 0.045 # 4.5% Institutional Vig
+def get_market_margin(): return 0.045
 
 # ==========================================
 # 4. PREMIUM UI RENDERING
@@ -178,9 +167,12 @@ col_menu, col_core, col_book = st.columns([1, 1.8, 2.2], gap="large")
 with col_menu:
     st.markdown("<h3 style='color:#00F0FF; font-weight:900; font-size:1.1rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:20px;'>Market Screener</h3>", unsafe_allow_html=True)
     target_date = st.date_input("Match Date", date.today())
-    
     l_map = {"🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League": 39, "🇪🇺 Champions League": 2, "🇪🇸 La Liga": 140, "🇵🇹 Primeira Liga": 94, "🇮🇹 Serie A": 135, "🇩🇪 Bundesliga": 78}
     league_name = st.selectbox("Competition", list(l_map.keys()))
+    
+    st.markdown("<hr style='border-color: rgba(255,255,255,0.1); margin: 20px 0;'>", unsafe_allow_html=True)
+    st.markdown("<h4 style='color:#64748B; font-size:0.8rem; text-transform:uppercase; font-weight:800; margin-bottom:10px;'>Risk Management</h4>", unsafe_allow_html=True)
+    bankroll = st.number_input("Total Bankroll ($)", value=100000, step=5000)
     
     with st.spinner("Connecting to Liquidity Pools..."):
         fixtures = get_live_fixtures(target_date.strftime('%Y-%m-%d'), l_map[league_name])
@@ -190,12 +182,10 @@ with col_menu:
         m_map = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}": f for f in fixtures}
         m_sel = m_map[st.selectbox("Select Target Match", list(m_map.keys()))]
         st.button("🔄 ANALYZE FIXTURE", use_container_width=True)
-    else:
-        st.info("No fixtures scheduled for this date/league.")
+    else: st.info("No fixtures scheduled for this date/league.")
 
 if m_sel:
     h_id, a_id = m_sel['teams']['home']['id'], m_sel['teams']['away']['id']
-    
     with st.spinner("Processing Bivariate Monte Carlo (25k paths)..."):
         h_stats, a_stats = get_real_stats(h_id, l_map[league_name]), get_real_stats(a_id, l_map[league_name])
         proj_h, proj_a = calculate_projected_goals(h_stats, a_stats)
@@ -212,12 +202,8 @@ if m_sel:
             if odd > 1.05 and prob > 0:
                 market_implied = 1 / odd
                 fair_market_prob = market_implied / (1 + margin)
-                
                 edge = (prob * odd) - 1
-                valid_markets.append({
-                    "Market": mkt, "Odd": odd, "TrueProb": prob, "Edge": edge, 
-                    "FairMarketProb": fair_market_prob
-                })
+                valid_markets.append({"Market": mkt, "Odd": odd, "TrueProb": prob, "Edge": edge, "FairMarketProb": fair_market_prob})
                 if edge > max_edge:
                     max_edge, best_bet = edge, valid_markets[-1]
     
@@ -245,11 +231,14 @@ if m_sel:
 
         if best_bet and best_bet["Edge"] > 0:
             rec_kelly = calculate_kelly(best_bet['TrueProb'], best_bet['Odd'])
+            bet_dollar_amount = (rec_kelly / 100) * bankroll
+            conviction = "🔥 MAX CONVICTION" if best_bet["Edge"] > 0.15 else "HIGH CONVICTION"
+            
             st.markdown(f"""
 <div class="alpha-box">
-<div class="alpha-title">⭐ ALPHA SIGNAL IDENTIFIED ⭐</div>
+<div class="alpha-title">⭐ ALPHA SIGNAL: {conviction} ⭐</div>
 <div style="font-size: 2.2rem; font-weight: 900; color: #FFFFFF; text-shadow: 0 0 20px rgba(0,255,136,0.4); margin-bottom: 20px;">{best_bet['Market']}</div>
-<div style="display: flex; justify-content: space-around; font-family: 'JetBrains Mono';">
+<div style="display: flex; justify-content: space-around; font-family: 'JetBrains Mono'; margin-bottom: 15px;">
 <div>
 <div style="color: #64748B; font-size: 0.75rem; font-weight: 800;">BOOKIE LINE</div>
 <div style="color: #FFD700; font-size: 1.3rem; font-weight: 900;">{best_bet['Odd']:.2f}</div>
@@ -259,20 +248,29 @@ if m_sel:
 <div style="color: #00FF88; font-size: 1.3rem; font-weight: 900;">+{best_bet['Edge']*100:.1f}%</div>
 </div>
 <div>
-<div style="color: #64748B; font-size: 0.75rem; font-weight: 800;">KELLY (1/4) SIZE</div>
-<div style="color: #FFFFFF; font-size: 1.3rem; font-weight: 900;">{rec_kelly:.2f}%</div>
+<div style="color: #64748B; font-size: 0.75rem; font-weight: 800;">REC. BET SIZE</div>
+<div style="color: #FFFFFF; font-size: 1.3rem; font-weight: 900;">${bet_dollar_amount:,.0f}</div>
 </div>
 </div>
 </div>
 """, unsafe_allow_html=True)
-        elif not live_odds:
-            st.warning("⚠️ Market Makers have not released liquidity for this fixture yet.")
-        else:
-            st.error("📉 Efficient Market Detected. No mathematical edge found.")
+            
+            # Export CSV Button
+            csv_data = pd.DataFrame([{
+                "Fixture": f"{m_sel['teams']['home']['name']} vs {m_sel['teams']['away']['name']}",
+                "Market": m['Market'], "Book_Odd": round(m['Odd'],2), "True_Prob": round(m['TrueProb'],4),
+                "Edge_Pct": round(m['Edge']*100,2)
+            } for m in valid_markets if m['Edge'] > 0]).to_csv(index=False).encode('utf-8')
+            
+            col_b1, col_b2 = st.columns(2)
+            with col_b1: st.button("🚀 EXECUTE TRADE API", use_container_width=True)
+            with col_b2: st.download_button(label="📥 EXPORT ALPHA SGN (CSV)", data=csv_data, file_name='alpha_signals.csv', mime='text/csv', use_container_width=True)
+
+        elif not live_odds: st.warning("⚠️ Market Makers have not released liquidity for this fixture yet.")
+        else: st.error("📉 Efficient Market Detected. No mathematical edge found.")
 
     with col_book:
         st.markdown("<h3 style='color:#FFFFFF; font-weight:900; font-size:1.1rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:20px;'>Institutional Order Book</h3>", unsafe_allow_html=True)
-        
         if live_odds:
             st.markdown("""
 <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; font-size: 0.65rem; color: #64748B; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; padding: 0 15px 10px 15px; border-bottom: 1px solid #1E293B; margin-bottom: 10px;">
@@ -284,14 +282,10 @@ if m_sel:
 </div>
 <div style="max-height: 550px; overflow-y: auto; padding-right: 5px;">
 """, unsafe_allow_html=True)
-            
             valid_markets = sorted(valid_markets, key=lambda x: x['Edge'], reverse=True)
             for m in valid_markets:
                 is_edge = m['Edge'] > 0
-                txt_col = "#00FF88" if is_edge else "#EF4444"
-                bg_col = "rgba(0, 255, 136, 0.05)" if is_edge else "transparent"
-                border = "border-left: 3px solid #00FF88;" if is_edge else "border-left: 3px solid transparent;"
-                
+                txt_col, bg_col, border = ("#00FF88", "rgba(0, 255, 136, 0.05)", "border-left: 3px solid #00FF88;") if is_edge else ("#EF4444", "transparent", "border-left: 3px solid transparent;")
                 st.markdown(f"""
 <div class="order-row" style="{border} background:{bg_col};">
 <div class="order-cell market-name">{m['Market']}</div>
