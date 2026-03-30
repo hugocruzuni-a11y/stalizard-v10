@@ -186,7 +186,7 @@ with col_ctrl:
         st.markdown("<div style='color:#FF0000; font-size:0.7rem;'>ERR: NO_LIQUIDITY_IN_EXCHANGE</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
     
-    # NEW: Quant Insights Manual for Bettor Education
+    # Quant Insights Manual for Bettor Education
     st.markdown("""
     <div class='grid-panel'>
         <div class='panel-title'>[ SYS_MANUAL // QUANT_INSIGHTS ]</div>
@@ -198,8 +198,7 @@ with col_ctrl:
             Representa a expectativa matemática de golos cruzando a força de ataque de uma equipa com a fraqueza defensiva do adversário.
             
             <span class='manual-term'>KELLY CRITERION (ƒ*)</span>
-            O nosso sistema usa a fórmula 1/4 Kelly para evitar a falência. A matemática aloca capital baseada na confiança do sinal:
-            $$f^* = \\frac{bp - q}{b}$$
+            O nosso sistema usa a fórmula 1/4 Kelly para evitar a falência. A matemática aloca capital baseada na confiança do sinal.
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -245,7 +244,6 @@ if m_sel:
                 dollar_sz = (rec_kelly/100) * bankroll
                 exp_yield = best_bet['EDGE'] * dollar_sz
                 
-                # Dynamic Risk Warning based on Kelly Size
                 warning_html = ""
                 if rec_kelly > 5.0:
                     warning_html = "<div class='risk-warn'>SYS_WARN: HIGH EXPOSURE. CONSIDER HALF-KELLY MODIFIER TO REDUCE DRAWDOWN RISK.</div>"
@@ -268,9 +266,38 @@ if m_sel:
 
         st.markdown("<div class='grid-panel'>", unsafe_allow_html=True)
         st.markdown("<div class='panel-title'>ORDER_BOOK_LADDER</div>", unsafe_allow_html=True)
+        
         if live_odds:
             valid_markets = sorted(valid_markets, key=lambda x: x['EDGE'], reverse=True)
+            
+            # Construção segura da tabela linha a linha para evitar quebras do interpretador
             table_html = "<table class='ob-table'><tr><th>MKT_ID</th><th>ASK_ODD</th><th>SHIN_NO_VIG</th><th>SYS_PROB</th><th>EV_ALPHA</th></tr>"
+            
             for m in valid_markets:
-                edge_val = m['EDGE']*100
-                color_cls = "hl-green" if edge_val >
+                edge_val = m['EDGE'] * 100
+                color_cls = "hl-green" if edge_val > 0 else "hl-red"
+                sign = "+" if edge_val > 0 else ""
+                
+                row = f"<tr><td>{m['MKT']}</td><td>{m['ODD']:.3f}</td>"
+                row += f"<td>{m['FAIR']*100:.1f}%</td><td>{m['PROB']*100:.1f}%</td>"
+                row += f"<td class='{color_cls}'>{sign}{edge_val:.2f}%</td></tr>"
+                
+                table_html += row
+                
+            table_html += "</table>"
+            
+            st.markdown(table_html, unsafe_allow_html=True)
+        else:
+            st.markdown("<div class='data-lbl'>WAITING FOR MARKET MAKERS...</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div class='terminal-log'>
+            <p class='log-line'>[SYS_KERNEL] RUNNING PRE-FLIGHT CHECKS...</p>
+            <p class='log-line'>[SYS_KERNEL] API METRICS ALIGNED.</p>
+            <p class='log-line'>[ALGO_ENGINE] INGECTING POISSON MATRIX: SUCCESS.</p>
+            <p class='log-line log-new'>[ALGO_ENGINE] PARSING LIVE LIQUIDITY FOR +EV OPPORTUNITIES.</p>
+            <p class='log-line log-new'>[ALGO_ENGINE] CALIBRATING KELLY VECTORS FOR RISK MANAGEMENT.</p>
+            <p class='log-line log-new'>[SYS_KERNEL] TERMINAL AWAITING DIRECTIVES...</p>
+        </div>
+        """, unsafe_allow_html=True)
