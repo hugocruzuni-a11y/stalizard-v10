@@ -169,8 +169,11 @@ st.markdown("""
 col_ctrl, col_exec = st.columns([1, 2.5], gap="small")
 
 with col_ctrl:
-    st.markdown("<div class='grid-panel'>", unsafe_allow_html=True)
-    st.markdown("<div class='panel-title'>SYS_CFG</div>", unsafe_allow_html=True)
+    st.markdown("""
+<div class='grid-panel'>
+<div class='panel-title'>SYS_CFG</div>
+""", unsafe_allow_html=True)
+    
     target_date = st.date_input("TARGET_DATE", date.today())
     l_map = {"PREMIER_LGE": 39, "UCL": 2, "LA_LIGA": 140, "LIGA_PT": 94, "SERIE_A": 135}
     league_name = st.selectbox("EXCHANGE", list(l_map.keys()))
@@ -183,25 +186,28 @@ with col_ctrl:
         m_sel = m_map[st.selectbox("ASSET_TICKER", list(m_map.keys()))]
         btn_run = st.button("EXEC_QUANT_SIM()")
     else:
-        st.markdown("<div style='color:#FF0000; font-size:0.7rem;'>ERR: NO_LIQUIDITY_IN_EXCHANGE</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # Quant Insights Manual for Bettor Education
+        st.markdown("""
+<div style='color:#FF0000; font-size:0.7rem;'>ERR: NO_LIQUIDITY_IN_EXCHANGE</div>
+""", unsafe_allow_html=True)
+        
     st.markdown("""
-    <div class='grid-panel'>
-        <div class='panel-title'>[ SYS_MANUAL // QUANT_INSIGHTS ]</div>
-        <div class='manual-box'>
-            <span class='manual-term'>EXPECTED VALUE (+EV)</span>
-            O verdadeiro indicador de lucro a longo prazo. Um +EV de 5% significa que por cada $100 investidos, o retorno teórico é de $5. Não é uma garantia de vitória no curto prazo.
-            
-            <span class='manual-term'>POISSON LAMBDA (λ)</span>
-            Representa a expectativa matemática de golos cruzando a força de ataque de uma equipa com a fraqueza defensiva do adversário.
-            
-            <span class='manual-term'>KELLY CRITERION (ƒ*)</span>
-            O nosso sistema usa a fórmula 1/4 Kelly para evitar a falência. A matemática aloca capital baseada na confiança do sinal.
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
+    
+    # Quant Insights Manual for Bettor Education (ALL FLUSH LEFT)
+    st.markdown("""
+<div class='grid-panel'>
+<div class='panel-title'>[ SYS_MANUAL // QUANT_INSIGHTS ]</div>
+<div class='manual-box'>
+<span class='manual-term'>EXPECTED VALUE (+EV)</span>
+O verdadeiro indicador de lucro a longo prazo. Um +EV de 5% significa que por cada $100 investidos, o retorno teórico é de $5. Não é uma garantia de vitória no curto prazo.
+<span class='manual-term'>POISSON LAMBDA (λ)</span>
+Representa a expectativa matemática de golos cruzando a força de ataque de uma equipa com a fraqueza defensiva do adversário.
+<span class='manual-term'>KELLY CRITERION (ƒ*)</span>
+O nosso sistema usa a fórmula 1/4 Kelly para evitar a falência. A matemática aloca capital baseada na confiança do sinal.
+</div>
+</div>
+""", unsafe_allow_html=True)
 
 if m_sel:
     h_id, a_id = m_sel['teams']['home']['id'], m_sel['teams']['away']['id']
@@ -229,14 +235,14 @@ if m_sel:
         col_m1, col_m2 = st.columns([1, 1])
         with col_m1:
             st.markdown(f"""
-            <div class='grid-panel'>
-                <div class='panel-title'>POISSON_MODEL_METADATA</div>
-                <div class='data-row'><span class='data-lbl'>LAMBDA (λ1) HOME:</span><span class='data-val hl-cyan'>{lam_h:.3f}</span></div>
-                <div class='data-row'><span class='data-lbl'>LAMBDA (λ2) AWAY:</span><span class='data-val hl-cyan'>{lam_a:.3f}</span></div>
-                <div class='data-row'><span class='data-lbl'>ITERATIONS:</span><span class='data-val'>50,000</span></div>
-                <div class='data-row'><span class='data-lbl'>DEVIG_METHOD:</span><span class='data-val'>SHIN_VAR</span></div>
-            </div>
-            """, unsafe_allow_html=True)
+<div class='grid-panel'>
+<div class='panel-title'>POISSON_MODEL_METADATA</div>
+<div class='data-row'><span class='data-lbl'>LAMBDA (λ1) HOME:</span><span class='data-val hl-cyan'>{lam_h:.3f}</span></div>
+<div class='data-row'><span class='data-lbl'>LAMBDA (λ2) AWAY:</span><span class='data-val hl-cyan'>{lam_a:.3f}</span></div>
+<div class='data-row'><span class='data-lbl'>ITERATIONS:</span><span class='data-val'>50,000</span></div>
+<div class='data-row'><span class='data-lbl'>DEVIG_METHOD:</span><span class='data-val'>SHIN_VAR</span></div>
+</div>
+""", unsafe_allow_html=True)
             
         with col_m2:
             if best_bet and best_bet["EDGE"] > 0:
@@ -251,26 +257,29 @@ if m_sel:
                     warning_html = "<div class='risk-warn' style='color:#888; border-color:#555;'>SYS_NOTE: MARGINAL EDGE. EXECUTE ONLY IF CONFIRMED BY ALTERNATIVE DATA SOURCES.</div>"
 
                 st.markdown(f"""
-                <div class='trade-signal'>
-                    <div class='panel-title' style='color:#00FF00; border-color:#00FF00;'>ALPHA_DETECTED // TRADE_PAYLOAD</div>
-                    <div class='trade-asset'>{best_bet['MKT']} @ {best_bet['ODD']:.3f}</div>
-                    <div class='data-row'><span class='data-lbl'>SYS_PROB:</span><span class='data-val'>{best_bet['PROB']*100:.2f}%</span></div>
-                    <div class='data-row'><span class='data-lbl'>TRUE_EDGE:</span><span class='data-val hl-green'>+{best_bet['EDGE']*100:.2f}%</span></div>
-                    <div class='data-row'><span class='data-lbl'>EXP_YIELD:</span><span class='data-val hl-green'>+${exp_yield:.2f}</span></div>
-                    <div class='data-row'><span class='data-lbl'>KELLY_SIZE(1/4):</span><span class='data-val hl-cyan'>${dollar_sz:,.0f} ({rec_kelly:.2f}%)</span></div>
-                    {warning_html}
-                </div>
-                """, unsafe_allow_html=True)
+<div class='trade-signal'>
+<div class='panel-title' style='color:#00FF00; border-color:#00FF00;'>ALPHA_DETECTED // TRADE_PAYLOAD</div>
+<div class='trade-asset'>{best_bet['MKT']} @ {best_bet['ODD']:.3f}</div>
+<div class='data-row'><span class='data-lbl'>SYS_PROB:</span><span class='data-val'>{best_bet['PROB']*100:.2f}%</span></div>
+<div class='data-row'><span class='data-lbl'>TRUE_EDGE:</span><span class='data-val hl-green'>+{best_bet['EDGE']*100:.2f}%</span></div>
+<div class='data-row'><span class='data-lbl'>EXP_YIELD:</span><span class='data-val hl-green'>+${exp_yield:.2f}</span></div>
+<div class='data-row'><span class='data-lbl'>KELLY_SIZE(1/4):</span><span class='data-val hl-cyan'>${dollar_sz:,.0f} ({rec_kelly:.2f}%)</span></div>
+{warning_html}
+</div>
+""", unsafe_allow_html=True)
             elif live_odds:
-                st.markdown("<div class='grid-panel'><div class='data-val hl-red'>NO_ALPHA_DETECTED // PASS</div></div>", unsafe_allow_html=True)
+                st.markdown("""
+<div class='grid-panel'><div class='data-val hl-red'>NO_ALPHA_DETECTED // PASS</div></div>
+""", unsafe_allow_html=True)
 
-        st.markdown("<div class='grid-panel'>", unsafe_allow_html=True)
-        st.markdown("<div class='panel-title'>ORDER_BOOK_LADDER</div>", unsafe_allow_html=True)
+        st.markdown("""
+<div class='grid-panel'>
+<div class='panel-title'>ORDER_BOOK_LADDER</div>
+""", unsafe_allow_html=True)
         
         if live_odds:
             valid_markets = sorted(valid_markets, key=lambda x: x['EDGE'], reverse=True)
             
-            # Construção segura da tabela linha a linha para evitar quebras do interpretador
             table_html = "<table class='ob-table'><tr><th>MKT_ID</th><th>ASK_ODD</th><th>SHIN_NO_VIG</th><th>SYS_PROB</th><th>EV_ALPHA</th></tr>"
             
             for m in valid_markets:
@@ -288,16 +297,21 @@ if m_sel:
             
             st.markdown(table_html, unsafe_allow_html=True)
         else:
-            st.markdown("<div class='data-lbl'>WAITING FOR MARKET MAKERS...</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown("""
+<div class='data-lbl'>WAITING FOR MARKET MAKERS...</div>
+""", unsafe_allow_html=True)
+            
+        st.markdown("""
+</div>
+""", unsafe_allow_html=True)
         
         st.markdown("""
-        <div class='terminal-log'>
-            <p class='log-line'>[SYS_KERNEL] RUNNING PRE-FLIGHT CHECKS...</p>
-            <p class='log-line'>[SYS_KERNEL] API METRICS ALIGNED.</p>
-            <p class='log-line'>[ALGO_ENGINE] INGECTING POISSON MATRIX: SUCCESS.</p>
-            <p class='log-line log-new'>[ALGO_ENGINE] PARSING LIVE LIQUIDITY FOR +EV OPPORTUNITIES.</p>
-            <p class='log-line log-new'>[ALGO_ENGINE] CALIBRATING KELLY VECTORS FOR RISK MANAGEMENT.</p>
-            <p class='log-line log-new'>[SYS_KERNEL] TERMINAL AWAITING DIRECTIVES...</p>
-        </div>
-        """, unsafe_allow_html=True)
+<div class='terminal-log'>
+<p class='log-line'>[SYS_KERNEL] RUNNING PRE-FLIGHT CHECKS...</p>
+<p class='log-line'>[SYS_KERNEL] API METRICS ALIGNED.</p>
+<p class='log-line'>[ALGO_ENGINE] INGECTING POISSON MATRIX: SUCCESS.</p>
+<p class='log-line log-new'>[ALGO_ENGINE] PARSING LIVE LIQUIDITY FOR +EV OPPORTUNITIES.</p>
+<p class='log-line log-new'>[ALGO_ENGINE] CALIBRATING KELLY VECTORS FOR RISK MANAGEMENT.</p>
+<p class='log-line log-new'>[SYS_KERNEL] TERMINAL AWAITING DIRECTIVES...</p>
+</div>
+""", unsafe_allow_html=True)
