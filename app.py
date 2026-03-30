@@ -7,11 +7,18 @@ import requests
 from datetime import date, timedelta
 import time
 import uuid
+import random  # <--- O MISSING LINK QUE FEZ O SISTEMA CAIR FOI COLOCADO AQUI.
 
 # ==========================================
 # 1. SETUP INSTITUCIONAL (BLACKROCK ALADDIN STYLE)
 # ==========================================
 st.set_page_config(page_title="APEX QUANT | ALADDIN", layout="wide", initial_sidebar_state="collapsed")
+
+def safe_rerun():
+    try:
+        st.rerun()
+    except AttributeError:
+        st.experimental_rerun()
 
 st.markdown("""
     <style>
@@ -136,7 +143,7 @@ if not st.session_state.user:
             st.text_input("G-7 Security Clearance", type="password", placeholder="Enter to Authorize")
             if st.form_submit_button("INITIALIZE TERMINAL", use_container_width=True):
                 st.session_state.user = "PORTFOLIO_MANAGER"
-                st.rerun()
+                safe_rerun()
     st.stop()
 
 # ==========================================
@@ -201,7 +208,7 @@ with c_left:
     if not edited.equals(df_display):
         for _, row in edited.iterrows():
             st.session_state.ledger.loc[st.session_state.ledger['ID'] == row['ID'], 'Status'] = row['Status']
-        st.rerun()
+        safe_rerun()
 
 # --- DIREITA: EXECUÇÃO QUANTITATIVA ---
 with c_main:
@@ -235,7 +242,7 @@ with c_main:
                 t_odd = 1 / p_real
                 edge = (p_real * m_odd) - 1
                 
-                # Validação de Edge BlackRock: Só mostramos se houver valor estatístico considerável
+                # Validação de Edge BlackRock
                 if edge > 0.01:
                     stake = current_bk * ((edge / (m_odd - 1)) * kelly)
                     edge_color = "#10B981"
@@ -262,7 +269,7 @@ with c_main:
                             st.session_state.ledger = pd.concat([st.session_state.ledger, new_trade], ignore_index=True)
                             st.toast("Risk position allocated.", icon="✅")
                             time.sleep(0.2)
-                            st.rerun()
+                            safe_rerun()
                         st.markdown("</div>", unsafe_allow_html=True)
                     else:
                         st.markdown("<div style='text-align:center; font-family:\"JetBrains Mono\"; font-size:0.75rem; color:#64748B; padding:5px;'>NO ALPHA</div>", unsafe_allow_html=True)
