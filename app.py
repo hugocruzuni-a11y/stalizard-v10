@@ -54,7 +54,7 @@ st.markdown("""
 # 2. DATA ENGINE (LIVE API CONNECTION)
 # ==========================================
 # SECURITY FIX: Do not hardcode API keys. Rely strictly on Streamlit Secrets.
-API_KEY = st.secrets.get("API_KEY", "") 
+API_KEY = st.secrets.get("API_KEY", "8171043bf0a322286bb127947dbd4041") 
 HEADERS = {"x-apisports-key": API_KEY, "x-apisports-host": "v3.football.api-sports.io"}
 
 def fetch_api(endpoint, params):
