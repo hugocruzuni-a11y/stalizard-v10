@@ -2,11 +2,13 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import requests
+import math
+import plotly.graph_objects as go
 from datetime import date
 import time
 
 # ==========================================
-# 1. INSTITUTIONAL UX SETUP (READABLE)
+# 1. INSTITUTIONAL UX SETUP (READABLE + VISUAL)
 # ==========================================
 st.set_page_config(page_title="APEX QUANT TERMINAL", layout="wide", initial_sidebar_state="collapsed")
 
@@ -140,11 +142,7 @@ def calculate_lambdas(h_stats, a_stats):
     return lam_h, lam_a
 
 def run_monte_carlo_sim(lam_h, lam_a, sims=50000):
-    # ==========================================
-    # SEMENTE FIXA PARA RESULTADOS CONSISTENTES NA APRESENTAÇÃO
-    # ==========================================
-    np.random.seed(42) 
-    
+    np.random.seed(42) # Semente fixa para a apresentação
     h_goals, a_goals = np.random.poisson(lam_h, sims), np.random.poisson(lam_a, sims)
     
     for i in range(sims):
@@ -154,7 +152,6 @@ def run_monte_carlo_sim(lam_h, lam_a, sims=50000):
     diff, total = h_goals - a_goals, h_goals + a_goals
     hw, dr, aw = np.sum(diff > 0)/sims, np.sum(diff == 0)/sims, np.sum(diff < 0)/sims
     
-    # Safe Draw No Bet & AH 1.0 Calculations (Removing Push condition)
     dnb_h_prob = hw / (hw + aw) if (hw + aw) > 0 else 0
     dnb_a_prob = aw / (hw + aw) if (hw + aw) > 0 else 0
     
@@ -194,17 +191,21 @@ def calculate_kelly(prob, odd, fraction=0.25):
     q = 1 - prob
     return max(0, (((b * prob) - q) / b) * fraction * 100)
 
+def poisson_pmf(lam, k):
+    """Calcula a probabilidade teórica para o gráfico"""
+    return (lam**k * math.exp(-lam)) / math.factorial(k)
+
 # ==========================================
-# 3. INTERFACE (READABLE & PROFESSIONAL)
+# 3. INTERFACE (READABLE & VISUAL)
 # ==========================================
 st.markdown("""
 <div class="top-nav">
-<div>APEX <span>QUANT</span></div>
+<div>APEX <span style="color:#10B981;">QUANT</span></div>
 <div class="sys-status">● TIER-1 LIQUIDITY POOL CONNECTED</div>
 </div>
 """, unsafe_allow_html=True)
 
-col_ctrl, col_exec = st.columns([1, 2.5], gap="large")
+col_ctrl, col_exec = st.columns([1, 2.8], gap="large")
 
 with col_ctrl:
     st.markdown("""
@@ -234,20 +235,22 @@ with col_ctrl:
     
     st.markdown("""
 <div class='grid-panel'>
-<div class='panel-title'>Quant Insights (Manual)</div>
+<div class='panel-title'>Quant Insights</div>
 <div class='manual-box'>
-<span class='manual-term'>Double Chance & DNB</span>
-Mercados vitais para proteger o capital. O algoritmo "Draw No Bet" remove a variável do empate da equação de probabilidade, calculando o peso puro da vitória.
+<span class='manual-term'>Interactive Plotting</span>
+Gráficos dinâmicos que materializam a distribuição de Poisson e o Delta do mercado, permitindo uma análise visual instantânea do Risco vs Recompensa.
 <span class='manual-term'>Dynamic De-Vigging</span>
 O modelo analisa o Overround exato (margem de lucro da casa) aplicado no mercado primário 1X2 e ajusta as probabilidades de pagamento.
-<span class='manual-term'>Poisson Distribution (λ)</span>
-A expectativa matemática de golos. O modelo cruza o poder de fogo com as deficiências defensivas e adiciona 10% de peso ao fator casa (HFA).
+<span class='manual-term'>Expected Value (+EV)</span>
+Indica a margem de lucro teórico a longo prazo cruzando as True Odds do modelo com a linha da casa.
 </div>
 </div>
 """, unsafe_allow_html=True)
 
 if m_sel:
     h_id, a_id = m_sel['teams']['home']['id'], m_sel['teams']['away']['id']
+    h_name = m_sel['teams']['home']['name']
+    a_name = m_sel['teams']['away']['name']
     
     h_stats, a_stats = get_real_stats(h_id, l_map[league_name]), get_real_stats(a_id, l_map[league_name])
     lam_h, lam_a = calculate_lambdas(h_stats, a_stats)
@@ -269,19 +272,10 @@ if m_sel:
                     max_edge, best_bet = edge, valid_markets[-1]
     
     with col_exec:
-        col_m1, col_m2 = st.columns([1, 1])
-        with col_m1:
-            st.markdown(f"""
-<div class='grid-panel'>
-<div class='panel-title'>Poisson Distribution Metrics</div>
-<div class='data-row'><span class='data-lbl'>Home Exp. Goals (λ)</span><span class='data-val hl-blue'>{lam_h:.3f}</span></div>
-<div class='data-row'><span class='data-lbl'>Away Exp. Goals (λ)</span><span class='data-val hl-blue'>{lam_a:.3f}</span></div>
-<div class='data-row'><span class='data-lbl'>Monte Carlo Iterations</span><span class='data-val'>50,000</span></div>
-<div class='data-row'><span class='data-lbl'>Detected Market Margin</span><span class='data-val hl-warn'>{dynamic_margin*100:.2f}%</span></div>
-</div>
-""", unsafe_allow_html=True)
-            
-        with col_m2:
+        # Top Row: Alpha Signal & Goal Distribution Chart
+        col_alpha, col_chart = st.columns([1.2, 1])
+        
+        with col_alpha:
             if best_bet and best_bet["Edge"] > 0:
                 rec_kelly = calculate_kelly(best_bet['ModelProb'], best_bet['BookOdd'])
                 dollar_sz = (rec_kelly/100) * bankroll
@@ -297,6 +291,7 @@ if m_sel:
 <div class='data-row'><span class='data-lbl'>Model Probability</span><span class='data-val'>{best_bet['ModelProb']*100:.2f}%</span></div>
 <div class='data-row'><span class='data-lbl'>Expected Value (Edge)</span><span class='data-val hl-green'>+{best_bet['Edge']*100:.2f}%</span></div>
 <div class='data-row'><span class='data-lbl'>Rec. Bankroll Size (1/4 Kelly)</span><span class='data-val hl-blue'>${dollar_sz:,.0f} ({rec_kelly:.2f}%)</span></div>
+<div class='data-row' style='margin-top:8px;'><span class='data-lbl'>Detected Market Margin</span><span class='data-val hl-warn'>{dynamic_margin*100:.2f}%</span></div>
 {warning_html}
 </div>
 """, unsafe_allow_html=True)
@@ -305,6 +300,74 @@ if m_sel:
 <div class='grid-panel'><div class='data-val hl-red'>Efficient Market Detected. Protect Capital. Pass.</div></div>
 """, unsafe_allow_html=True)
 
+        with col_chart:
+            # Gráfico Plotly: Distribuição de Poisson
+            st.markdown("""
+<div class='grid-panel' style='padding-bottom: 0;'>
+<div class='panel-title'>Goal Expectancy Distribution (Poisson)</div>
+""", unsafe_allow_html=True)
+            goals_range = list(range(6))
+            h_probs_chart = [poisson_pmf(lam_h, g)*100 for g in goals_range]
+            a_probs_chart = [poisson_pmf(lam_a, g)*100 for g in goals_range]
+
+            fig_dist = go.Figure(data=[
+                go.Bar(name=h_name, x=goals_range, y=h_probs_chart, marker_color='#38BDF8', opacity=0.85),
+                go.Bar(name=a_name, x=goals_range, y=a_probs_chart, marker_color='#10B981', opacity=0.85)
+            ])
+            fig_dist.update_layout(
+                barmode='group',
+                template='plotly_dark',
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                height=180,
+                margin=dict(l=0, r=0, t=10, b=0),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=10, color="#94A3B8")),
+                xaxis=dict(title="Goals", title_font=dict(size=10, color="#64748B"), tickfont=dict(size=10, color="#94A3B8"), gridcolor="rgba(255,255,255,0.05)"),
+                yaxis=dict(title="Probability (%)", title_font=dict(size=10, color="#64748B"), tickfont=dict(size=10, color="#94A3B8"), gridcolor="rgba(255,255,255,0.05)")
+            )
+            st.plotly_chart(fig_dist, use_container_width=True, config={'displayModeBar': False})
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # Gráfico Secundário (Visualização de Valor)
+        if live_odds and valid_markets:
+            st.markdown("""
+<div class='grid-panel' style='padding-bottom: 0;'>
+<div class='panel-title'>Probability Delta (Model vs Bookmaker) - Top 5 Markets</div>
+""", unsafe_allow_html=True)
+            
+            # Pega nos 5 melhores mercados para o gráfico
+            top_markets = sorted([m for m in valid_markets if m['Edge'] > 0], key=lambda x: x['Edge'], reverse=True)[:5]
+            
+            if top_markets:
+                m_names = [m['Market'] for m in top_markets]
+                sys_probs = [m['ModelProb']*100 for m in top_markets]
+                book_probs = [m['TrueOdd']*100 for m in top_markets] # Usar a true odd da bookie para comparação justa
+                
+                fig_delta = go.Figure()
+                fig_delta.add_trace(go.Bar(
+                    y=m_names, x=book_probs, name='Bookie (No-Vig)', orientation='h', marker_color='#334155'
+                ))
+                fig_delta.add_trace(go.Bar(
+                    y=m_names, x=sys_probs, name='System Prob', orientation='h', marker_color='#10B981'
+                ))
+                
+                fig_delta.update_layout(
+                    barmode='group',
+                    template='plotly_dark',
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    height=200,
+                    margin=dict(l=0, r=0, t=10, b=0),
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=10, color="#94A3B8")),
+                    xaxis=dict(title="Probability (%)", title_font=dict(size=10, color="#64748B"), tickfont=dict(size=10, color="#94A3B8"), gridcolor="rgba(255,255,255,0.05)"),
+                    yaxis=dict(autorange="reversed", tickfont=dict(size=10, color="#F8FAFC"))
+                )
+                st.plotly_chart(fig_delta, use_container_width=True, config={'displayModeBar': False})
+            else:
+                st.info("No +EV markets to chart.")
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # Order Book Table (Em baixo)
         st.markdown("""
 <div class='grid-panel'>
 <div class='panel-title'>Algorithmic Order Book (Full Range)</div>
