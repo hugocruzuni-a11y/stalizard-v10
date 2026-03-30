@@ -140,7 +140,11 @@ def calculate_lambdas(h_stats, a_stats):
     return lam_h, lam_a
 
 def run_monte_carlo_sim(lam_h, lam_a, sims=50000):
-    np.random.seed(int(time.time()))
+    # ==========================================
+    # SEMENTE FIXA PARA RESULTADOS CONSISTENTES NA APRESENTAÇÃO
+    # ==========================================
+    np.random.seed(42) 
+    
     h_goals, a_goals = np.random.poisson(lam_h, sims), np.random.poisson(lam_a, sims)
     
     for i in range(sims):
