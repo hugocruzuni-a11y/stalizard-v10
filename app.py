@@ -100,26 +100,40 @@ def get_real_odds(fixture_id):
         for bet in bets:
             name = bet.get('name', '')
             vals = {str(v.get('value', '')): float(v.get('odd', 0.0)) for v in bet.get('values', [])}
-            # Nomes de mercado limpos e legíveis
+            
             if name == 'Match Winner':
                 if 'Home' in vals: market_odds["Home Win"] = vals['Home']
                 if 'Draw' in vals: market_odds["Draw"] = vals['Draw']
                 if 'Away' in vals: market_odds["Away Win"] = vals['Away']
+            elif name == 'Double Chance':
+                if 'Home/Draw' in vals: market_odds["Double Chance (1X)"] = vals['Home/Draw']
+                if 'Draw/Away' in vals: market_odds["Double Chance (X2)"] = vals['Draw/Away']
+                if 'Home/Away' in vals: market_odds["Double Chance (12)"] = vals['Home/Away']
+            elif name == 'Draw No Bet':
+                if 'Home' in vals: market_odds["Draw No Bet (Home)"] = vals['Home']
+                if 'Away' in vals: market_odds["Draw No Bet (Away)"] = vals['Away']
             elif name == 'Goals Over/Under':
+                if 'Over 1.5' in vals: market_odds["Over 1.5 Goals"] = vals['Over 1.5']
+                if 'Under 1.5' in vals: market_odds["Under 1.5 Goals"] = vals['Under 1.5']
                 if 'Over 2.5' in vals: market_odds["Over 2.5 Goals"] = vals['Over 2.5']
                 if 'Under 2.5' in vals: market_odds["Under 2.5 Goals"] = vals['Under 2.5']
+                if 'Over 3.5' in vals: market_odds["Over 3.5 Goals"] = vals['Over 3.5']
+                if 'Under 3.5' in vals: market_odds["Under 3.5 Goals"] = vals['Under 3.5']
             elif name == 'Both Teams Score':
-                if 'Yes' in vals: market_odds["Both Teams to Score (Yes)"] = vals['Yes']
-                if 'No' in vals: market_odds["Both Teams to Score (No)"] = vals['No']
+                if 'Yes' in vals: market_odds["BTTS (Yes)"] = vals['Yes']
+                if 'No' in vals: market_odds["BTTS (No)"] = vals['No']
             elif name == 'Asian Handicap':
                 for k, odd in vals.items():
                     if "-0.5" in k and "Home" in k: market_odds["Asian Handicap -0.5"] = odd
                     if "+0.5" in k and "Home" in k: market_odds["Asian Handicap +0.5"] = odd
+                    if "-1.0" in k and "Home" in k: market_odds["Asian Handicap -1.0"] = odd
+                    if "+1.0" in k and "Home" in k: market_odds["Asian Handicap +1.0"] = odd
+                    if "-1.5" in k and "Home" in k: market_odds["Asian Handicap -1.5"] = odd
+                    if "+1.5" in k and "Home" in k: market_odds["Asian Handicap +1.5"] = odd
     except: pass 
     return market_odds
 
 def calculate_lambdas(h_stats, a_stats):
-    # Aplicação de Home Field Advantage Factor (HFA) de 10% na Força do Mandante
     hfa_multiplier = 1.10 
     lam_h = round(max(0.1, (h_stats['gf_h']/1.55 * hfa_multiplier) * (a_stats['ga_a']/1.55) * 1.55), 3)
     lam_a = round(max(0.1, (a_stats['gf_a']/1.25) * (h_stats['ga_h']/1.25) * 1.25), 3)
@@ -129,7 +143,6 @@ def run_monte_carlo_sim(lam_h, lam_a, sims=50000):
     np.random.seed(int(time.time()))
     h_goals, a_goals = np.random.poisson(lam_h, sims), np.random.poisson(lam_a, sims)
     
-    # Dixon-Coles
     for i in range(sims):
         if h_goals[i] == 1 and a_goals[i] == 0 and np.random.random() < 0.05: a_goals[i] = 1
         elif h_goals[i] == 0 and a_goals[i] == 1 and np.random.random() < 0.05: h_goals[i] = 1
@@ -137,24 +150,40 @@ def run_monte_carlo_sim(lam_h, lam_a, sims=50000):
     diff, total = h_goals - a_goals, h_goals + a_goals
     hw, dr, aw = np.sum(diff > 0)/sims, np.sum(diff == 0)/sims, np.sum(diff < 0)/sims
     
-    # Mapeamento usando os nomes legíveis
+    # Safe Draw No Bet & AH 1.0 Calculations (Removing Push condition)
+    dnb_h_prob = hw / (hw + aw) if (hw + aw) > 0 else 0
+    dnb_a_prob = aw / (hw + aw) if (hw + aw) > 0 else 0
+    
+    ah_minus_1_prob = np.sum(diff > 1) / sims
+    ah_minus_1_push = np.sum(diff == 1) / sims
+    ah_minus_1_true = ah_minus_1_prob / (1 - ah_minus_1_push) if (1 - ah_minus_1_push) > 0 else 0
+
+    ah_plus_1_prob = np.sum(diff > -1) / sims
+    ah_plus_1_push = np.sum(diff == -1) / sims
+    ah_plus_1_true = ah_plus_1_prob / (1 - ah_plus_1_push) if (1 - ah_plus_1_push) > 0 else 0
+    
     return {
         "Home Win": hw, "Draw": dr, "Away Win": aw,
+        "Double Chance (1X)": hw + dr, "Double Chance (X2)": aw + dr, "Double Chance (12)": hw + aw,
+        "Draw No Bet (Home)": dnb_h_prob, "Draw No Bet (Away)": dnb_a_prob,
         "Asian Handicap -0.5": hw, "Asian Handicap +0.5": hw + dr,
+        "Asian Handicap -1.0": ah_minus_1_true, "Asian Handicap +1.0": ah_plus_1_true,
+        "Asian Handicap -1.5": np.sum(diff > 1)/sims, "Asian Handicap +1.5": np.sum(diff > -2)/sims,
+        "Over 1.5 Goals": np.sum(total > 1.5)/sims, "Under 1.5 Goals": np.sum(total < 1.5)/sims,
         "Over 2.5 Goals": np.sum(total > 2.5)/sims, "Under 2.5 Goals": np.sum(total < 2.5)/sims,
-        "Both Teams to Score (Yes)": np.sum((h_goals > 0) & (a_goals > 0))/sims, 
-        "Both Teams to Score (No)": np.sum((h_goals == 0) | (a_goals == 0))/sims
+        "Over 3.5 Goals": np.sum(total > 3.5)/sims, "Under 3.5 Goals": np.sum(total < 3.5)/sims,
+        "BTTS (Yes)": np.sum((h_goals > 0) & (a_goals > 0))/sims, 
+        "BTTS (No)": np.sum((h_goals == 0) | (a_goals == 0))/sims
     }
 
 def calculate_dynamic_margin(odds):
-    """Calcula a margem exata da casa de apostas baseada no mercado 1X2"""
     try:
         hw, dr, aw = odds.get("Home Win", 0), odds.get("Draw", 0), odds.get("Away Win", 0)
         if hw > 0 and dr > 0 and aw > 0:
             implied_sum = (1/hw) + (1/dr) + (1/aw)
             return max(0.01, implied_sum - 1)
     except: pass
-    return 0.045 # Margem fallback
+    return 0.045
 
 def calculate_kelly(prob, odd, fraction=0.25):
     b = odd - 1
@@ -167,7 +196,7 @@ def calculate_kelly(prob, odd, fraction=0.25):
 st.markdown("""
 <div class="top-nav">
 <div>APEX <span>QUANT</span></div>
-<div class="sys-status">● LIVE DATA FEED CONNECTED</div>
+<div class="sys-status">● TIER-1 LIQUIDITY POOL CONNECTED</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -203,12 +232,12 @@ with col_ctrl:
 <div class='grid-panel'>
 <div class='panel-title'>Quant Insights (Manual)</div>
 <div class='manual-box'>
+<span class='manual-term'>Double Chance & DNB</span>
+Mercados vitais para proteger o capital. O algoritmo "Draw No Bet" remove a variável do empate da equação de probabilidade, calculando o peso puro da vitória.
 <span class='manual-term'>Dynamic De-Vigging</span>
-O modelo analisa o Overround (margem de lucro) exato que a casa está a aplicar ao jogo atual e remove-o matematicamente para encontrar a probabilidade real (True Odds).
+O modelo analisa o Overround exato (margem de lucro da casa) aplicado no mercado primário 1X2 e ajusta as probabilidades de pagamento.
 <span class='manual-term'>Poisson Distribution (λ)</span>
-A expectativa matemática de golos. O modelo cruza a força de ataque com a fraqueza defensiva e adiciona um multiplicador de 10% (Home Field Advantage).
-<span class='manual-term'>Expected Value (+EV)</span>
-Indica a margem de lucro teórico a longo prazo, cruzando as True Odds do modelo com a linha de pagamento da casa de apostas.
+A expectativa matemática de golos. O modelo cruza o poder de fogo com as deficiências defensivas e adiciona 10% de peso ao fator casa (HFA).
 </div>
 </div>
 """, unsafe_allow_html=True)
@@ -253,10 +282,9 @@ if m_sel:
                 rec_kelly = calculate_kelly(best_bet['ModelProb'], best_bet['BookOdd'])
                 dollar_sz = (rec_kelly/100) * bankroll
                 
-                # Anomaly Alert para Edges absurdos
                 warning_html = ""
                 if best_bet["Edge"] > 0.30:
-                    warning_html = "<div style='color: #F59E0B; font-size: 0.75rem; margin-top: 15px; text-align: center; border: 1px dashed #F59E0B; padding: 5px;'>⚠️ MARKET ANOMALY: Edge > 30%. Verify late injuries or line-up changes before execution.</div>"
+                    warning_html = "<div style='color: #F59E0B; font-size: 0.75rem; margin-top: 15px; text-align: center; border: 1px dashed #F59E0B; padding: 5px;'>⚠️ ANOMALY ALERT: Edge > 30%. Verify late injuries/news before execution.</div>"
 
                 st.markdown(f"""
 <div class='trade-signal'>
@@ -270,12 +298,12 @@ if m_sel:
 """, unsafe_allow_html=True)
             elif live_odds:
                 st.markdown("""
-<div class='grid-panel'><div class='data-val hl-red'>Efficient Market Detected. Pass.</div></div>
+<div class='grid-panel'><div class='data-val hl-red'>Efficient Market Detected. Protect Capital. Pass.</div></div>
 """, unsafe_allow_html=True)
 
         st.markdown("""
 <div class='grid-panel'>
-<div class='panel-title'>Algorithmic Order Book</div>
+<div class='panel-title'>Algorithmic Order Book (Full Range)</div>
 """, unsafe_allow_html=True)
         
         if live_odds:
