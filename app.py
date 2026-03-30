@@ -16,6 +16,13 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Correção 1: Função de Rerun segura para qualquer versão do Streamlit
+def safe_rerun():
+    try:
+        st.rerun()
+    except AttributeError:
+        st.experimental_rerun()
+
 def generate_institutional_history():
     """Gera 500 registos realistas com variância estatística apropriada."""
     np.random.seed(42)
@@ -29,16 +36,11 @@ def generate_institutional_history():
         d = date_start + timedelta(days=random.randint(0, 180))
         t1, t2 = random.sample(teams, 2)
         
-        # Odds com distribuição realista
         odd_comp = round(random.uniform(1.60, 3.50), 2)
-        
-        # Closing Line Value (CLV) realista: a maioria é pequena, algumas são negativas (bad beats)
         clv = np.random.normal(loc=0.03, scale=0.04)
         odd_real = odd_comp / (1 + clv)
         prob_win = 1 / odd_real
-        
         stake = round(random.uniform(50, 250), 2)
-        
         won = random.random() < prob_win
         status = "Settled - Won" if won else "Settled - Lost"
         
@@ -74,28 +76,23 @@ st.markdown("""
     .stApp { background-color: #0F172A; color: #E2E8F0; font-family: 'Inter', sans-serif; }
     [data-testid="stSidebar"] { background-color: #0B1120 !important; border-right: 1px solid #1E293B !important; }
     
-    /* Tipografia e Tabs */
     h1, h2, h3 { font-weight: 500; letter-spacing: -0.5px; color: #F8FAFC; }
     .stTabs [data-baseweb="tab-list"] { background-color: transparent; border-bottom: 1px solid #1E293B; gap: 0; }
     .stTabs [data-baseweb="tab"] { color: #94A3B8; font-weight: 500; font-size: 0.85rem; padding: 12px 24px; background: transparent; border: none; transition: color 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
     .stTabs [aria-selected="true"] { color: #38BDF8 !important; border-bottom: 2px solid #38BDF8 !important; background: rgba(56, 189, 248, 0.05) !important; }
     
-    /* Terminal Login */
     .login-wrapper { display: flex; justify-content: center; align-items: center; min-height: 80vh; }
     .auth-panel { background: #0B1120; border: 1px solid #1E293B; border-radius: 4px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-width: 400px; width: 100%; margin: 0 auto; }
     .auth-header { font-size: 1.2rem; font-weight: 600; color: #F8FAFC; margin-bottom: 24px; text-align: center; border-bottom: 1px solid #1E293B; padding-bottom: 16px; }
     
-    /* Metrics Board */
     .metric-container { background: #0B1120; border: 1px solid #1E293B; border-radius: 4px; padding: 16px; }
     .metric-label { font-size: 0.75rem; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
     .metric-val { font-size: 1.5rem; font-weight: 500; font-family: 'Roboto Mono', monospace; color: #F8FAFC; }
     .metric-sub { font-size: 0.75rem; margin-top: 4px; color: #94A3B8; }
     
-    /* Positivo/Negativo Cores */
     .val-pos { color: #10B981 !important; }
     .val-neg { color: #EF4444 !important; }
     
-    /* Buttons */
     div.stButton > button { background: #1E293B !important; color: #F8FAFC !important; font-weight: 500 !important; border-radius: 4px !important; border: 1px solid #334155 !important; transition: background 0.2s; font-size: 0.85rem; }
     div.stButton > button:hover { background: #334155 !important; border-color: #475569 !important; }
     .btn-primary div.stButton > button { background: #0EA5E9 !important; border-color: #0284C7 !important; color: #FFF !important; }
@@ -112,8 +109,8 @@ def render_auth():
         st.markdown("<div class='auth-panel'>", unsafe_allow_html=True)
         st.markdown("<div class='auth-header'>Apex Quant Terminal</div>", unsafe_allow_html=True)
         
-        user_id = st.text_input("User ID", placeholder="Enter institutional ID")
-        pass_key = st.text_input("Passkey", type="password", placeholder="••••••••")
+        user_id = st.text_input("User ID", placeholder="admin")
+        pass_key = st.text_input("Passkey", type="password", placeholder="admin")
         
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("<div class='btn-primary'>", unsafe_allow_html=True)
@@ -126,7 +123,7 @@ def render_auth():
                     time.sleep(0.5)
                     st.session_state.logged_in = True
                     st.session_state.user = user_id
-                    st.rerun()
+                    safe_rerun()
             else:
                 st.error("Authentication failed. Verify credentials.")
     st.markdown("</div>", unsafe_allow_html=True)
@@ -138,7 +135,6 @@ def calculate_performance(df):
     resolved = df[df['Status'].isin(['Settled - Won', 'Settled - Lost'])].copy()
     if resolved.empty: return None
     
-    # Lógica financeira Trademate
     resolved['Realized_PnL'] = resolved.apply(lambda r: r['Stake (€)'] * (r['Matched Odd'] - 1) if r['Status'] == 'Settled - Won' else -r['Stake (€)'], axis=1)
     resolved['EV_PnL'] = resolved['Stake (€)'] * ((resolved['Matched Odd'] / resolved['True Odd']) - 1)
     
@@ -163,17 +159,16 @@ def render_terminal():
         st.markdown("<br><br><br><br><br>", unsafe_allow_html=True)
         if st.button("End Session", use_container_width=True):
             st.session_state.logged_in = False
-            st.rerun()
+            safe_rerun()
 
     df_data = st.session_state.trade_ledger
     perf_data = calculate_performance(df_data)
     net_profit = perf_data['Realized_PnL'].sum() if perf_data is not None else 0
     current_capital = initial_capital + net_profit
 
-    # Interface de Tabs minimalista
     tab_ledger, tab_analytics = st.tabs(["Trade Ledger", "Performance Analytics"])
 
-    # --- TAB 1: REGISTO DE OPERAÇÕES (Trade Ledger) ---
+    # --- TAB 1: REGISTO DE OPERAÇÕES ---
     with tab_ledger:
         st.markdown("<h3 style='margin-top:0;'>Portfolio Ledger</h3>", unsafe_allow_html=True)
         
@@ -187,11 +182,10 @@ def render_terminal():
 
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Tabela de dados rigorosa e sem distrações visuais
+        # Correção 2: DataFrame atualizado com indexação segura
         edited_df = st.data_editor(
             df_view,
             use_container_width=True,
-            num_rows="dynamic",
             column_config={
                 "Status": st.column_config.SelectboxColumn("Status", options=["Pending", "Settled - Won", "Settled - Lost", "Voided"], required=True),
                 "Matched Odd": st.column_config.NumberColumn(format="%.2f"),
@@ -204,10 +198,11 @@ def render_terminal():
         )
 
         if not edited_df.equals(df_view):
-            st.session_state.trade_ledger.update(edited_df)
-            st.rerun()
+            # Substitui linhas apenas com base no index existente de forma rígida
+            st.session_state.trade_ledger.loc[edited_df.index] = edited_df
+            safe_rerun()
 
-    # --- TAB 2: ANÁLISE QUANTITATIVA (Performance Analytics) ---
+    # --- TAB 2: ANÁLISE QUANTITATIVA ---
     with tab_analytics:
         st.markdown("<h3 style='margin-top:0;'>Quantitative Performance Review</h3>", unsafe_allow_html=True)
         
@@ -216,14 +211,13 @@ def render_terminal():
         else:
             total_trades = len(perf_data)
             wins = len(perf_data[perf_data['Status'] == 'Settled - Won'])
-            win_rate = wins / total_trades
+            win_rate = wins / total_trades if total_trades > 0 else 0
             
             turnover = perf_data['Stake (€)'].sum()
             roi = (net_profit / turnover) * 100 if turnover > 0 else 0
             max_drawdown = perf_data['Drawdown'].min()
-            clv_positive = len(perf_data[perf_data['CLV'] > 0]) / total_trades
+            clv_positive = len(perf_data[perf_data['CLV'] > 0]) / total_trades if total_trades > 0 else 0
             
-            # Painel de métricas financeiras padrão
             m1, m2, m3, m4, m5 = st.columns(5)
             
             val_color = "val-pos" if net_profit > 0 else "val-neg"
@@ -237,29 +231,20 @@ def render_terminal():
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # Gráficos com design limpo (sem gridlines ruidosas, cores contidas)
             fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.75, 0.25], vertical_spacing=0.03)
-            
             x_vals = list(range(len(perf_data)))
             
-            # PnL Realizado vs Expected Value
             fig.add_trace(go.Scatter(x=x_vals, y=perf_data['Cum_PnL'], mode='lines', name='Realized PnL', line=dict(color='#10B981', width=2)), row=1, col=1)
             fig.add_trace(go.Scatter(x=x_vals, y=perf_data['Cum_EV'], mode='lines', name='Expected Value (CLV)', line=dict(color='#38BDF8', width=2, dash='dash')), row=1, col=1)
-            
-            # Drawdown isolado em baixo
             fig.add_trace(go.Scatter(x=x_vals, y=perf_data['Drawdown'], mode='lines', name='Drawdown', line=dict(color='#EF4444', width=1), fill='tozeroy', fillcolor='rgba(239, 68, 68, 0.1)'), row=2, col=1)
             
             fig.update_layout(
-                height=600, 
-                paper_bgcolor='rgba(0,0,0,0)', 
-                plot_bgcolor='rgba(0,0,0,0)', 
-                font=dict(color="#94A3B8", family="Inter"),
-                hovermode="x unified",
+                height=600, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
+                font=dict(color="#94A3B8", family="Inter"), hovermode="x unified",
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=11)),
                 margin=dict(l=0, r=0, t=40, b=0)
             )
             
-            # Limpeza visual dos eixos
             fig.update_xaxes(showgrid=False, zeroline=False)
             fig.update_yaxes(title="PnL (€)", showgrid=True, gridcolor='rgba(30,41,59,0.5)', zeroline=True, zerolinecolor='#1E293B', row=1, col=1)
             fig.update_yaxes(title="Drawdown", showgrid=True, gridcolor='rgba(30,41,59,0.5)', zeroline=True, zerolinecolor='#1E293B', row=2, col=1)
