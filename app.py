@@ -52,6 +52,7 @@ st.markdown("""
 # ==========================================
 # 2. DATA ENGINE & ADVANCED MATH
 # ==========================================
+# A tua chave protegida com fallback para a apresentação
 API_KEY = st.secrets.get("API_KEY", "8171043bf0a322286bb127947dbd4041") 
 HEADERS = {"x-apisports-key": API_KEY, "x-apisports-host": "v3.football.api-sports.io"}
 
@@ -192,45 +193,47 @@ if m_sel:
                     max_edge, best_bet = edge, valid_markets[-1]
     
     with col_data:
+        # ATENÇÃO: Código HTML colado à esquerda para evitar a caixa branca do Markdown
         st.markdown(f"""
-        <div class="data-matrix">
-            <div style="font-size: 0.7rem; color: #555; margin-bottom: 15px;">// ASSET_METADATA_STREAM</div>
-            <div style="font-size: 1.5rem; color: #FFF; font-weight: 800; margin-bottom: 5px;">{m_sel['teams']['home']['name'].upper()}</div>
-            <div style="font-size: 1.5rem; color: #FFF; font-weight: 800; margin-bottom: 20px;">{m_sel['teams']['away']['name'].upper()}</div>
-            
-            <div class="metric-row"><span class="metric-label">SYS.XG_PROXY_HOME :</span><span class="neon-text">{proj_h:.3f}</span></div>
-            <div class="metric-row"><span class="metric-label">SYS.XG_PROXY_AWAY :</span><span class="neon-text">{proj_a:.3f}</span></div>
-            <div class="metric-row"><span class="metric-label">POISSON_SIM_PATHS :</span><span class="neon-text">25,000</span></div>
-            <div class="metric-row"><span class="metric-label">MARKET_VIG_DETECT :</span><span class="warning-text">{(vig_1x2*100):.2f}%</span></div>
-            <div class="metric-row"><span class="metric-label">ALPHA_CORRELATION :</span><span class="neon-text">ACTIVE</span></div>
-        </div>
-        """, unsafe_allow_html=True)
+<div class="data-matrix">
+    <div style="font-size: 0.7rem; color: #555; margin-bottom: 15px;">// ASSET_METADATA_STREAM</div>
+    <div style="font-size: 1.5rem; color: #FFF; font-weight: 800; margin-bottom: 5px;">{m_sel['teams']['home']['name'].upper()}</div>
+    <div style="font-size: 1.5rem; color: #FFF; font-weight: 800; margin-bottom: 20px;">{m_sel['teams']['away']['name'].upper()}</div>
+    
+    <div class="metric-row"><span class="metric-label">SYS.XG_PROXY_HOME :</span><span class="neon-text">{proj_h:.3f}</span></div>
+    <div class="metric-row"><span class="metric-label">SYS.XG_PROXY_AWAY :</span><span class="neon-text">{proj_a:.3f}</span></div>
+    <div class="metric-row"><span class="metric-label">POISSON_SIM_PATHS :</span><span class="neon-text">25,000</span></div>
+    <div class="metric-row"><span class="metric-label">MARKET_VIG_DETECT :</span><span class="warning-text">{(vig_1x2*100):.2f}%</span></div>
+    <div class="metric-row"><span class="metric-label">ALPHA_CORRELATION :</span><span class="neon-text">ACTIVE</span></div>
+</div>
+""", unsafe_allow_html=True)
 
         if best_bet and best_bet["Edge"] > 0:
             rec_kelly = calculate_kelly(best_bet['TrueProb'], best_bet['Odd'])
+            # ATENÇÃO: HTML colado à esquerda novamente
             st.markdown(f"""
-                <div class="alpha-box">
-                    <div style="font-size: 2.5rem; font-weight: 800; color: #00FF41; margin-bottom: 10px;">{best_bet['Market'].upper()}</div>
-                    <div style="display: flex; justify-content: space-between; text-align: left; background: #000; padding: 15px; border: 1px solid #003B00;">
-                        <div>
-                            <div style="color: #555; font-size: 0.7rem;">BOOK_QUOTE</div>
-                            <div style="color: #FFF; font-size: 1.2rem; font-weight: 800;">{best_bet['Odd']:.3f}</div>
-                        </div>
-                        <div>
-                            <div style="color: #555; font-size: 0.7rem;">SYS_FAIR_PRICE</div>
-                            <div style="color: #00FF41; font-size: 1.2rem; font-weight: 800;">{(1/best_bet['TrueProb']):.3f}</div>
-                        </div>
-                        <div>
-                            <div style="color: #555; font-size: 0.7rem;">CALC_EDGE (EV)</div>
-                            <div style="color: #00FF41; font-size: 1.2rem; font-weight: 800;">+{best_bet['Edge']*100:.2f}%</div>
-                        </div>
-                        <div>
-                            <div style="color: #555; font-size: 0.7rem;">REC_SIZE (¼ KELLY)</div>
-                            <div style="color: #FFB000; font-size: 1.2rem; font-weight: 800;">{rec_kelly:.2f}%</div>
-                        </div>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
+<div class="alpha-box">
+    <div style="font-size: 2.5rem; font-weight: 800; color: #00FF41; margin-bottom: 10px;">{best_bet['Market'].upper()}</div>
+    <div style="display: flex; justify-content: space-between; text-align: left; background: #000; padding: 15px; border: 1px solid #003B00;">
+        <div>
+            <div style="color: #555; font-size: 0.7rem;">BOOK_QUOTE</div>
+            <div style="color: #FFF; font-size: 1.2rem; font-weight: 800;">{best_bet['Odd']:.3f}</div>
+        </div>
+        <div>
+            <div style="color: #555; font-size: 0.7rem;">SYS_FAIR_PRICE</div>
+            <div style="color: #00FF41; font-size: 1.2rem; font-weight: 800;">{(1/best_bet['TrueProb']):.3f}</div>
+        </div>
+        <div>
+            <div style="color: #555; font-size: 0.7rem;">CALC_EDGE (EV)</div>
+            <div style="color: #00FF41; font-size: 1.2rem; font-weight: 800;">+{best_bet['Edge']*100:.2f}%</div>
+        </div>
+        <div>
+            <div style="color: #555; font-size: 0.7rem;">REC_SIZE (¼ KELLY)</div>
+            <div style="color: #FFB000; font-size: 1.2rem; font-weight: 800;">{rec_kelly:.2f}%</div>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
             if st.button("> INITIATE_TRADE_SEQUENCE()", use_container_width=True):
                 st.toast("SYS: Trade payload compiled. Ready for API dispatch.", icon="📟")
 
