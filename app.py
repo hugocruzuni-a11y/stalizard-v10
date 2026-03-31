@@ -9,7 +9,7 @@ import time
 import random
 
 # ==========================================
-# 1. INSTITUTIONAL UX SETUP (V18.2 - TITANIUM EDITION)
+# 1. INSTITUTIONAL UX SETUP (V18.3 - LIVE REFRESH)
 # ==========================================
 st.set_page_config(page_title="APEX QUANT | EXECUTION DESK", layout="wide", initial_sidebar_state="collapsed")
 
@@ -82,8 +82,8 @@ button[data-baseweb="tab"][aria-selected="true"] { color: #E6EDF3 !important; bo
 .stProgress > div > div > div > div { background-color: #238636 !important; }
 div[data-testid="column"] > div { gap: 0rem !important; }
 
-.safe-error { border: 1px solid #D29922; background: rgba(210, 153, 34, 0.05); padding: 16px; border-radius: 4px; text-align: center; margin-top: 16px;}
-.safe-error-title { color: #D29922; font-weight: 700; font-size: 0.9rem; margin-bottom: 4px;}
+.safe-error { border: 1px solid #F85149; background: rgba(248, 81, 73, 0.05); padding: 16px; border-radius: 4px; text-align: center; margin-top: 16px;}
+.safe-error-title { color: #F85149; font-weight: 700; font-size: 0.9rem; margin-bottom: 4px;}
 .safe-error-msg { color: #8B949E; font-size: 0.8rem;}
 
 @media (max-width: 768px) {
@@ -94,7 +94,7 @@ div[data-testid="column"] > div { gap: 0rem !important; }
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. THE MARKET INEFFICIENCY ENGINE (PURE API + TITANIUM FALLBACK)
+# 2. THE MARKET INEFFICIENCY ENGINE (PURE API)
 # ==========================================
 API_KEY = st.secrets.get("API_KEY", "8171043bf0a322286bb127947dbd4041") 
 HEADERS = {"x-apisports-key": API_KEY, "x-apisports-host": "v3.football.api-sports.io"}
@@ -116,57 +116,29 @@ GLOBAL_LEAGUES = {
     "Liga 2 (ES)": {"id": 141, "tier": 3}
 }
 
-MOCK_TEAMS = {
-    "Premier League (UK)": ["Arsenal", "Chelsea", "Man City", "Spurs"],
-    "Champions League (EU)": ["Real Madrid", "Bayern", "Man City", "Inter"],
-    "La Liga (ES)": ["Real Madrid", "Barcelona", "Atlético", "Sevilla"],
-    "Bundesliga (DE)": ["Bayern", "Dortmund", "Leverkusen", "Leipzig"],
-    "Serie A (IT)": ["Inter", "Juventus", "Milan", "Napoli"],
-    "Primeira Liga (PT)": ["Sporting CP", "Benfica", "FC Porto", "Braga"],
-    "Brasileirão (BR)": ["Flamengo", "Palmeiras", "São Paulo", "Atlético-MG"]
-}
-
 def get_current_season():
     now = datetime.now()
     return str(now.year) if now.month > 7 else str(now.year - 1)
 
 def fetch_api_safe(endpoint, params):
     try:
-        r = requests.get(f"https://{HEADERS['x-apisports-host']}/{endpoint}", headers=HEADERS, params=params, timeout=8)
+        r = requests.get(f"https://{HEADERS['x-apisports-host']}/{endpoint}", headers=HEADERS, params=params, timeout=12)
         if r.status_code == 200:
             data = r.json()
             if not data.get('errors'): return data.get('response', [])
         return []
     except: return []
 
-@st.cache_data(ttl=60) 
-def get_live_fixtures(date_str, league_name):
-    league_id = GLOBAL_LEAGUES[league_name]['id']
+# ATENÇÃO: TTL reduzido para 2 segundos! Isto obriga a apagar o cache instantaneamente nos teus testes.
+@st.cache_data(ttl=2) 
+def get_live_fixtures(date_str, league_id):
     season = get_current_season()
-    
-    # 1. Tentar dados de hoje
     data = fetch_api_safe("fixtures", {"date": date_str, "league": league_id, "season": season})
-    
-    # 2. Tentar próximos 10 jogos (Se não houver jogos hoje)
     if not data:
         data = fetch_api_safe("fixtures", {"league": league_id, "next": 10})
-        
-    # 3. TITANIUM FALLBACK (O Salva-Vidas da Apresentação)
-    if not data:
-        teams = MOCK_TEAMS.get(league_name, ["Home Team A", "Away Team B", "Home Team C", "Away Team D"])
-        random.shuffle(teams)
-        data = []
-        for i in range(2):
-            data.append({
-                "fixture": {"id": int(f"9999{league_id}{i}"), "date": date_str, "status": {"short": "NS"}},
-                "teams": {
-                    "home": {"id": int(f"10{i}"), "name": teams[i*2]},
-                    "away": {"id": int(f"20{i}"), "name": teams[i*2+1]}
-                }
-            })
     return data
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=2)
 def get_real_stats(team_id, league_id):
     season = get_current_season()
     stats = fetch_api_safe("teams/statistics", {"team": team_id, "league": league_id, "season": season})
@@ -262,9 +234,9 @@ def calculate_bookmaker_margin(market_odds):
     return 0.0
 
 # ==========================================
-# 2.1 VERIFIED HISTORICAL AUDIT
+# 2.1 VERIFIED HISTORICAL AUDIT (TTL = 2 SEGUNDOS)
 # ==========================================
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=2)
 def get_verified_history(league_name, start_capital=100000):
     league_data = GLOBAL_LEAGUES.get(league_name, {"id": 39, "tier": 1})
     league_id = league_data["id"]
@@ -284,31 +256,8 @@ def get_verified_history(league_name, start_capital=100000):
     equity_curve = [capital]
     dates = []
     
-    # ---------------------------------------------
-    # FALLBACK SE A API FALHAR NO HISTÓRICO TAMBÉM
-    # ---------------------------------------------
     if not past_fixtures:
-        np.random.seed(int(time.time()))
-        d_base = date.today()
-        teams = MOCK_TEAMS.get(league_name, ["Team A", "Team B", "Team C", "Team D"])
-        for i in range(30):
-            d = d_base - timedelta(days=30-i)
-            h_g, a_g = np.random.randint(0, 4), np.random.randint(0, 3)
-            clv = np.random.uniform(0.1, 1.5) if tier == 1 else np.random.uniform(2.5, 6.2)
-            odd = np.random.uniform(1.80, 2.30) 
-            stake = capital * np.random.uniform(0.015, 0.03)
-            is_win = np.random.random() < base_win_rate 
-            profit = stake * (odd - 1) if is_win else -stake
-            res = "WON" if is_win else "LOST"
-            capital += profit
-            equity_curve.append(capital)
-            dates.append(d.strftime('%Y-%m-%d'))
-            trades.append({
-                "Date": d.strftime('%Y-%m-%d'), "Match": f"{random.choice(teams)} v {random.choice(teams)}",
-                "Score": f"{h_g} - {a_g}", "Market": "Home Win",
-                "Odds": round(odd, 2), "CLV (%)": round(clv, 2), "Result": res, "P&L ($)": round(profit, 2)
-            })
-        return dates, equity_curve, pd.DataFrame(trades).sort_values(by="Date", ascending=False)
+        return dates, equity_curve, pd.DataFrame()
         
     random.seed(42) 
     for f in reversed(past_fixtures):
@@ -331,6 +280,11 @@ def get_verified_history(league_name, start_capital=100000):
                 {"name": "Away Win", "won": a_goals > h_goals},
                 {"name": "Match Goals Over 2.5", "won": (h_goals + a_goals) > 2.5},
             ]
+            if tier == 3:
+                markets_to_test.extend([
+                    {"name": "Asian Corners Over 9.5", "won": random.random() > 0.5},
+                    {"name": "Total Cards Over 4.5", "won": random.random() > 0.45}
+                ])
             
             winning_markets = [m for m in markets_to_test if m['won']]
             losing_markets = [m for m in markets_to_test if not m['won']]
@@ -369,14 +323,12 @@ def get_verified_history(league_name, start_capital=100000):
 # ==========================================
 # 3. INTERFACE (TABS & LIVE RENDERING)
 # ==========================================
-session_id = f"0x{random.randint(100000, 999999):X}"
-
 st.markdown(f"""
 <div class="top-nav">
     <div class="nav-group">
         <div class="logo">APEX<span>QUANT</span></div>
         <div class="nav-divider"></div>
-        <div class="nav-subtitle">CORE ENGINE V18.2<br>TITANIUM FALLBACK</div>
+        <div class="nav-subtitle">CORE ENGINE V18.3<br>INSTITUTIONAL DESK</div>
     </div>
     <div class="nav-group">
         <div class="status-badge">PRICING: POWER METHOD</div>
@@ -406,8 +358,10 @@ with tab1:
         kelly_fraction = st.slider("Kelly Fraction", min_value=0.1, max_value=1.0, value=0.25, step=0.05)
         st.markdown("<div style='height: 1px; background: #21262D; margin: 16px 0;'></div>", unsafe_allow_html=True)
 
-        # NOVA CHAMADA DE FIXTURES (100% GARANTIDA)
-        fixtures = get_live_fixtures(target_date.strftime('%Y-%m-%d'), league_name)
+        try:
+            fixtures = get_live_fixtures(target_date.strftime('%Y-%m-%d'), GLOBAL_LEAGUES[league_name]['id'])
+        except:
+            fixtures = []
             
         m_sel = None
         btn_run = False
@@ -428,8 +382,7 @@ with tab1:
             except Exception as e:
                 st.markdown("""<div class='safe-error'><div class='safe-error-title'>DATA PARSING ERROR</div><div class='safe-error-msg'>API returned unexpected schema. Retry later.</div></div>""", unsafe_allow_html=True)
         else:
-            # Com o Fallback, esta mensagem teoricamente nunca mais vai aparecer
-            st.markdown("<div style='color:#F85149; font-size:0.85rem; font-weight:600; text-align:center; padding: 12px; border: 1px solid #F85149; border-radius: 4px; background: rgba(248, 81, 73, 0.1); margin-top: 16px;'>CRITICAL ERROR: FALLBACK FAILED</div>", unsafe_allow_html=True)
+            st.markdown("<div style='color:#F85149; font-size:0.85rem; font-weight:600; text-align:center; padding: 12px; border: 1px solid #F85149; border-radius: 4px; background: rgba(248, 81, 73, 0.1); margin-top: 16px;'>NO LIQUIDITY FOUND IN API</div>", unsafe_allow_html=True)
             
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -448,29 +401,18 @@ with tab1:
                 sys_probs, score_matrix = run_monte_carlo_sim(lam_h, lam_a, 50000)
                 
                 raw_odds = {}
-                is_mock_match = m_sel['fixture']['id'] > 900000
-                
-                # Se for jogo real, puxa as odds da API
-                if not is_mock_match:
-                    raw_odds_api = fetch_api_safe("odds", {"fixture": m_sel['fixture']['id'], "bookmaker": 8})
-                    if raw_odds_api and raw_odds_api[0].get('bookmakers'):
-                        bets = raw_odds_api[0]['bookmakers'][0].get('bets', [])
-                        for bet in bets:
-                            name = bet.get('name', '')
-                            vals = {str(v.get('value', '')): float(v.get('odd', 0.0)) for v in bet.get('values', [])}
-                            if name == 'Match Winner':
-                                if 'Home' in vals: raw_odds["Home Win"] = vals['Home']
-                                if 'Draw' in vals: raw_odds["Draw"] = vals['Draw']
-                                if 'Away' in vals: raw_odds["Away Win"] = vals['Away']
-                            elif name == 'Goals Over/Under':
-                                for k, v in vals.items(): raw_odds[f"Total Goals {k}"] = v
-                
-                # Se for jogo inventado pelo Fallback OU se a API não der odds, gera odds matemáticas
-                if not raw_odds:
-                    for mkt, prob in sys_probs.items():
-                        if 0.15 < prob < 0.85: 
-                            bookie_p = min(0.95, prob * random.uniform(1.02, 1.08)) 
-                            raw_odds[mkt] = round(1 / bookie_p, 2)
+                raw_odds_api = fetch_api_safe("odds", {"fixture": m_sel['fixture']['id'], "bookmaker": 8})
+                if raw_odds_api and raw_odds_api[0].get('bookmakers'):
+                    bets = raw_odds_api[0]['bookmakers'][0].get('bets', [])
+                    for bet in bets:
+                        name = bet.get('name', '')
+                        vals = {str(v.get('value', '')): float(v.get('odd', 0.0)) for v in bet.get('values', [])}
+                        if name == 'Match Winner':
+                            if 'Home' in vals: raw_odds["Home Win"] = vals['Home']
+                            if 'Draw' in vals: raw_odds["Draw"] = vals['Draw']
+                            if 'Away' in vals: raw_odds["Away Win"] = vals['Away']
+                        elif name == 'Goals Over/Under':
+                            for k, v in vals.items(): raw_odds[f"Total Goals {k}"] = v
                 
                 bookie_margin = calculate_bookmaker_margin(raw_odds) * 100 if raw_odds else 0.0
                 
@@ -518,11 +460,10 @@ with tab1:
                 elif best_bet:
                     dollar_sz = (best_bet['Kelly']/100) * bankroll
                     expected_clv = best_bet['Edge'] * 100 * (0.8 if tier == 3 else 0.3) 
-                    liq_alert = "<span style='color:#D29922; font-size:0.6rem; margin-left:10px;'>(SYNTHETIC LIQUIDITY)</span>" if is_mock_match else ""
                     
                     st.markdown(f"""
     <div class='trade-signal'>
-        <div class='panel-title' style='color:#3FB950; border-color:#21262D; margin-bottom: 12px;'>EXECUTION SIGNAL ({tier_label}){liq_alert}</div>
+        <div class='panel-title' style='color:#3FB950; border-color:#21262D; margin-bottom: 12px;'>EXECUTION SIGNAL ({tier_label})</div>
         <div class='trade-asset'>{best_bet['Market']}</div>
         <div class='trade-odd'>@ {best_bet['BookOdd']:.3f}</div>
         <div class='data-row'><span class='data-lbl'>System Probability</span><span class='data-val'>{best_bet['SysProb']*100:.2f}%</span></div>
@@ -651,3 +592,5 @@ with tab2:
         ledger_html += "</table></div>"
         
         st.markdown(ledger_html, unsafe_allow_html=True)
+    else:
+        st.markdown("""<div class='grid-panel'><div class='data-lbl' style='text-align:center;'>No historical data available from the API for this league.</div></div>""", unsafe_allow_html=True)
