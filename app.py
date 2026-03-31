@@ -9,7 +9,7 @@ import time
 import random
 
 # ==========================================
-# 1. INSTITUTIONAL UX SETUP (PIXEL-PERFECT V5.0)
+# 1. INSTITUTIONAL UX SETUP (THE FINAL MASTERPIECE)
 # ==========================================
 st.set_page_config(page_title="APEX QUANT TERMINAL", layout="wide", initial_sidebar_state="collapsed")
 
@@ -17,9 +17,9 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
 
-/* Base Theme */
+/* Base Theme & Anti-Streamlit Overrides */
 .stApp { background-color: #02040A; color: #E2E8F0; font-family: 'Inter', sans-serif; }
-header, footer { visibility: hidden; display: none; }
+header, footer, #MainMenu, div[data-testid="stToolbar"] { visibility: hidden !important; display: none !important; }
 
 /* Redesigned Top Nav - Strict Alignment */
 .top-nav { 
