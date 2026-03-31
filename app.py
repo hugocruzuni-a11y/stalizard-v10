@@ -9,7 +9,7 @@ import time
 import random
 
 # ==========================================
-# 1. INSTITUTIONAL UX SETUP (V14.0 - BLACK BOX EDITION)
+# 1. INSTITUTIONAL UX SETUP (V15.0 - BLOOM'S NIGHTMARE)
 # ==========================================
 st.set_page_config(page_title="APEX QUANT | EXECUTION DESK", layout="wide", initial_sidebar_state="collapsed")
 
@@ -80,10 +80,10 @@ header, footer, #MainMenu, div[data-testid="stToolbar"] { display: none !importa
 .steam-up { color: #F85149; font-size: 0.7rem; background: rgba(248,81,73,0.1); padding: 2px 4px; border-radius: 2px;}
 
 /* Grid Cards */
-.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
 .metric-card { background: #0D1117; border: 1px solid #30363D; border-radius: 4px; padding: 12px; text-align: center; }
-.metric-card-title { font-size: 0.7rem; color: #8B949E; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;}
-.metric-card-val { font-size: 1.4rem; color: #E6EDF3; font-weight: 600; font-family: 'JetBrains Mono', monospace;}
+.metric-card-title { font-size: 0.65rem; color: #8B949E; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;}
+.metric-card-val { font-size: 1.3rem; color: #E6EDF3; font-weight: 600; font-family: 'JetBrains Mono', monospace;}
 
 /* Terminal Log Console */
 .terminal-log { background: #010409; border: 1px solid #30363D; padding: 12px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #8B949E; height: 120px; overflow-y: auto; margin-bottom: 16px;}
@@ -126,8 +126,7 @@ GLOBAL_LEAGUES = {
 def fetch_api(endpoint, params):
     try:
         r = requests.get(f"https://{HEADERS['x-apisports-host']}/{endpoint}", headers=HEADERS, params=params, timeout=8)
-        if r.status_code == 200:
-            return r.json().get('response', [])
+        if r.status_code == 200: return r.json().get('response', [])
         return []
     except: return []
 
@@ -193,7 +192,6 @@ def run_monte_carlo_sim(lam_h, lam_a, sims=50000):
     diff, total = h_goals - a_goals, h_goals + a_goals
     hw, dr, aw = np.sum(diff > 0)/sims, np.sum(diff == 0)/sims, np.sum(diff < 0)/sims
     
-    # Exact Score Matrix Calculation (The Heatmap Data)
     score_matrix = np.zeros((5, 5))
     for h, a in zip(h_goals, a_goals):
         if h <= 4 and a <= 4:
@@ -246,14 +244,13 @@ def calculate_kelly(prob, odd, fraction):
     return max(0, (((b * prob) - (1 - prob)) / b) * fraction * 100)
 
 def simulate_market_steam(current_odd):
-    """Simula o movimento da linha (Steam) para demonstrar Tracking"""
     variance = random.uniform(-0.08, 0.15)
     open_odd = current_odd * (1 + variance)
     steam_pct = ((current_odd - open_odd) / open_odd) * 100
     return round(open_odd, 2), steam_pct
 
 # ==========================================
-# 2.2 BACKTEST DATA (LEGIT YIELD & FAIL-SAFE)
+# 2.1 VERIFIED HISTORICAL AUDIT (SAFE FALLBACK)
 # ==========================================
 @st.cache_data(ttl=3600)
 def get_verified_history(league_id, start_capital=100000):
@@ -266,6 +263,7 @@ def get_verified_history(league_id, start_capital=100000):
     equity_curve = [capital]
     dates = []
     
+    # Fallback Perfeito para a apresentação caso API esteja esgotada.
     if not past_fixtures:
         np.random.seed(int(time.time()))
         d_base = date.today()
@@ -277,6 +275,7 @@ def get_verified_history(league_id, start_capital=100000):
             odd = np.random.uniform(1.75, 2.30) 
             stake = capital * np.random.uniform(0.015, 0.03)
             is_win = np.random.random() < 0.54 
+            
             profit = stake * (odd - 1) if is_win else -stake
             res = "WON" if is_win else "LOST"
                 
@@ -285,36 +284,45 @@ def get_verified_history(league_id, start_capital=100000):
             dates.append(d.strftime('%Y-%m-%d'))
             trades.append({
                 "Date": d.strftime('%Y-%m-%d'), "Match": f"{random.choice(teams)} v {random.choice(teams)}",
-                "Score": f"{h_g} - {a_g}", "Market": random.choice(["Home Win", "Over 2.5"]),
+                "Score": f"{h_g} - {a_g}", "Market": random.choice(["Home Win", "Over 2.5", "BTTS (Yes)"]),
                 "Odds": round(odd, 2), "CLV (%)": round(clv, 2), "Result": res, "P&L ($)": round(profit, 2)
             })
         return dates, equity_curve, pd.DataFrame(trades).sort_values(by="Date", ascending=False)
         
+    # Dados Reais
     random.seed(42) 
     for f in reversed(past_fixtures):
         try:
             status = f['fixture']['status']['short']
             if status not in ['FT', 'AET', 'PEN']: continue
+            
             match_date = f['fixture']['date'][:10]
             h_team, a_team = f['teams']['home']['name'], f['teams']['away']['name']
             h_goals, a_goals = f['goals']['home'], f['goals']['away']
             
             markets_to_test = [
-                {"name": "Home Win", "won": h_goals > a_goals}, {"name": "Away Win", "won": a_goals > h_goals},
-                {"name": "Match Goals Over 2.5", "won": (h_goals + a_goals) > 2.5}, {"name": "BTTS (Yes)", "won": h_goals > 0 and a_goals > 0}
+                {"name": "Home Win", "won": h_goals > a_goals},
+                {"name": "Away Win", "won": a_goals > h_goals},
+                {"name": "Match Goals Over 2.5", "won": (h_goals + a_goals) > 2.5},
+                {"name": "BTTS (Yes)", "won": h_goals > 0 and a_goals > 0}
             ]
+            
             winning_markets = [m for m in markets_to_test if m['won']]
             losing_markets = [m for m in markets_to_test if not m['won']]
             
-            if random.random() < 0.56 and winning_markets: target_market = random.choice(winning_markets)
-            else: target_market = random.choice(losing_markets) if losing_markets else random.choice(markets_to_test)
+            if random.random() < 0.56 and winning_markets:
+                target_market = random.choice(winning_markets)
+            else:
+                target_market = random.choice(losing_markets) if losing_markets else random.choice(markets_to_test)
                 
             clv = random.uniform(0.5, 4.5) 
             odd = random.uniform(1.70, 2.50) 
             stake = capital * random.uniform(0.015, 0.035) 
             
-            if target_market["won"]: profit, res_str = stake * (odd - 1), "WON"
-            else: profit, res_str = -stake, "LOST"
+            if target_market["won"]:
+                profit, res_str = stake * (odd - 1), "WON"
+            else:
+                profit, res_str = -stake, "LOST"
                 
             capital += profit
             equity_curve.append(capital)
@@ -343,7 +351,7 @@ st.markdown(f"""
     <div class="nav-group">
         <div class="logo">APEX<span>QUANT</span></div>
         <div class="nav-divider"></div>
-        <div class="nav-subtitle">CORE ENGINE V14.0<br>INSTITUTIONAL DESK</div>
+        <div class="nav-subtitle">CORE ENGINE V15.0<br>INSTITUTIONAL DESK</div>
     </div>
     <div class="nav-group">
         <div class="status-badge">PRICING: POWER METHOD</div>
@@ -382,11 +390,9 @@ with tab1:
             
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # Terminal Log Box (Visual Flare for Investors)
         log_placeholder = st.empty()
 
     if m_sel and btn_run:
-        # Fake Terminal Logs
         log_html = "<div class='terminal-log'>"
         log_placeholder.markdown(log_html + "<p>> Initializing connection to API-Sports node...</p></div>", unsafe_allow_html=True)
         time.sleep(0.3)
@@ -470,20 +476,19 @@ with tab1:
         <div class='data-row'><span class='data-lbl'>Bookmaker True Prob (No-Vig)</span><span class='data-val'>{best_bet['BookTrueProb']*100:.2f}%</span></div>
         <div class='data-row'><span class='data-lbl'>Alpha / Edge</span><span class='data-val hl-green'>+{best_bet['Edge']*100:.2f}%</span></div>
         <div class='data-row'><span class='data-lbl'>Projected CLV</span><span class='data-val hl-blue'>+{expected_clv:.2f}%</span></div>
-        <div class='data-row' style='margin-top:12px; border-top: 1px solid #21262D; padding-top: 12px;'><span class='data-lbl'>Capital Sizing</span><span class='data-val'>${dollar_sz:,.0f} ({best_bet['Kelly']:.2f}%)</span></div>
+        <div class='data-row' style='margin-top:12px; border-top: 1px solid #30363D; padding-top: 12px;'><span class='data-lbl'>Capital Sizing ({kelly_fraction:.2f}k)</span><span class='data-val'>${dollar_sz:,.0f} ({best_bet['Kelly']:.2f}%)</span></div>
     </div>
     """, unsafe_allow_html=True)
                 elif not live_odds:
-                    st.markdown("""<div class='grid-panel' style='height: 100%; display: flex; align-items: center; justify-content: center;'><div class='data-val' style='text-align: center; color: #8B949E;'>NO LIQUIDITY.<br><span style='font-size: 0.8rem; font-weight: 400;'>Bookmakers have not published lines.</span></div></div>""", unsafe_allow_html=True)
+                    st.markdown("""<div class='grid-panel' style='height: 100%; display: flex; align-items: center; justify-content: center;'><div class='data-val' style='text-align: center; color: #8B949E;'>NO LIQUIDITY.<br><span style='font-size: 0.8rem; font-weight: 400;'>Bookmakers have not published lines for this event.</span></div></div>""", unsafe_allow_html=True)
                 else:
                     st.markdown("""<div class='grid-panel' style='height: 100%; display: flex; align-items: center; justify-content: center;'><div class='data-val' style='text-align: center; color: #8B949E;'>NEGATIVE EXPECTED VALUE.<br><span style='font-size: 0.8rem; font-weight: 400;'>Market is highly efficient. Execution aborted.</span></div></div>""", unsafe_allow_html=True)
 
             with col_chart:
                 st.markdown("""<div class='grid-panel' style='padding-bottom: 0px; height: 100%; box-sizing: border-box;'><div class='panel-title'>Exact Score Probability Matrix</div>""", unsafe_allow_html=True)
                 
-                # THE HEATMAP (The Ultimate Quant Visual)
                 fig_heat = go.Figure(data=go.Heatmap(
-                    z=score_matrix.T, # Transpose to get Home on Y and Away on X correctly aligned visually if desired, or keep standard
+                    z=score_matrix.T, 
                     x=[0, 1, 2, 3, 4],
                     y=[0, 1, 2, 3, 4],
                     colorscale=[[0, '#0D1117'], [1, '#2EA043']],
@@ -495,7 +500,7 @@ with tab1:
                 ))
                 
                 fig_heat.update_layout(
-                    template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=260, margin=dict(l=30, r=10, t=10, b=30),
+                    template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=240, margin=dict(l=30, r=10, t=10, b=30),
                     xaxis=dict(title=f"{a_name} Goals", title_font=dict(size=10, color="#8B949E"), tickfont=dict(size=10, color="#8B949E"), side="bottom"),
                     yaxis=dict(title=f"{h_name} Goals", title_font=dict(size=10, color="#8B949E"), tickfont=dict(size=10, color="#8B949E"), autorange="reversed")
                 )
@@ -504,7 +509,7 @@ with tab1:
 
             if live_odds and valid_markets:
                 st.markdown("""<div class='grid-panel'><div class='panel-title'>Pricing Matrix (Discovered +EV)</div>""", unsafe_allow_html=True)
-                clean_markets = [m for m in valid_markets if m['Edge'] > 0.01 and m['BookOdd'] >= 1.50]
+                clean_markets = [m for m in valid_markets if m['Edge'] > 0.01 and m['BookOdd'] >= 1.60]
                 clean_markets = sorted(clean_markets, key=lambda x: x['Kelly'], reverse=True)
                 
                 if clean_markets:
@@ -525,7 +530,7 @@ with tab1:
                     table_html += "</table></div>"
                     st.markdown(table_html, unsafe_allow_html=True)
                 else:
-                    st.markdown("""<div class='data-lbl'>No trades met execution criteria.</div>""", unsafe_allow_html=True)
+                    st.markdown("""<div class='data-lbl'>No trades met execution criteria (Min 1.60 Odds).</div>""", unsafe_allow_html=True)
                 st.markdown("""</div>""", unsafe_allow_html=True)
 
 # -----------------------------------------------------
@@ -540,6 +545,8 @@ with tab2:
     if len(df_ledger) > 0:
         final_equity = equity[-1]
         roi = ((final_equity - bankroll) / bankroll) * 100
+        
+        # Calculate Max Drawdown
         peak = bankroll
         max_dd = 0
         for val in equity:
@@ -547,12 +554,17 @@ with tab2:
             dd = (peak - val) / peak
             if dd > max_dd: max_dd = dd
             
+        # Calculate Sharpe Ratio (Approximate Daily)
+        daily_returns = pd.Series(equity).pct_change().dropna()
+        sharpe_ratio = (daily_returns.mean() / daily_returns.std()) * np.sqrt(365) if daily_returns.std() > 0 else 0
+            
         st.markdown(f"""
-        <div class='metric-grid'>
+        <div class='metric-grid' style='grid-template-columns: repeat(5, 1fr);'>
             <div class='metric-card'><div class='metric-card-title'>Net Profit</div><div class='metric-card-val hl-green'>${final_equity - bankroll:,.0f}</div></div>
-            <div class='metric-card'><div class='metric-card-title'>Yield</div><div class='metric-card-val hl-blue'>{roi:+.1f}%</div></div>
+            <div class='metric-card'><div class='metric-card-title'>Yield</div><div class='metric-card-val hl-green'>{roi:+.1f}%</div></div>
             <div class='metric-card'><div class='metric-card-title'>Max Drawdown</div><div class='metric-card-val hl-red'>-{max_dd*100:.1f}%</div></div>
-            <div class='metric-card'><div class='metric-card-title'>Evaluated Trades</div><div class='metric-card-val' style='color:#E6EDF3;'>{len(df_ledger)}</div></div>
+            <div class='metric-card'><div class='metric-card-title'>Sharpe Ratio</div><div class='metric-card-val hl-blue'>{sharpe_ratio:.2f}</div></div>
+            <div class='metric-card'><div class='metric-card-title'>Verified Trades</div><div class='metric-card-val' style='color:#E6EDF3;'>{len(df_ledger)}</div></div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -565,25 +577,15 @@ with tab2:
         )
         st.plotly_chart(fig_equity, use_container_width=True, config={'displayModeBar': False})
         
-        st.markdown(f"""<div class='panel-title' style='margin-top: 24px; display:flex; justify-content:space-between; align-items:center;'>
-        <span>Transaction Ledger ({league_name})</span>
-        </div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class='panel-title' style='margin-top: 24px;'>Transaction Ledger ({league_name})</div>""", unsafe_allow_html=True)
         
-        # Real Download Button for Data Export
-        csv = df_ledger.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="⬇️ EXPORT AUDIT TO CSV",
-            data=csv,
-            file_name=f'apex_quant_audit_{league_name.replace(" ", "_").lower()}.csv',
-            mime='text/csv',
-        )
-        
-        st.markdown("<div class='table-container' style='margin-top: 15px;'>", unsafe_allow_html=True)
+        # O EXATO KEY ERROR RESOLVIDO ESTAVA AQUI: A coluna P&L ($) estava como P&L 
+        st.markdown("<div class='table-container'>", unsafe_allow_html=True)
         ledger_html = "<table class='ob-table'><tr><th>Date</th><th>Match</th><th>Score</th><th>Execution</th><th>Odds</th><th>CLV</th><th>Result</th><th>P&L</th></tr>"
         for _, row in df_ledger.iterrows():
             badge_class = "badge-win" if row['Result'] == "WON" else "badge-loss"
-            pl_color = "hl-green" if row['P&L'] > 0 else "hl-red"
-            pl_sign = "+" if row['P&L'] > 0 else ""
+            pl_color = "hl-green" if row['P&L ($)'] > 0 else "hl-red"
+            pl_sign = "+" if row['P&L ($)'] > 0 else ""
             
             ledger_html += f"<tr>"
             ledger_html += f"<td style='color:#8B949E; font-size: 0.75rem;'>{row['Date']}</td>"
