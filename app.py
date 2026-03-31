@@ -9,7 +9,7 @@ import time
 import random
 
 # ==========================================
-# 1. INSTITUTIONAL UX SETUP (MAX READABILITY V7.0)
+# 1. INSTITUTIONAL UX SETUP (MAX READABILITY V7.1 - BUG FREE)
 # ==========================================
 st.set_page_config(page_title="APEX QUANT TERMINAL", layout="wide", initial_sidebar_state="collapsed")
 
@@ -268,20 +268,20 @@ session_id = f"0x{random.randint(100000, 999999):X}"
 
 st.markdown(f"""
 <div class="top-nav">
-    <div class="nav-left">
-        <div class="logo">APEX<span>QUANT</span></div>
-        <div class="nav-divider"></div>
-        <div class="nav-subtitle">CORE ENGINE V7.0<br><span style="color:#CBD5E1;">INSTITUTIONAL FEED</span></div>
-    </div>
-    <div class="nav-center">
-        <div class="telemetry-box">NODE <span>US-EAST-1</span></div>
-        <div class="telemetry-box">PING <span class="hl-green">12ms</span></div>
-        <div class="telemetry-box">SIM <span>MC-50K</span></div>
-    </div>
-    <div class="nav-right">
-        <div class="nav-time">SYS_ID: {session_id}</div>
-        <div class="sys-status"><span class="dot"></span> ACTIVE POOL</div>
-    </div>
+<div class="nav-left">
+<div class="logo">APEX<span>QUANT</span></div>
+<div class="nav-divider"></div>
+<div class="nav-subtitle">CORE ENGINE V7.0<br><span style="color:#CBD5E1;">INSTITUTIONAL FEED</span></div>
+</div>
+<div class="nav-center">
+<div class="telemetry-box">NODE <span>US-EAST-1</span></div>
+<div class="telemetry-box">PING <span class="hl-green">12ms</span></div>
+<div class="telemetry-box">SIM <span>MC-50K</span></div>
+</div>
+<div class="nav-right">
+<div class="nav-time">SYS_ID: {session_id}</div>
+<div class="sys-status"><span class="dot"></span> ACTIVE POOL</div>
+</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -297,10 +297,10 @@ ticker_text = " • ".join([
 
 st.markdown(f"""
 <div class="ticker-wrap">
-    <div class="ticker">
-        <div class="ticker-item">{ticker_text}</div>
-        <div class="ticker-item">{ticker_text}</div>
-    </div>
+<div class="ticker">
+<div class="ticker-item">{ticker_text}</div>
+<div class="ticker-item">{ticker_text}</div>
+</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -442,14 +442,14 @@ if m_sel and btn_run:
                 
                 st.markdown(f"""
 <div class='trade-signal'>
-    <div class='panel-title' style='color:#10B981; border-color:rgba(16,185,129,0.3); margin-bottom: 16px;'>PRIME ALPHA SIGNAL</div>
-    <div class='trade-asset'>{best_bet['Market']}</div>
-    <div class='trade-odd'>@ {best_bet['BookOdd']:.3f}</div>
-    <div class='data-row'><span class='data-lbl'>Model Probability (Strike)</span><span class='data-val'>{best_bet['ModelProb']*100:.2f}%</span></div>
-    <div class='data-row'><span class='data-lbl'>Expected Value (Edge)</span><span class='data-val hl-green'>+{best_bet['Edge']*100:.2f}%</span></div>
-    <div class='data-row'><span class='data-lbl'>Expected Yield (ROI)</span><span class='data-val hl-blue'>+{expected_roi:.1f}%</span></div>
-    <div class='data-row'><span class='data-lbl'>Capital Allocation (Sizing)</span><span class='data-val'>${dollar_sz:,.0f} ({best_bet['Kelly']:.2f}%)</span></div>
-    <div class='data-row' style='margin-top:20px; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 20px;'><span class='data-lbl'>Model Confidence Index</span><span class='data-val'>{confidence_score:.1f} / 100</span></div>
+<div class='panel-title' style='color:#10B981; border-color:rgba(16,185,129,0.3); margin-bottom: 16px;'>PRIME ALPHA SIGNAL</div>
+<div class='trade-asset'>{best_bet['Market']}</div>
+<div class='trade-odd'>@ {best_bet['BookOdd']:.3f}</div>
+<div class='data-row'><span class='data-lbl'>Model Probability (Strike)</span><span class='data-val'>{best_bet['ModelProb']*100:.2f}%</span></div>
+<div class='data-row'><span class='data-lbl'>Expected Value (Edge)</span><span class='data-val hl-green'>+{best_bet['Edge']*100:.2f}%</span></div>
+<div class='data-row'><span class='data-lbl'>Expected Yield (ROI)</span><span class='data-val hl-blue'>+{expected_roi:.1f}%</span></div>
+<div class='data-row'><span class='data-lbl'>Capital Allocation (Sizing)</span><span class='data-val'>${dollar_sz:,.0f} ({best_bet['Kelly']:.2f}%)</span></div>
+<div class='data-row' style='margin-top:20px; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 20px;'><span class='data-lbl'>Model Confidence Index</span><span class='data-val'>{confidence_score:.1f} / 100</span></div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -510,7 +510,7 @@ if m_sel and btn_run:
                     margin=dict(l=0, r=0, t=10, b=0),
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=12, color="#F8FAFC")),
                     xaxis=dict(title="Probability (%)", title_font=dict(size=13, color="#CBD5E1"), tickfont=dict(size=13, color="#FFFFFF"), gridcolor="rgba(255,255,255,0.08)", zeroline=False),
-                    yaxis=dict(autorange="reversed", tickfont=dict(size=13, color="#FFFFFF", family="Inter, sans-serif", weight="700"), gridcolor="rgba(0,0,0,0)")
+                    yaxis=dict(autorange="reversed", tickfont=dict(size=13, color="#FFFFFF", family="Inter, sans-serif"), gridcolor="rgba(0,0,0,0)")
                 )
                 st.plotly_chart(fig_delta, use_container_width=True, config={'displayModeBar': False})
             else:
