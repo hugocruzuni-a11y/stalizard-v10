@@ -381,14 +381,15 @@ with tab1:
                 st.markdown("""<div class='grid-panel'><div class='panel-title'>Mathematical Pricing Matrix</div>""", unsafe_allow_html=True)
                 clean_markets = sorted(valid_markets, key=lambda x: x['Edge'], reverse=True)
                 
-                st.markdown("<div class='table-container'>", unsafe_allow_html=True)
-                table_html = "<table class='ob-table'><tr><th>Market</th><th>Odd</th><th>Sys Prob</th><th>Edge</th><th>Rec. Size</th></tr>"
+                table_html = "<div class='table-container'><table class='ob-table'><tr><th>Market</th><th>Odd</th><th>Sys Prob</th><th>Edge</th><th>Rec. Size</th></tr>"
                 for m in clean_markets[:10]: 
                     e_color = "hl-green" if m['Edge'] > 0 else "hl-red"
                     table_html += f"<tr><td>{m['Market']}</td><td style='color:#58A6FF; font-weight:700;'>{m['BookOdd']:.3f}</td>"
                     table_html += f"<td>{m['SysProb']*100:.1f}%</td><td class='{e_color}'>{m['Edge']*100:+.2f}%</td><td style='color:#8B949E;'>{m['Kelly']:.2f}%</td></tr>"
-                table_html += "</table></div></div>", unsafe_allow_html=True)
+                table_html += "</table></div>"
+                
                 st.markdown(table_html, unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
 
 # -----------------------------------------------------
 # TAB 2: PURE PREDICTIVE AUDIT
