@@ -8,7 +8,7 @@ from datetime import date, datetime, timedelta
 import time
 
 # ==========================================
-# 1. INSTITUTIONAL UX SETUP
+# 1. INSTITUTIONAL UX SETUP (V3.0)
 # ==========================================
 st.set_page_config(page_title="APEX QUANT | EXECUTION DESK", layout="wide", initial_sidebar_state="collapsed")
 st.cache_data.clear()
@@ -44,12 +44,10 @@ header, footer, #MainMenu, div[data-testid="stToolbar"] { display: none !importa
 .hl-green { color: #3FB950 !important; }
 .hl-red { color: #F85149 !important; }
 .hl-blue { color: #58A6FF !important; }
-.hl-gray { color: #8B949E !important; }
 .badge-win { background: rgba(63,185,80,0.1); color: #3FB950; border: 1px solid rgba(63,185,80,0.4); padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 0.7rem; }
 .badge-loss { background: rgba(248,81,73,0.1); color: #F85149; border: 1px solid rgba(248,81,73,0.4); padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 0.7rem; }
 .safe-error { border: 1px solid #F85149; background: rgba(248, 81, 73, 0.1); padding: 16px; border-radius: 6px; text-align: center; margin-bottom: 16px; }
 .safe-error-title { color: #F85149; font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
-.safe-error-msg { color: #C9D1D9; font-size: 0.8rem; }
 
 /* Alpha Box */
 .trade-signal { border-left: 3px solid #58A6FF; background: #0D1117; padding: 16px; margin-bottom: 16px; border-radius: 0 4px 4px 0;}
@@ -57,47 +55,36 @@ header, footer, #MainMenu, div[data-testid="stToolbar"] { display: none !importa
 .trade-odd { font-size: 1.1rem; color: #58A6FF; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-bottom: 12px;}
 
 /* Tables */
-.table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; }
+.table-container { width: 100%; overflow-x: auto; margin-bottom: 10px; }
 .ob-table { width: 100%; min-width: 700px; font-size: 0.8rem; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; }
 .ob-table th { color: #8B949E; text-align: right; font-weight: 500; border-bottom: 1px solid #30363D; padding: 8px; font-size: 0.7rem; text-transform: uppercase; background: #010409;}
 .ob-table th:first-child { text-align: left; }
 .ob-table td { text-align: right; padding: 8px; border-bottom: 1px solid #21262D; color: #C9D1D9;}
 .ob-table td:first-child { text-align: left; color: #E6EDF3;}
-.ob-table tr:hover td { background: #1C2128; }
 
 /* Grid Cards */
 .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
 .metric-card { background: #0D1117; border: 1px solid #30363D; border-radius: 4px; padding: 12px; text-align: center; }
-.metric-card-title { font-size: 0.7rem; color: #8B949E; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;}
+.metric-card-title { font-size: 0.7rem; color: #8B949E; text-transform: uppercase; font-weight: 600; margin-bottom: 4px;}
 .metric-card-val { font-size: 1.4rem; color: #E6EDF3; font-weight: 600; font-family: 'JetBrains Mono', monospace;}
 
 /* Streamlit Overrides */
-div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: #0D1117 !important; border: 1px solid #30363D !important; color: #E6EDF3 !important; border-radius: 3px !important; font-size: 0.85rem !important;}
-.btn-run > button { background: #238636 !important; color: #FFFFFF !important; border: none !important; font-weight: 600 !important; width: 100%; border-radius: 4px !important; padding: 12px !important; font-size: 0.9rem !important; margin-top: 8px;}
-.btn-run > button:hover { background: #2EA043 !important; }
-button[data-baseweb="tab"] { color: #8B949E !important; font-weight: 500 !important; font-size: 0.85rem !important;}
+div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: #0D1117 !important; border: 1px solid #30363D !important; color: #E6EDF3 !important; }
+.btn-run > button { background: #238636 !important; color: #FFFFFF !important; border: none !important; font-weight: 600 !important; width: 100%; border-radius: 4px !important; padding: 12px !important; margin-top: 8px;}
+button[data-baseweb="tab"] { color: #8B949E !important; }
 button[data-baseweb="tab"][aria-selected="true"] { color: #E6EDF3 !important; border-bottom-color: #238636 !important;}
-.stProgress > div > div > div > div { background-color: #238636 !important; }
-div[data-testid="column"] > div { gap: 0rem !important; }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. PRO-TIER DATA POOL & MATH ENGINE
+# 2. DATA POOL & MATH ENGINE (DIXON-COLES + AH)
 # ==========================================
 API_KEY = st.secrets.get("API_KEY", "8171043bf0a322286bb127947dbd4041") 
 HEADERS = {"x-apisports-key": API_KEY, "x-apisports-host": "v3.football.api-sports.io"}
 
-# Ligas com Maior Ineficiência de Mercado (Maior +EV para Modelos Quants)
 GLOBAL_LEAGUES = {
-    # Nível 1: Elevada Ineficiência & Boa Liquidez (O paraíso dos apostadores pro)
-    "Championship (UK)": 40, "League One (UK)": 41, 
-    "2. Bundesliga (DE)": 79, "Serie B (IT)": 136, "La Liga 2 (ES)": 141,
-    "MLS (USA)": 253, "J1 League (JP)": 98, "Brasileirão Série A (BR)": 71,
-    "Eredivisie (NL)": 88, "Primeira Liga (PT)": 94, "Pro League (BE)": 144,
-    # Nível 2: Mercados Eficientes (Menos Edge, mas maior Volume)
-    "Premier League (UK)": 39, "Champions League (EU)": 2, "La Liga (ES)": 140,
-    "Serie A (IT)": 135, "Bundesliga (DE)": 78
+    "Championship (UK)": 40, "League One (UK)": 41, "2. Bundesliga (DE)": 79, "Serie B (IT)": 136, 
+    "MLS (USA)": 253, "Brasileirão A": 71, "Premier League (UK)": 39, "La Liga (ES)": 140, "Bundesliga (DE)": 78
 }
 
 def get_current_season():
@@ -137,7 +124,8 @@ def get_real_stats(team_id, league_id):
         }
     except: return default_stats
 
-def calculate_lambdas(h_stats, a_stats):
+def calculate_xg_lambdas(h_stats, a_stats):
+    """Calcula o xG projetado (lambdas) baseando-se na força do ataque vs fraqueza da defesa"""
     lam_h = max(0.1, (h_stats['gf_h']/1.45) * (a_stats['ga_a']/1.45) * 1.45)
     lam_a = max(0.1, (a_stats['gf_a']/1.15) * (h_stats['ga_h']/1.15) * 1.15)
     return lam_h, lam_a
@@ -145,114 +133,54 @@ def calculate_lambdas(h_stats, a_stats):
 def poisson_pmf(lam, k):
     return (lam**k * math.exp(-lam)) / math.factorial(k)
 
-def exact_poisson_matrix(lam_h, lam_a, max_goals=6):
-    """
-    Tensor Matrix com Correção Dixon-Coles.
-    Resolve o problema da sobrestimação da independência estatística do Poisson Puro.
-    Ajusta empates de baixa pontuação (0-0, 1-1, 1-0, 0-1) para refletir a realidade do futebol.
-    """
+def get_asian_handicap_prob(matrix, line, is_home=True):
+    """Calcula a probabilidade exata para Handicap Asiático gerindo Pushes (Reembolsos)"""
+    prob_win, prob_push = 0, 0
+    max_g = matrix.shape[0]
+    for h in range(max_g):
+        for a in range(max_g):
+            diff = (h - a) if is_home else (a - h)
+            if diff + line > 0: prob_win += matrix[h, a]
+            elif diff + line == 0: prob_push += matrix[h, a]
+    
+    # Probabilidade ajustada ignorando o push (como as casas fazem no AH)
+    if prob_push >= 1.0: return 0
+    return prob_win / (1 - prob_push)
+
+def exact_poisson_matrix(lam_h, lam_a, max_goals=8):
+    """Tensor Matrix com Correção Dixon-Coles (Aumentado para 8 golos para captar overlines)"""
     h_probs = [poisson_pmf(lam_h, i) for i in range(max_goals)]
     a_probs = [poisson_pmf(lam_a, i) for i in range(max_goals)]
-    
     score_matrix = np.outer(h_probs, a_probs)
     
-    # DIXON-COLES ADJUSTMENT RHO (Correção de Independência)
+    # DIXON-COLES RHO
     rho = -0.05 
     try:
         score_matrix[0, 0] *= max(0, 1 - lam_h * lam_a * rho)
         score_matrix[1, 0] *= max(0, 1 + lam_a * rho)
         score_matrix[0, 1] *= max(0, 1 + lam_h * rho)
         score_matrix[1, 1] *= max(0, 1 - rho)
-        # Normalizar para garantir que a soma totaliza 1.0 (Distribuição de Probabilidade Válida)
         score_matrix = score_matrix / score_matrix.sum()
     except: pass
     
-    # Probabilidades 1X2 Exatas
-    hw = np.tril(score_matrix, -1).sum()
-    dr = np.trace(score_matrix)
-    aw = np.triu(score_matrix, 1).sum()
-    
-    # Probabilidades Totais (Over/Under)
-    u15 = sum(score_matrix[i, j] for i in range(max_goals) for j in range(max_goals) if i + j < 1.5)
-    o15 = 1 - u15
-    
-    u25 = sum(score_matrix[i, j] for i in range(max_goals) for j in range(max_goals) if i + j < 2.5)
-    o25 = 1 - u25
-    
-    u35 = sum(score_matrix[i, j] for i in range(max_goals) for j in range(max_goals) if i + j < 3.5)
-    o35 = 1 - u35
-    
-    # Probabilidades BTTS (Both Teams To Score)
-    btts_no = sum(score_matrix[0, :]) + sum(score_matrix[:, 0]) - score_matrix[0, 0]
-    btts_yes = 1 - btts_no
-    
     probs = {
-        "Home Win": hw, "Draw": dr, "Away Win": aw, 
-        "BTTS (Yes)": btts_yes, "BTTS (No)": btts_no,
-        "Total Goals Over 1.5": o15, "Total Goals Under 1.5": u15,
-        "Total Goals Over 2.5": o25, "Total Goals Under 2.5": u25,
-        "Total Goals Over 3.5": o35, "Total Goals Under 3.5": u35
+        "Home Win": np.tril(score_matrix, -1).sum(), "Draw": np.trace(score_matrix), "Away Win": np.triu(score_matrix, 1).sum(), 
+        "BTTS (Yes)": 1 - (sum(score_matrix[0, :]) + sum(score_matrix[:, 0]) - score_matrix[0, 0]),
+        "BTTS (No)": sum(score_matrix[0, :]) + sum(score_matrix[:, 0]) - score_matrix[0, 0]
     }
     
-    return probs, score_matrix * 100
-
-def power_method_devig(implied_probs):
-    if not implied_probs or sum(implied_probs) == 0: return implied_probs
-    total_implied = sum(implied_probs)
-    if total_implied <= 1.0: return implied_probs 
-    k = 1.0
-    learning_rate = 0.01
-    for _ in range(100):
-        current_sum = sum([p**k for p in implied_probs])
-        if abs(current_sum - 1.0) < 0.001: break
-        if current_sum > 1.0: k += learning_rate
-        else: k -= learning_rate
-    return [p**k for p in implied_probs]
-
-def extract_true_odds(market_odds):
-    """Remove a margem da casa de apostas (vig/juice) de mercados bidirecionais e tridirecionais"""
-    true_odds_map = {}
-    try:
-        # Match Winner (Tridirecional)
-        if "Home Win" in market_odds and "Draw" in market_odds and "Away Win" in market_odds:
-            hw, dr, aw = market_odds["Home Win"], market_odds["Draw"], market_odds["Away Win"]
-            if hw > 0 and dr > 0 and aw > 0:
-                true_p = power_method_devig([1/hw, 1/dr, 1/aw])
-                true_odds_map["Home Win"], true_odds_map["Draw"], true_odds_map["Away Win"] = true_p[0], true_p[1], true_p[2]
+    for val in [1.5, 2.5, 3.5]:
+        u_prob = sum(score_matrix[i, j] for i in range(max_goals) for j in range(max_goals) if i + j < val)
+        probs[f"Total Goals Under {val}"] = u_prob
+        probs[f"Total Goals Over {val}"] = 1 - u_prob
         
-        # Over/Under (Bidirecionais isolados)
-        for val in ["1.5", "2.5", "3.5"]:
-            o_key, u_key = f"Total Goals Over {val}", f"Total Goals Under {val}"
-            if o_key in market_odds and u_key in market_odds:
-                o_val, u_val = market_odds[o_key], market_odds[u_key]
-                if o_val > 0 and u_val > 0:
-                    true_p = power_method_devig([1/o_val, 1/u_val])
-                    true_odds_map[o_key], true_odds_map[u_key] = true_p[0], true_p[1]
-                    
-        # BTTS (Bidirecional)
-        if "BTTS (Yes)" in market_odds and "BTTS (No)" in market_odds:
-            y_val, n_val = market_odds["BTTS (Yes)"], market_odds["BTTS (No)"]
-            if y_val > 0 and n_val > 0:
-                true_p = power_method_devig([1/y_val, 1/n_val])
-                true_odds_map["BTTS (Yes)"], true_odds_map["BTTS (No)"] = true_p[0], true_p[1]
-                
-    except: pass
-    return true_odds_map
+    return probs, score_matrix
 
 def calculate_adjusted_kelly(prob, odd, fraction):
     b = odd - 1
     if b <= 0: return 0
     raw_kelly = (((b * prob) - (1 - prob)) / b) 
-    if raw_kelly <= 0: return 0
-    return min(raw_kelly * fraction * 100, 5.0) 
-
-def calculate_bookmaker_margin(market_odds):
-    try:
-        if "Home Win" in market_odds and "Draw" in market_odds and "Away Win" in market_odds:
-            hw, dr, aw = market_odds["Home Win"], market_odds["Draw"], market_odds["Away Win"]
-            if hw > 0 and dr > 0 and aw > 0: return ((1/hw) + (1/dr) + (1/aw)) - 1
-    except: pass
-    return None
+    return max(0, min(raw_kelly * fraction * 100, 5.0))
 
 # ==========================================
 # 2.1 VERIFIED HISTORICAL AUDIT
@@ -261,13 +189,9 @@ def calculate_bookmaker_margin(market_odds):
 def get_verified_history(league_id):
     season = get_current_season()
     past_fixtures = fetch_api_safe("fixtures", {"league": league_id, "season": season, "last": 40})
-    if not past_fixtures:
-        past_fixtures = fetch_api_safe("fixtures", {"league": league_id, "season": str(int(season)-1), "last": 40})
+    if not past_fixtures: return pd.DataFrame()
     
     trades = []
-    
-    if not past_fixtures: return pd.DataFrame()
-        
     for f in reversed(past_fixtures):
         try:
             status = f.get('fixture', {}).get('status', {}).get('short', '')
@@ -276,19 +200,11 @@ def get_verified_history(league_id):
             match_date = f.get('fixture', {}).get('date', '2026-01-01')[:10]
             if match_date > date.today().strftime('%Y-%m-%d'): continue
             
-            h_team = f.get('teams', {}).get('home', {}).get('name', 'Unknown')
-            a_team = f.get('teams', {}).get('away', {}).get('name', 'Unknown')
-            h_id = f.get('teams', {}).get('home', {}).get('id')
-            a_id = f.get('teams', {}).get('away', {}).get('id')
-            
-            h_goals = f.get('goals', {}).get('home')
-            a_goals = f.get('goals', {}).get('away')
-            
+            h_id, a_id = f['teams']['home']['id'], f['teams']['away']['id']
+            h_goals, a_goals = f.get('goals', {}).get('home'), f.get('goals', {}).get('away')
             if h_goals is None or a_goals is None: continue
             
-            h_stats = get_real_stats(h_id, league_id)
-            a_stats = get_real_stats(a_id, league_id)
-            lam_h, lam_a = calculate_lambdas(h_stats, a_stats)
+            lam_h, lam_a = calculate_xg_lambdas(get_real_stats(h_id, league_id), get_real_stats(a_id, league_id))
             sys_probs, _ = exact_poisson_matrix(lam_h, lam_a)
             
             best_market = max(sys_probs.keys(), key=lambda m: sys_probs.get(m, 0))
@@ -299,30 +215,21 @@ def get_verified_history(league_id):
             elif h_goals < a_goals: real_outcomes.append("Away Win")
             else: real_outcomes.append("Draw")
             
-            if (h_goals + a_goals) > 1.5: real_outcomes.append("Total Goals Over 1.5")
-            else: real_outcomes.append("Total Goals Under 1.5")
-            
-            if (h_goals + a_goals) > 2.5: real_outcomes.append("Total Goals Over 2.5")
-            else: real_outcomes.append("Total Goals Under 2.5")
-            
-            if (h_goals + a_goals) > 3.5: real_outcomes.append("Total Goals Over 3.5")
-            else: real_outcomes.append("Total Goals Under 3.5")
-            
+            for val in [1.5, 2.5, 3.5]:
+                if (h_goals + a_goals) > val: real_outcomes.append(f"Total Goals Over {val}")
+                else: real_outcomes.append(f"Total Goals Under {val}")
+                
             if h_goals > 0 and a_goals > 0: real_outcomes.append("BTTS (Yes)")
             else: real_outcomes.append("BTTS (No)")
             
-            is_win = best_market in real_outcomes
-            min_odd = 1 / pred_prob
-            
             trades.append({
-                "Date": match_date, "Match": f"{h_team} v {a_team}", "Score": f"{int(h_goals)} - {int(a_goals)}",
-                "Model Top Pick": best_market, "Pred. Prob": f"{pred_prob*100:.1f}%", 
-                "Min Fair Odd": round(min_odd, 2), "Outcome": "HIT" if is_win else "MISS"
+                "Date": match_date, "Match": f"{f['teams']['home']['name']} v {f['teams']['away']['name']}", 
+                "Score": f"{int(h_goals)} - {int(a_goals)}", "Model Top Pick": best_market, 
+                "Pred. Prob": f"{pred_prob*100:.1f}%", "Outcome": "HIT" if best_market in real_outcomes else "MISS"
             })
         except: continue
             
-    df_trades = pd.DataFrame(trades).sort_values(by="Date", ascending=False)
-    return df_trades
+    return pd.DataFrame(trades).sort_values(by="Date", ascending=False)
 
 # ==========================================
 # 3. INTERFACE
@@ -332,10 +239,9 @@ st.markdown(f"""
     <div class="nav-group">
         <div class="logo">APEX<span>QUANT</span></div>
         <div class="nav-divider"></div>
-        <div class="nav-subtitle">CORE ENGINE V22.0<br>DIXON-COLES MATRIX</div>
+        <div class="nav-subtitle" style="font-size: 0.8rem; font-weight:600;">CORE ENGINE V3.0<br>xG + ASIAN HANDICAP TENSOR</div>
     </div>
     <div class="nav-group">
-        <div class="status-badge">MATH: POISSON TENSOR (DC ADJ)</div>
         <div class="status-badge status-live">● API STRICT MODE</div>
     </div>
 </div>
@@ -354,139 +260,115 @@ with tab1:
         league_id = GLOBAL_LEAGUES[league_name]
         
         st.markdown("<div style='height: 1px; background: #21262D; margin: 16px 0;'></div>", unsafe_allow_html=True)
-        bankroll = st.number_input("Portfolio Size ($)", value=100000, step=10000, format="%d")
-        kelly_fraction = st.slider("Kelly Fraction", min_value=0.1, max_value=1.0, value=0.25, step=0.05)
+        bankroll = st.number_input("Portfolio Size ($)", value=100000, step=10000)
+        kelly_fraction = st.slider("Kelly Fraction", 0.05, 0.50, 0.20, 0.05)
         st.markdown("<div style='height: 1px; background: #21262D; margin: 16px 0;'></div>", unsafe_allow_html=True)
 
         with st.spinner("Fetching API Data..."):
             fixtures = get_live_fixtures(target_date.strftime('%Y-%m-%d'), league_id)
             
-        m_sel = None
-        btn_run = False
-        
+        m_sel, btn_run = None, False
         if fixtures:
-            m_map = {}
-            for f in fixtures:
-                h_name = f.get('teams', {}).get('home', {}).get('name', 'Unknown')
-                a_name = f.get('teams', {}).get('away', {}).get('name', 'Unknown')
-                date_match = f.get('fixture', {}).get('date', 'Unknown')[:10]
-                m_map[f"{h_name} v {a_name} ({date_match})"] = f
-                
+            m_map = {f"{f['teams']['home']['name']} v {f['teams']['away']['name']} ({f['fixture']['date'][:10]})": f for f in fixtures}
             m_sel = m_map[st.selectbox("Select Asset", list(m_map.keys()))]
             st.markdown("<div class='btn-run'>", unsafe_allow_html=True)
             btn_run = st.button("INITIALIZE ENGINE")
             st.markdown("</div>", unsafe_allow_html=True)
         else:
-            st.markdown("<div style='color:#F85149; font-size:0.85rem; font-weight:600; text-align:center; padding: 12px; border: 1px solid #F85149; border-radius: 4px; background: rgba(248, 81, 73, 0.1); margin-top: 16px;'>NO API FIXTURES AVAILABLE</div>", unsafe_allow_html=True)
-            
+            st.markdown("<div class='safe-error'><div class='safe-error-title'>NO API FIXTURES</div></div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
     if m_sel and btn_run:
-        with st.spinner("Calculating Dixon-Coles Probability Tensors..."):
+        with st.spinner("Calculating xG and Dixon-Coles Probability Tensors..."):
             try:
-                h_id = m_sel.get('teams', {}).get('home', {}).get('id')
-                a_id = m_sel.get('teams', {}).get('away', {}).get('id')
-                h_name = m_sel.get('teams', {}).get('home', {}).get('name', 'Home Team')
-                a_name = m_sel.get('teams', {}).get('away', {}).get('name', 'Away Team')
+                h_name, a_name = m_sel['teams']['home']['name'], m_sel['teams']['away']['name']
+                h_stats = get_real_stats(m_sel['teams']['home']['id'], league_id)
+                a_stats = get_real_stats(m_sel['teams']['away']['id'], league_id)
                 
-                h_stats = get_real_stats(h_id, league_id)
-                a_stats = get_real_stats(a_id, league_id)
+                # Dynamic xG Lambdas
+                lam_h, lam_a = calculate_xg_lambdas(h_stats, a_stats)
+                sys_probs, score_matrix = exact_poisson_matrix(lam_h, lam_a, max_goals=8)
                 
-                lam_h, lam_a = calculate_lambdas(h_stats, a_stats)
-                sys_probs, score_matrix = exact_poisson_matrix(lam_h, lam_a, max_goals=6)
-                
-                raw_odds = {}
-                raw_odds_api = fetch_api_safe("odds", {"fixture": m_sel['fixture']['id'], "bookmaker": 8})
-                
-                # Leitura expandida de mercados API
-                if raw_odds_api and raw_odds_api[0].get('bookmakers'):
-                    bets = raw_odds_api[0]['bookmakers'][0].get('bets', [])
-                    for bet in bets:
-                        name = bet.get('name', '')
-                        vals = {str(v.get('value', '')): float(v.get('odd', 0.0)) for v in bet.get('values', [])}
-                        if name == 'Match Winner':
-                            if 'Home' in vals: raw_odds["Home Win"] = vals['Home']
-                            if 'Draw' in vals: raw_odds["Draw"] = vals['Draw']
-                            if 'Away' in vals: raw_odds["Away Win"] = vals['Away']
-                        elif name == 'Goals Over/Under':
-                            for k, v in vals.items(): raw_odds[f"Total Goals {k}"] = v
-                        elif name == 'Both Teams Score':
-                            if 'Yes' in vals: raw_odds["BTTS (Yes)"] = vals['Yes']
-                            if 'No' in vals: raw_odds["BTTS (No)"] = vals['No']
-                
-                bookie_margin = calculate_bookmaker_margin(raw_odds)
+                # Fetch & Parse Odds (Incl. Asian Handicap)
+                odds_api = fetch_api_safe("odds", {"fixture": m_sel['fixture']['id'], "bookmaker": 8})
                 valid_markets = []
-                best_bet = None
                 
-                if raw_odds:
-                    true_bookie_probs = extract_true_odds(raw_odds)
-                    for mkt, odd in raw_odds.items():
-                        sys_p = sys_probs.get(mkt, 0)
-                        if sys_p == 0: continue
-                        
-                        book_true_p = true_bookie_probs.get(mkt, 1/odd) 
-                        edge = (sys_p / book_true_p) - 1
-                        kelly_val = calculate_adjusted_kelly(sys_p, odd, kelly_fraction) if edge > 0 else 0
-                        
-                        valid_markets.append({
-                            "Market": mkt, "BookOdd": odd, "SysProb": sys_p, "BookTrueProb": book_true_p,
-                            "Edge": edge, "Kelly": kelly_val
-                        })
-                    
-                    safe_bets = [m for m in valid_markets if m['Edge'] > 0.01]
-                    if safe_bets: best_bet = max(safe_bets, key=lambda x: x['Kelly'])
-                    
+                if odds_api and odds_api[0].get('bookmakers'):
+                    for bet in odds_api[0]['bookmakers'][0].get('bets', []):
+                        b_name = bet.get('name', '')
+                        for v in bet.get('values', []):
+                            val_str, odd = str(v.get('value', '')), float(v.get('odd', 0))
+                            prob = 0
+                            market_label = ""
+                            
+                            if b_name == 'Match Winner':
+                                market_label = f"{val_str} Win" if val_str != 'Draw' else 'Draw'
+                                prob = sys_probs.get(market_label, 0)
+                            elif b_name == 'Goals Over/Under':
+                                market_label = f"Total Goals {val_str}"
+                                prob = sys_probs.get(market_label, 0)
+                            elif b_name == 'Both Teams Score':
+                                market_label = f"BTTS ({val_str})"
+                                prob = sys_probs.get(market_label, 0)
+                            elif b_name == 'Asian Handicap':
+                                try:
+                                    # Parse "Home -1.5", "Away +0.5" etc.
+                                    parts = val_str.split(" ")
+                                    if len(parts) >= 2:
+                                        is_home = (parts[0].lower() == 'home')
+                                        line = float(parts[1])
+                                        market_label = f"Asian Handicap {val_str}"
+                                        prob = get_asian_handicap_prob(score_matrix, line, is_home)
+                                except: pass
+                            
+                            if prob > 0:
+                                edge = (prob * odd) - 1
+                                kelly = calculate_adjusted_kelly(prob, odd, kelly_fraction) if edge > 0 else 0
+                                valid_markets.append({
+                                    "Market": market_label, "BookOdd": odd, "SysProb": prob, "Edge": edge, "Kelly": kelly
+                                })
+                                
+                safe_bets = [m for m in valid_markets if m['Edge'] > 0.01]
+                best_bet = max(safe_bets, key=lambda x: x['Kelly']) if safe_bets else None
+                
             except Exception as e:
-                 st.markdown(f"<div class='safe-error'><div class='safe-error-title'>Execution Error</div><div class='safe-error-msg'>Required parameters missing from API. {str(e)}</div></div>", unsafe_allow_html=True)
+                 st.markdown(f"<div class='safe-error'><div class='safe-error-title'>Execution Error</div><div>{str(e)}</div></div>", unsafe_allow_html=True)
                  st.stop()
             
         with col_exec:
-            b_margin_ui = f"{bookie_margin*100:.1f}%" if bookie_margin else "UNAVAILABLE"
-            m_color = "hl-red" if bookie_margin and bookie_margin > 0.08 else "hl-blue"
-            
+            # 1. xG Projection Metrics
             st.markdown(f"""
             <div class='metric-grid'>
-                <div class='metric-card'><div class='metric-card-title'>{h_name} Eval xG</div><div class='metric-card-val'>{lam_h:.2f}</div></div>
-                <div class='metric-card'><div class='metric-card-title'>{a_name} Eval xG</div><div class='metric-card-val'>{lam_a:.2f}</div></div>
-                <div class='metric-card'><div class='metric-card-title'>Bookmaker Overround</div><div class='metric-card-val {m_color}'>{b_margin_ui}</div></div>
+                <div class='metric-card'><div class='metric-card-title'>{h_name} Eval xG</div><div class='metric-card-val hl-blue'>{lam_h:.2f}</div></div>
+                <div class='metric-card'><div class='metric-card-title'>{a_name} Eval xG</div><div class='metric-card-val hl-blue'>{lam_a:.2f}</div></div>
+                <div class='metric-card'><div class='metric-card-title'>Projected Total Goals</div><div class='metric-card-val hl-green'>{lam_h+lam_a:.2f}</div></div>
             </div>
             """, unsafe_allow_html=True)
 
             col_alpha, col_chart = st.columns([1.1, 1], gap="large")
             
             with col_alpha:
-                if not raw_odds:
-                    st.markdown("""<div class='grid-panel' style='height: 100%; display: flex; align-items: center; justify-content: center;'><div class='data-val' style='text-align: center; color: #8B949E;'>NO MARKET DATA.<br><span style='font-size: 0.8rem; font-weight: 400;'>Strict Mode active. No synthetic odds injected. API lines missing.</span></div></div>""", unsafe_allow_html=True)
-                elif best_bet:
+                if best_bet:
                     dollar_sz = (best_bet['Kelly']/100) * bankroll
-                    expected_clv = best_bet['Edge'] * 100 * 0.4
-                    
                     st.markdown(f"""
-    <div class='trade-signal'>
-        <div class='panel-title' style='color:#58A6FF; border-color:#21262D; margin-bottom: 12px;'>PRIME EXECUTION SIGNAL</div>
-        <div class='trade-asset'>{best_bet['Market']}</div>
-        <div class='trade-odd'>@ {best_bet['BookOdd']:.3f}</div>
-        <div class='data-row'><span class='data-lbl'>System Pure Probability</span><span class='data-val'>{best_bet['SysProb']*100:.2f}%</span></div>
-        <div class='data-row'><span class='data-lbl'>Bookmaker Devig Prob</span><span class='data-val'>{best_bet['BookTrueProb']*100:.2f}%</span></div>
-        <div class='data-row'><span class='data-lbl'>Calculated Edge</span><span class='data-val hl-green'>+{best_bet['Edge']*100:.2f}%</span></div>
-        <div class='data-row'><span class='data-lbl'>Expected CLV Drop</span><span class='data-val hl-blue'>+{expected_clv:.2f}%</span></div>
-        <div class='data-row' style='margin-top:12px; border-top: 1px solid #30363D; padding-top: 12px;'><span class='data-lbl'>Allocation Size</span><span class='data-val'>${dollar_sz:,.0f} ({best_bet['Kelly']:.2f}%)</span></div>
-    </div>
-    """, unsafe_allow_html=True)
+                    <div class='trade-signal'>
+                        <div class='panel-title' style='color:#58A6FF; border-color:#21262D; margin-bottom: 12px;'>PRIME EXECUTION SIGNAL</div>
+                        <div class='trade-asset'>{best_bet['Market']}</div>
+                        <div class='trade-odd'>@ {best_bet['BookOdd']:.3f}</div>
+                        <div class='data-row'><span class='data-lbl'>System Pure Probability</span><span class='data-val'>{best_bet['SysProb']*100:.2f}%</span></div>
+                        <div class='data-row'><span class='data-lbl'>Calculated Edge</span><span class='data-val hl-green'>+{best_bet['Edge']*100:.2f}%</span></div>
+                        <div class='data-row' style='margin-top:12px; border-top: 1px solid #30363D; padding-top: 12px;'><span class='data-lbl'>Allocation Size</span><span class='data-val hl-blue'>${dollar_sz:,.0f} ({best_bet['Kelly']:.2f}%)</span></div>
+                    </div>
+                    """, unsafe_allow_html=True)
                 else:
-                    st.markdown("""<div class='grid-panel' style='height: 100%; display: flex; align-items: center; justify-content: center;'><div class='data-val' style='text-align: center; color: #8B949E;'>NEGATIVE EXPECTED VALUE.<br><span style='font-size: 0.8rem; font-weight: 400;'>Market is mathematically efficient. No edge found. Capital protected.</span></div></div>""", unsafe_allow_html=True)
+                    st.markdown("""<div class='grid-panel' style='height: 100%; display: flex; align-items: center; justify-content: center;'><div class='data-val' style='text-align: center; color: #8B949E;'>NO MARKET DATA OR NO EDGE.<br>Capital protected.</div></div>""", unsafe_allow_html=True)
 
             with col_chart:
-                st.markdown("""<div class='grid-panel' style='padding-bottom: 0px; height: 100%; box-sizing: border-box;'><div class='panel-title'>Exact Score Tensor Matrix</div>""", unsafe_allow_html=True)
-                
+                st.markdown("""<div class='grid-panel' style='padding-bottom: 0px; height: 100%;'><div class='panel-title'>Exact Score Tensor Matrix (8x8)</div>""", unsafe_allow_html=True)
                 fig_heat = go.Figure(data=go.Heatmap(
-                    z=score_matrix.T, 
-                    x=[0, 1, 2, 3, 4, 5], y=[0, 1, 2, 3, 4, 5],
-                    colorscale=[[0, '#0D1117'], [1, '#238636']], 
-                    text=np.round(score_matrix.T, 1), texttemplate="%{text}%", textfont={"color":"white", "size":10, "family":"JetBrains Mono"},
-                    showscale=False, xgap=2, ygap=2
+                    z=(score_matrix * 100).T, x=list(range(8)), y=list(range(8)), colorscale=[[0, '#0D1117'], [1, '#238636']], 
+                    text=np.round((score_matrix * 100).T, 1), texttemplate="%{text}%", textfont={"color":"white", "size":9, "family":"JetBrains Mono"}, showscale=False
                 ))
-                
                 fig_heat.update_layout(
                     template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=260, margin=dict(l=30, r=10, t=10, b=30),
                     xaxis=dict(title=f"{a_name}", title_font=dict(size=10, color="#8B949E"), tickfont=dict(size=10, color="#8B949E"), side="bottom"),
@@ -497,77 +379,45 @@ with tab1:
 
             if valid_markets:
                 st.markdown("""<div class='grid-panel'><div class='panel-title'>Mathematical Pricing Matrix</div>""", unsafe_allow_html=True)
-                clean_markets = sorted(valid_markets, key=lambda x: x['SysProb'], reverse=True)
+                clean_markets = sorted(valid_markets, key=lambda x: x['Edge'], reverse=True)
                 
                 st.markdown("<div class='table-container'>", unsafe_allow_html=True)
-                table_html = "<table class='ob-table'><tr><th>Market</th><th>Live Odd</th><th>Sys Prob</th><th>Edge</th><th>Rec. Size</th></tr>"
-                for m in clean_markets[:8]: 
-                    edge_val = m['Edge'] * 100
-                    e_color = "hl-green" if edge_val > 0 else "hl-red"
-                    e_sign = "+" if edge_val > 0 else ""
+                table_html = "<table class='ob-table'><tr><th>Market</th><th>Odd</th><th>Sys Prob</th><th>Edge</th><th>Rec. Size</th></tr>"
+                for m in clean_markets[:10]: 
+                    e_color = "hl-green" if m['Edge'] > 0 else "hl-red"
                     table_html += f"<tr><td>{m['Market']}</td><td style='color:#58A6FF; font-weight:700;'>{m['BookOdd']:.3f}</td>"
-                    table_html += f"<td>{m['SysProb']*100:.1f}%</td>"
-                    table_html += f"<td class='{e_color}'>{e_sign}{edge_val:.2f}%</td>"
-                    table_html += f"<td style='color:#8B949E;'>{m['Kelly']:.2f}%</td></tr>"
-                table_html += "</table></div>"
+                    table_html += f"<td>{m['SysProb']*100:.1f}%</td><td class='{e_color}'>{m['Edge']*100:+.2f}%</td><td style='color:#8B949E;'>{m['Kelly']:.2f}%</td></tr>"
+                table_html += "</table></div></div>", unsafe_allow_html=True)
                 st.markdown(table_html, unsafe_allow_html=True)
-                st.markdown("""</div>""", unsafe_allow_html=True)
 
 # -----------------------------------------------------
 # TAB 2: PURE PREDICTIVE AUDIT
 # -----------------------------------------------------
 with tab2:
     st.markdown("""<div class='grid-panel' style='margin-bottom: 20px;'><div class='panel-title'>Model Predictive Accuracy (Pure API Historical Verification)</div>""", unsafe_allow_html=True)
-    
     with st.spinner(f"Evaluating Deterministic Model Accuracy against historical outcomes for {league_name}..."):
-        try:
-            df_ledger = get_verified_history(GLOBAL_LEAGUES[league_name])
-        except Exception as e:
-            df_ledger = pd.DataFrame()
-            st.markdown("""<div class='safe-error'><div class='safe-error-title'>API LIMIT REACHED</div><div class='safe-error-msg'>Unable to fetch historical ledger. Check your API-Sports quota.</div></div>""", unsafe_allow_html=True)
+        df_ledger = get_verified_history(GLOBAL_LEAGUES[league_name])
     
     if len(df_ledger) > 0:
-        total_matches = len(df_ledger)
-        hits = len(df_ledger[df_ledger['Outcome'] == 'HIT'])
-        hit_rate = (hits / total_matches) * 100 if total_matches > 0 else 0
-        
-        brier_sum = 0
-        for _, row in df_ledger.iterrows():
-            prob_str = row['Pred. Prob'].replace('%', '')
-            prob = float(prob_str) / 100
-            actual = 1.0 if row['Outcome'] == 'HIT' else 0.0
-            brier_sum += (prob - actual)**2
-        brier_score = brier_sum / total_matches if total_matches > 0 else 0
-        
-        hr_color = "hl-green" if hit_rate > 50 else "hl-red"
+        hit_rate = (len(df_ledger[df_ledger['Outcome'] == 'HIT']) / len(df_ledger)) * 100
         
         st.markdown(f"""
-        <div class='metric-grid' style='grid-template-columns: repeat(4, 1fr);'>
-            <div class='metric-card'><div class='metric-card-title'>Evaluated Matches</div><div class='metric-card-val' style='color:#E6EDF3;'>{total_matches}</div></div>
-            <div class='metric-card'><div class='metric-card-title'>Model Hit Rate</div><div class='metric-card-val {hr_color}'>{hit_rate:.1f}%</div></div>
-            <div class='metric-card'><div class='metric-card-title'>Brier Score (Acc)</div><div class='metric-card-val hl-blue'>{brier_score:.3f}</div></div>
+        <div class='metric-grid' style='grid-template-columns: repeat(3, 1fr);'>
+            <div class='metric-card'><div class='metric-card-title'>Evaluated Matches</div><div class='metric-card-val'>{len(df_ledger)}</div></div>
+            <div class='metric-card'><div class='metric-card-title'>Model Hit Rate</div><div class='metric-card-val hl-blue'>{hit_rate:.1f}%</div></div>
             <div class='metric-card'><div class='metric-card-title'>Data Purity</div><div class='metric-card-val hl-green'>100% REAL</div></div>
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown("<div class='table-container' style='margin-top: 15px;'>", unsafe_allow_html=True)
-        ledger_html = "<table class='ob-table'><tr><th>Date</th><th>Match</th><th>Final Score</th><th>Model Top Pick</th><th>Pred. Prob</th><th>Min Fair Odd</th><th>Outcome</th></tr>"
-        
-        for _, row in df_ledger.head(40).iterrows():
+        st.markdown("<div class='table-container'>", unsafe_allow_html=True)
+        ledger_html = "<table class='ob-table'><tr><th>Date</th><th>Match</th><th>Final Score</th><th>Model Top Pick</th><th>Pred. Prob</th><th>Outcome</th></tr>"
+        for _, row in df_ledger.head(30).iterrows():
             res = str(row.get('Outcome', 'MISS'))
-            badge_class = "badge-win" if res == "HIT" else "badge-loss"
-            
-            ledger_html += f"<tr>"
-            ledger_html += f"<td style='color:#8B949E; font-size: 0.75rem;'>{row.get('Date', '')}</td>"
-            ledger_html += f"<td>{row.get('Match', '')}</td>"
-            ledger_html += f"<td style='color:#E6EDF3; font-weight:600;'>{row.get('Score', '')}</td>"
-            ledger_html += f"<td>{row.get('Model Top Pick', '')}</td>"
-            ledger_html += f"<td style='color:#58A6FF;'>{row.get('Pred. Prob', '')}</td>"
-            ledger_html += f"<td style='color:#8B949E; font-family: JetBrains Mono;'>{row.get('Min Fair Odd', 0):.2f}</td>"
-            ledger_html += f"<td><span class='{badge_class}'>{res}</span></td>"
-            ledger_html += f"</tr>"
+            b_class = "badge-win" if res == "HIT" else "badge-loss"
+            ledger_html += f"<tr><td style='color:#8B949E;'>{row.get('Date', '')}</td><td>{row.get('Match', '')}</td>"
+            ledger_html += f"<td style='color:#E6EDF3; font-weight:600;'>{row.get('Score', '')}</td><td>{row.get('Model Top Pick', '')}</td>"
+            ledger_html += f"<td style='color:#58A6FF;'>{row.get('Pred. Prob', '')}</td><td><span class='{b_class}'>{res}</span></td></tr>"
         ledger_html += "</table></div>"
-        
         st.markdown(ledger_html, unsafe_allow_html=True)
     else:
         st.markdown("""<div class='grid-panel'><div class='data-lbl' style='text-align:center;'>No historical data available. Check API Quotas.</div></div>""", unsafe_allow_html=True)
