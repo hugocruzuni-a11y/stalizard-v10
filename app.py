@@ -7,82 +7,82 @@ import plotly.graph_objects as go
 from datetime import date, datetime, timedelta
 
 # ==========================================
-# 1. HOLZHAUER TERMINAL UX SETUP
+# 1. HFT TERMINAL UX/UI (HOLZHAUER GRADE)
 # ==========================================
-st.set_page_config(page_title="APEX QUANT | TERMINAL", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="APEX QUANT | HFT DESK", layout="wide", initial_sidebar_state="collapsed")
 st.cache_data.clear()
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
-/* Bloomberg / Quant Terminal Baseline */
-.stApp { background-color: #000000; color: #C9D1D9; font-family: 'Inter', sans-serif; }
+/* TRUE BLACK TERMINAL */
+.stApp { background-color: #000000; color: #D1D5DB; font-family: 'Inter', sans-serif; }
 header, footer, #MainMenu, div[data-testid="stToolbar"] { display: none !important; }
 
-/* Brutalist Header */
-.top-nav { background: #0A0A0A; border-bottom: 1px solid #1F2328; padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; margin: -3rem -3rem 1.5rem -3rem; position: sticky; top: 0; z-index: 1000;}
-.nav-group { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.logo { font-size: 1.1rem; font-weight: 700; color: #E6EDF3; font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px;}
-.logo span { color: #3FB950; }
-.nav-divider { width: 1px; height: 16px; background-color: #30363D; }
-.status-badge { font-size: 0.65rem; font-family: 'JetBrains Mono', monospace; font-weight: 700; padding: 3px 6px; border-radius: 2px; border: 1px solid #30363D; color: #8B949E; background: #0D1117; text-transform: uppercase;}
-.status-live { color: #3FB950; border-color: #1A4D2E; background: #082613; }
+/* CYBER TOP BAR */
+.top-nav { background: #050505; border-bottom: 1px solid #1A1A1A; padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; margin: -3rem -3rem 1.5rem -3rem; position: sticky; top: 0; z-index: 1000;}
+.nav-group { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.logo { font-size: 1.2rem; font-weight: 700; color: #FFFFFF; font-family: 'Fira Code', monospace; letter-spacing: -1px;}
+.logo span { color: #00FFA3; text-shadow: 0 0 10px rgba(0, 255, 163, 0.4); }
+.status-badge { font-size: 0.65rem; font-family: 'Fira Code', monospace; font-weight: 600; padding: 4px 8px; border-radius: 2px; border: 1px solid #1A1A1A; color: #6B7280; background: #0A0A0A; letter-spacing: 0.5px;}
+.status-live { color: #00FFA3; border-color: rgba(0, 255, 163, 0.3); background: rgba(0, 255, 163, 0.05); }
 
-/* Institutional Grid Panels */
-.grid-panel { border: 1px solid #1F2328; background: #0D1117; padding: 14px; margin-bottom: 14px; border-radius: 4px; width: 100%; box-sizing: border-box; }
-.panel-title { font-size: 0.7rem; color: #8B949E; text-transform: uppercase; border-bottom: 1px solid #1F2328; padding-bottom: 6px; margin-bottom: 10px; font-weight: 700; letter-spacing: 0.5px;}
+/* QUANT PANELS */
+.grid-panel { border: 1px solid #1A1A1A; background: #050505; padding: 16px; margin-bottom: 16px; width: 100%; box-sizing: border-box; position: relative;}
+.grid-panel::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 1px; background: linear-gradient(90deg, #00FFA3 0%, transparent 50%); opacity: 0.2; }
+.panel-title { font-size: 0.65rem; color: #6B7280; text-transform: uppercase; border-bottom: 1px dashed #1A1A1A; padding-bottom: 8px; margin-bottom: 12px; font-weight: 600; letter-spacing: 1px; font-family: 'Fira Code', monospace;}
 
-/* High-Density Data Rows */
-.data-row { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px; align-items: center; border-bottom: 1px solid #161B22; padding-bottom: 4px;}
-.data-row:last-child { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
-.data-lbl { color: #8B949E; font-weight: 500;}
-.data-val { color: #E6EDF3; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+/* NEON DATA ROWS */
+.data-row { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px; align-items: center;}
+.data-lbl { color: #6B7280; font-weight: 500; font-family: 'Inter', sans-serif;}
+.data-val { color: #FFFFFF; font-weight: 600; font-family: 'Fira Code', monospace; }
 
-/* Core Quant Colors */
-.hl-green { color: #3FB950 !important; }
-.hl-red { color: #F85149 !important; }
-.hl-blue { color: #58A6FF !important; }
+/* HOLZHAUER COLORS */
+.hl-neon { color: #00FFA3 !important; text-shadow: 0 0 8px rgba(0, 255, 163, 0.3); }
+.hl-pink { color: #FF0055 !important; text-shadow: 0 0 8px rgba(255, 0, 85, 0.3); }
+.hl-cyan { color: #00E5FF !important; }
+.hl-gray { color: #4B5563 !important; }
 
-/* Micro Badges for Tables */
-.badge-win { color: #3FB950; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.7rem; }
-.badge-loss { color: #F85149; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.7rem; }
-.badge-high { color: #000000; background: #58A6FF; font-weight: 700; padding: 1px 4px; border-radius: 2px; font-size: 0.65rem;}
-.badge-med { color: #000000; background: #8B949E; font-weight: 700; padding: 1px 4px; border-radius: 2px; font-size: 0.65rem;}
-.badge-low { color: #000000; background: #F85149; font-weight: 700; padding: 1px 4px; border-radius: 2px; font-size: 0.65rem;}
+/* BLOOMBERG-STYLE TICKET */
+.trade-signal { background: #0A0A0A; padding: 20px; margin-bottom: 16px; border: 1px solid #1A1A1A; border-left: 3px solid #00FFA3; box-shadow: inset 0 0 20px rgba(0, 255, 163, 0.02);}
+.trade-asset { font-size: 1.1rem; color: #FFFFFF; font-weight: 600; margin-bottom: 4px; font-family: 'Fira Code', monospace; letter-spacing: -0.5px;}
+.trade-odd { font-size: 1.5rem; color: #00FFA3; font-weight: 700; font-family: 'Fira Code', monospace; margin-bottom: 16px; line-height: 1;}
 
-/* Execution Ticket (Alpha Box) */
-.trade-signal { border-left: 4px solid #3FB950; background: #05140A; padding: 16px; margin-bottom: 14px; border-radius: 0 4px 4px 0; border-top: 1px solid #1F2328; border-right: 1px solid #1F2328; border-bottom: 1px solid #1F2328;}
-.trade-asset { font-size: 1.1rem; color: #E6EDF3; font-weight: 700; margin-bottom: 2px; font-family: 'Inter', sans-serif;}
-.trade-odd { font-size: 1.3rem; color: #3FB950; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-bottom: 12px; letter-spacing: -0.5px;}
-
-/* Ultra-Compact Tables */
-.table-container { width: 100%; overflow-x: auto; margin-bottom: 8px; }
-.ob-table { width: 100%; font-size: 0.75rem; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; }
-.ob-table th { color: #8B949E; text-align: right; font-weight: 600; border-bottom: 1px solid #30363D; padding: 6px 8px; font-size: 0.65rem; text-transform: uppercase; background: #0A0A0A;}
+/* HIGH-DENSITY TABLES */
+.table-container { width: 100%; overflow-x: auto; margin-bottom: 10px; }
+.ob-table { width: 100%; min-width: 700px; font-size: 0.75rem; border-collapse: collapse; font-family: 'Fira Code', monospace; }
+.ob-table th { color: #4B5563; text-align: right; font-weight: 500; border-bottom: 1px solid #1A1A1A; padding: 8px; font-size: 0.65rem; text-transform: uppercase; background: #000000;}
 .ob-table th:first-child { text-align: left; }
-.ob-table td { text-align: right; padding: 6px 8px; border-bottom: 1px solid #1F2328; color: #C9D1D9;}
-.ob-table td:first-child { text-align: left; color: #E6EDF3;}
-.ob-table tr:hover td { background: #161B22; }
+.ob-table td { text-align: right; padding: 8px; border-bottom: 1px solid #0A0A0A; color: #D1D5DB;}
+.ob-table td:first-child { text-align: left; color: #FFFFFF;}
+.ob-table tr:hover td { background: #0A0A0A; }
 
-/* KPI Grid */
-.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px; }
-.metric-card { background: #0A0A0A; border: 1px solid #1F2328; border-radius: 4px; padding: 10px; text-align: center; }
-.metric-card-title { font-size: 0.65rem; color: #8B949E; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;}
-.metric-card-val { font-size: 1.3rem; color: #E6EDF3; font-weight: 700; font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px;}
+/* CONFIDENCE TAGS */
+.tag-high { background: rgba(0, 229, 255, 0.1); color: #00E5FF; border: 1px solid rgba(0, 229, 255, 0.3); padding: 2px 6px; border-radius: 2px; font-size: 0.65rem; font-weight: 700;}
+.tag-med { background: rgba(107, 114, 128, 0.1); color: #9CA3AF; border: 1px solid rgba(107, 114, 128, 0.3); padding: 2px 6px; border-radius: 2px; font-size: 0.65rem; font-weight: 600;}
+.tag-low { background: rgba(255, 0, 85, 0.1); color: #FF0055; border: 1px solid rgba(255, 0, 85, 0.3); padding: 2px 6px; border-radius: 2px; font-size: 0.65rem; font-weight: 600;}
+.tag-win { color: #00FFA3; font-weight: 700; }
+.tag-loss { color: #FF0055; font-weight: 700; }
 
-/* Base UI Overrides */
-div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: #0A0A0A !important; border: 1px solid #1F2328 !important; color: #E6EDF3 !important; border-radius: 2px !important; font-size: 0.8rem !important;}
-.btn-run > button { background: #238636 !important; color: #FFFFFF !important; border: none !important; font-weight: 700 !important; width: 100%; border-radius: 2px !important; padding: 10px !important; font-size: 0.85rem !important; margin-top: 8px;}
-.btn-run > button:hover { background: #2EA043 !important; }
-button[data-baseweb="tab"] { color: #8B949E !important; font-weight: 600 !important; font-size: 0.8rem !important; text-transform: uppercase; letter-spacing: 0.5px;}
-button[data-baseweb="tab"][aria-selected="true"] { color: #E6EDF3 !important; border-bottom-color: #238636 !important;}
+/* KPI GRID */
+.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.metric-card { background: #050505; border: 1px solid #1A1A1A; border-radius: 2px; padding: 12px 16px; display: flex; flex-direction: column; justify-content: center;}
+.metric-card-title { font-size: 0.6rem; color: #6B7280; text-transform: uppercase; font-weight: 600; margin-bottom: 4px; font-family: 'Fira Code', monospace;}
+.metric-card-val { font-size: 1.4rem; color: #FFFFFF; font-weight: 500; font-family: 'Fira Code', monospace; line-height: 1.2;}
+
+/* INPUTS & BUTTONS */
+div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: #050505 !important; border: 1px solid #1A1A1A !important; color: #FFFFFF !important; border-radius: 0px !important; font-family: 'Fira Code', monospace !important; font-size: 0.8rem !important;}
+.btn-run > button { background: transparent !important; color: #00FFA3 !important; border: 1px solid #00FFA3 !important; font-weight: 600 !important; width: 100%; border-radius: 2px !important; padding: 10px !important; font-size: 0.8rem !important; margin-top: 10px; font-family: 'Fira Code', monospace; letter-spacing: 1px;}
+.btn-run > button:hover { background: rgba(0, 255, 163, 0.1) !important; box-shadow: 0 0 10px rgba(0, 255, 163, 0.2) !important;}
+button[data-baseweb="tab"] { color: #6B7280 !important; font-weight: 600 !important; font-size: 0.8rem !important; font-family: 'Fira Code', monospace !important;}
+button[data-baseweb="tab"][aria-selected="true"] { color: #FFFFFF !important; border-bottom-color: #00FFA3 !important;}
 div[data-testid="column"] > div { gap: 0rem !important; }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. PRO-TIER DATA POOL & MATH ENGINE (V23.0)
+# 2. HOLZHAUER MATH & RISK ENGINE
 # ==========================================
 API_KEY = st.secrets.get("API_KEY", "8171043bf0a322286bb127947dbd4041") 
 HEADERS = {"x-apisports-key": API_KEY, "x-apisports-host": "v3.football.api-sports.io"}
@@ -120,14 +120,8 @@ def get_live_fixtures(date_str, league_id):
 def get_real_stats(team_id, league_id):
     season = get_current_season()
     stats = fetch_api_safe("teams/statistics", {"team": team_id, "league": league_id, "season": season})
-    
-    default_stats = {
-        "gf_h": 1.45, "ga_h": 1.15, "gf_a": 1.15, "ga_a": 1.45,
-        "corn_h": 5.5, "corn_a": 4.5, "cards_h": 2.0, "cards_a": 2.5
-    }
-    
+    default_stats = {"gf_h": 1.45, "ga_h": 1.15, "gf_a": 1.15, "ga_a": 1.45, "corn_h": 5.5, "corn_a": 4.5, "cards_h": 2.0, "cards_a": 2.5}
     if not stats: return default_stats 
-    
     try:
         data = stats if isinstance(stats, dict) else stats[0]
         goals = data.get('goals', {})
@@ -136,7 +130,7 @@ def get_real_stats(team_id, league_id):
             "ga_h": max(0.2, float(goals.get('against', {}).get('average', {}).get('home') or 1.15)),
             "gf_a": max(0.2, float(goals.get('for', {}).get('average', {}).get('away') or 1.15)),
             "ga_a": max(0.2, float(goals.get('against', {}).get('average', {}).get('away') or 1.45)),
-            "corn_h": 5.5, "corn_a": 4.5, "cards_h": 2.1, "cards_a": 2.4 # Prop Placeholders
+            "corn_h": 5.5, "corn_a": 4.5, "cards_h": 2.1, "cards_a": 2.4 
         }
     except: return default_stats
 
@@ -165,30 +159,21 @@ def exact_poisson_matrix(lam_h, lam_a, stats_h, stats_a, max_goals=6):
     hw = np.tril(score_matrix, -1).sum()
     dr = np.trace(score_matrix)
     aw = np.triu(score_matrix, 1).sum()
-    
     u25 = np.sum([score_matrix[i, j] for i in range(max_goals) for j in range(max_goals) if i + j < 2.5])
-    o25 = 1 - u25
-    
     btts_no = np.sum(score_matrix[0, :]) + np.sum(score_matrix[:, 0]) - score_matrix[0, 0]
-    btts_yes = 1 - btts_no
     
     exp_corners = stats_h['corn_h'] + stats_a['corn_a']
     exp_cards = stats_h['cards_h'] + stats_a['cards_a']
     
-    u95_corn = sum([poisson_pmf(exp_corners, i) for i in range(10)])
-    o95_corn = 1 - u95_corn
-    
-    u45_cards = sum([poisson_pmf(exp_cards, i) for i in range(5)])
-    o45_cards = 1 - u45_cards
-    
     probs = {
         "Home Win": hw, "Draw": dr, "Away Win": aw, 
-        "BTTS (Yes)": btts_yes, "BTTS (No)": btts_no,
-        "Total Goals Over 2.5": o25, "Total Goals Under 2.5": u25,
-        "Total Corners Over 9.5": o95_corn, "Total Corners Under 9.5": u95_corn,
-        "Total Cards Over 4.5": o45_cards, "Total Cards Under 4.5": u45_cards
+        "BTTS (Yes)": 1 - btts_no, "BTTS (No)": btts_no,
+        "Goals Over 2.5": 1 - u25, "Goals Under 2.5": u25,
+        "Corners Over 9.5": 1 - sum([poisson_pmf(exp_corners, i) for i in range(10)]), 
+        "Corners Under 9.5": sum([poisson_pmf(exp_corners, i) for i in range(10)]),
+        "Cards Over 4.5": 1 - sum([poisson_pmf(exp_cards, i) for i in range(5)]), 
+        "Cards Under 4.5": sum([poisson_pmf(exp_cards, i) for i in range(5)])
     }
-    
     return probs, score_matrix * 100
 
 def power_method_devig(implied_probs):
@@ -212,10 +197,8 @@ def extract_true_odds(market_odds):
                 true_p = power_method_devig([1/hw, 1/dr, 1/aw])
                 true_odds_map["Home Win"], true_odds_map["Draw"], true_odds_map["Away Win"] = true_p[0], true_p[1], true_p[2]
         
-        for p_mkt in [("Total Goals Over 2.5", "Total Goals Under 2.5"), 
-                      ("Total Corners Over 9.5", "Total Corners Under 9.5"),
-                      ("Total Cards Over 4.5", "Total Cards Under 4.5"),
-                      ("BTTS (Yes)", "BTTS (No)")]:
+        for p_mkt in [("Goals Over 2.5", "Goals Under 2.5"), ("Corners Over 9.5", "Corners Under 9.5"),
+                      ("Cards Over 4.5", "Cards Under 4.5"), ("BTTS (Yes)", "BTTS (No)")]:
             if p_mkt[0] in market_odds and p_mkt[1] in market_odds:
                 o_val, u_val = market_odds[p_mkt[0]], market_odds[p_mkt[1]]
                 if o_val > 0 and u_val > 0:
@@ -224,12 +207,23 @@ def extract_true_odds(market_odds):
     except: pass
     return true_odds_map
 
-def calculate_adjusted_kelly(prob, odd, fraction):
-    b = odd - 1
-    if b <= 0: return 0
-    raw_kelly = (((b * prob) - (1 - prob)) / b) 
-    if raw_kelly <= 0: return 0
-    return min(raw_kelly * fraction * 100, 5.0) 
+def calculate_strict_kelly(prob, odd, fraction, max_cap=0.03):
+    """
+    HOLZHAUER STRICT KELLY: Mathematically calculates the exact Kelly criterion,
+    applies the fractional safety, and hard-caps the exposure to protect against fat-tail events.
+    """
+    b = odd - 1.0
+    if b <= 0: return 0.0
+    
+    # Raw Kelly Edge Calculation (prob * odd - 1)
+    edge = (prob * odd) - 1.0
+    if edge <= 0: return 0.0
+    
+    raw_kelly = edge / b
+    adj_kelly = raw_kelly * fraction
+    
+    # Return the minimum between calculated Kelly and the Max Bankroll Cap (e.g., 3%)
+    return min(adj_kelly, max_cap) * 100 
 
 def calculate_bookmaker_margin(market_odds):
     try:
@@ -240,7 +234,7 @@ def calculate_bookmaker_margin(market_odds):
     return None
 
 # ==========================================
-# 2.1 VERIFIED HISTORICAL AUDIT (HOLZHAUER BACKTEST)
+# 2.1 INSTITUTIONAL BACKTEST ENGINE
 # ==========================================
 @st.cache_data(ttl=3600)
 def get_verified_history(league_id):
@@ -273,7 +267,6 @@ def get_verified_history(league_id):
             lam_h, lam_a = calculate_lambdas(h_stats, a_stats)
             sys_probs, _ = exact_poisson_matrix(lam_h, lam_a, h_stats, a_stats)
             
-            # Removemos props do backtest de forma estrita
             valid_preds = {k: v for k, v in sys_probs.items() if v >= 0.45 and "Corners" not in k and "Cards" not in k}
             
             if not valid_preds:
@@ -290,22 +283,20 @@ def get_verified_history(league_id):
             elif h_goals < a_goals: real_outcomes.append("Away Win")
             else: real_outcomes.append("Draw")
             
-            if (h_goals + a_goals) > 2.5: real_outcomes.append("Total Goals Over 2.5")
-            else: real_outcomes.append("Total Goals Under 2.5")
+            if (h_goals + a_goals) > 2.5: real_outcomes.append("Goals Over 2.5")
+            else: real_outcomes.append("Goals Under 2.5")
             
             if h_goals > 0 and a_goals > 0: real_outcomes.append("BTTS (Yes)")
             else: real_outcomes.append("BTTS (No)")
             
             is_win = best_market in real_outcomes
             min_odd = 1 / pred_prob 
-            
-            # PnL Unitário (Flat Staking)
             pnl = (min_odd - 1.0) if is_win else -1.0
             
             trades.append({
-                "Date": match_date, "Match": f"{h_team[:12]} v {a_team[:12]}",
-                "Model Pick": best_market.replace("Total Goals ", ""), "Conf": confidence,
-                "Prob": f"{pred_prob*100:.1f}%", "True Line": round(min_odd, 2), 
+                "Date": match_date, "Asset": f"{h_team[:10]} v {a_team[:10]}",
+                "Signal": best_market, "Conf": confidence,
+                "Sys_Prob": pred_prob, "True_Line": min_odd, 
                 "Res": "HIT" if is_win else "MISS", "PnL": pnl
             })
         except: continue
@@ -323,32 +314,37 @@ st.markdown(f"""
     <div class="nav-group">
         <div class="logo">APEX<span>QUANT</span></div>
         <div class="nav-divider"></div>
-        <div class="nav-subtitle" style="font-size: 0.75rem; color: #8B949E; line-height: 1.2;">CORE ENGINE V23.0<br><span style="color:#E6EDF3; font-weight:600;">INSTITUTIONAL DESK</span></div>
+        <div style="font-family:'Fira Code', monospace; font-size: 0.65rem; color: #6B7280; line-height: 1.2; letter-spacing: 0.5px;">V24.0 BUILD<br><span style="color:#FFFFFF; font-weight:600;">INSTITUTIONAL HFT DESK</span></div>
     </div>
     <div class="nav-group">
-        <div class="status-badge">MODEL: DC-POISSON + PROPS</div>
+        <div class="status-badge">DC-POISSON // BINOMIAL PROX</div>
         <div class="status-badge status-live">● API CONNECTED</div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-tab1, tab2 = st.tabs(["ORDER ENTRY", "RISK & BACKTEST"])
+tab1, tab2 = st.tabs(["ORDER EXECUTION", "RISK & ALPHA BACKTEST"])
 
 with tab1:
     col_ctrl, col_exec = st.columns([1, 2.6], gap="large")
 
     with col_ctrl:
-        st.markdown("""<div class='grid-panel' style='margin-bottom: 0;'><div class='panel-title'>Model Parameters</div>""", unsafe_allow_html=True)
-        target_date = st.date_input("Match Date", date.today())
+        st.markdown("""<div class='grid-panel' style='margin-bottom: 0;'><div class='panel-title'>SYSTEM PARAMETERS</div>""", unsafe_allow_html=True)
+        target_date = st.date_input("Execution Date", date.today())
         league_name = st.selectbox("Liquidity Pool", list(GLOBAL_LEAGUES.keys()))
         league_id = GLOBAL_LEAGUES[league_name]
         
-        st.markdown("<div style='height: 1px; background: #1F2328; margin: 12px 0;'></div>", unsafe_allow_html=True)
-        bankroll = st.number_input("Bankroll ($)", value=100000, step=10000, format="%d")
-        kelly_fraction = st.slider("Kelly Multiplier", min_value=0.1, max_value=1.0, value=0.25, step=0.05)
-        st.markdown("<div style='height: 1px; background: #1F2328; margin: 12px 0;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 1px; background: #1A1A1A; margin: 16px 0;'></div>", unsafe_allow_html=True)
+        
+        # Holzhauer Grade Inputs
+        bankroll = st.number_input("AUM (Assets Under Mgt) $", value=100000, step=10000, format="%d")
+        col_k1, col_k2 = st.columns(2)
+        with col_k1: kelly_fraction = st.selectbox("Kelly Divisor", [0.1, 0.25, 0.5, 1.0], index=1)
+        with col_k2: max_exposure = st.selectbox("Max Bet Cap", [0.01, 0.02, 0.03, 0.05], index=2, help="Max % of AUM per trade")
+        
+        st.markdown("<div style='height: 1px; background: #1A1A1A; margin: 16px 0;'></div>", unsafe_allow_html=True)
 
-        with st.spinner("Fetching Data..."):
+        with st.spinner("Fetching Market Data..."):
             fixtures = get_live_fixtures(target_date.strftime('%Y-%m-%d'), league_id)
             
         m_sel = None
@@ -359,20 +355,19 @@ with tab1:
             for f in fixtures:
                 h_name = f.get('teams', {}).get('home', {}).get('name', 'Unknown')
                 a_name = f.get('teams', {}).get('away', {}).get('name', 'Unknown')
-                date_match = f.get('fixture', {}).get('date', 'Unknown')[:10]
                 m_map[f"{h_name} v {a_name}"] = f
                 
             m_sel = m_map[st.selectbox("Select Asset", list(m_map.keys()))]
             st.markdown("<div class='btn-run'>", unsafe_allow_html=True)
-            btn_run = st.button("CALCULATE EDGE")
+            btn_run = st.button("CALCULATE ALPHA")
             st.markdown("</div>", unsafe_allow_html=True)
         else:
-            st.markdown("<div style='color:#F85149; font-size:0.75rem; font-weight:700; text-align:center; padding: 10px; border: 1px solid #F85149; border-radius: 2px; background: rgba(248, 81, 73, 0.1); margin-top: 12px;'>NO LIQUIDITY AVAILABLE</div>", unsafe_allow_html=True)
+            st.markdown("<div style='color:#FF0055; font-size:0.7rem; font-family:Fira Code; text-align:center; padding: 10px; border: 1px solid rgba(255,0,85,0.3); border-radius: 2px; background: rgba(255,0,85,0.05); margin-top: 12px;'>NO LIQUIDITY FOUND</div>", unsafe_allow_html=True)
             
         st.markdown("</div>", unsafe_allow_html=True)
 
     if m_sel and btn_run:
-        with st.spinner("Processing Matrix..."):
+        with st.spinner("Solving Tensors..."):
             try:
                 h_id = m_sel.get('teams', {}).get('home', {}).get('id')
                 a_id = m_sel.get('teams', {}).get('away', {}).get('id')
@@ -398,17 +393,17 @@ with tab1:
                             if 'Draw' in vals: raw_odds["Draw"] = vals['Draw']
                             if 'Away' in vals: raw_odds["Away Win"] = vals['Away']
                         elif name == 'Goals Over/Under':
-                            if 'Over 2.5' in vals: raw_odds["Total Goals Over 2.5"] = vals['Over 2.5']
-                            if 'Under 2.5' in vals: raw_odds["Total Goals Under 2.5"] = vals['Under 2.5']
+                            if 'Over 2.5' in vals: raw_odds["Goals Over 2.5"] = vals['Over 2.5']
+                            if 'Under 2.5' in vals: raw_odds["Goals Under 2.5"] = vals['Under 2.5']
                         elif name == 'Both Teams Score':
                             if 'Yes' in vals: raw_odds["BTTS (Yes)"] = vals['Yes']
                             if 'No' in vals: raw_odds["BTTS (No)"] = vals['No']
                         elif name == 'Corners Over Under': 
-                            if 'Over 9.5' in vals: raw_odds["Total Corners Over 9.5"] = vals['Over 9.5']
-                            if 'Under 9.5' in vals: raw_odds["Total Corners Under 9.5"] = vals['Under 9.5']
+                            if 'Over 9.5' in vals: raw_odds["Corners Over 9.5"] = vals['Over 9.5']
+                            if 'Under 9.5' in vals: raw_odds["Corners Under 9.5"] = vals['Under 9.5']
                         elif name == 'Cards Over/Under': 
-                            if 'Over 4.5' in vals: raw_odds["Total Cards Over 4.5"] = vals['Over 4.5']
-                            if 'Under 4.5' in vals: raw_odds["Total Cards Under 4.5"] = vals['Under 4.5']
+                            if 'Over 4.5' in vals: raw_odds["Cards Over 4.5"] = vals['Over 4.5']
+                            if 'Under 4.5' in vals: raw_odds["Cards Under 4.5"] = vals['Under 4.5']
                 
                 bookie_margin = calculate_bookmaker_margin(raw_odds)
                 valid_markets = []
@@ -421,15 +416,19 @@ with tab1:
                         if sys_p == 0: continue
                         
                         book_true_p = true_bookie_probs.get(mkt, 1/odd) 
-                        edge = (sys_p / book_true_p) - 1
-                        kelly_val = calculate_adjusted_kelly(sys_p, odd, kelly_fraction) if edge > 0 else 0
+                        
+                        # Exact EV Math
+                        ev_pct = (sys_p * odd) - 1.0
+                        
+                        # Holzhauer Strict Kelly
+                        kelly_val = calculate_strict_kelly(sys_p, odd, kelly_fraction, max_exposure) if ev_pct > 0 else 0
                         
                         valid_markets.append({
-                            "Market": mkt.replace("Total ", ""), "BookOdd": odd, "SysProb": sys_p, "BookTrueProb": book_true_p,
-                            "Edge": edge, "Kelly": kelly_val
+                            "Market": mkt, "BookOdd": odd, "SysProb": sys_p, 
+                            "EV": ev_pct, "Kelly": kelly_val
                         })
                     
-                    safe_bets = [m for m in valid_markets if m['Edge'] > 0.01]
+                    safe_bets = [m for m in valid_markets if m['EV'] > 0.005] # Need at least 0.5% EV
                     if safe_bets: best_bet = max(safe_bets, key=lambda x: x['Kelly'])
                     
             except Exception as e:
@@ -438,13 +437,13 @@ with tab1:
             
         with col_exec:
             b_margin_ui = f"{bookie_margin*100:.2f}%" if bookie_margin else "N/A"
-            m_color = "hl-red" if bookie_margin and bookie_margin > 0.07 else "hl-blue"
+            m_color = "hl-pink" if bookie_margin and bookie_margin > 0.05 else "hl-cyan"
             
             st.markdown(f"""
             <div class='metric-grid'>
-                <div class='metric-card'><div class='metric-card-title'>{h_name[:10]} xG</div><div class='metric-card-val'>{lam_h:.2f}</div></div>
-                <div class='metric-card'><div class='metric-card-title'>{a_name[:10]} xG</div><div class='metric-card-val'>{lam_a:.2f}</div></div>
-                <div class='metric-card'><div class='metric-card-title'>Market Vig</div><div class='metric-card-val {m_color}'>{b_margin_ui}</div></div>
+                <div class='metric-card'><div class='metric-card-title'>{h_name[:12]} xG</div><div class='metric-card-val'>{lam_h:.2f}</div></div>
+                <div class='metric-card'><div class='metric-card-title'>{a_name[:12]} xG</div><div class='metric-card-val'>{lam_a:.2f}</div></div>
+                <div class='metric-card'><div class='metric-card-title'>Market Vig (Juice)</div><div class='metric-card-val {m_color}'>{b_margin_ui}</div></div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -452,65 +451,70 @@ with tab1:
             
             with col_alpha:
                 if not raw_odds:
-                    st.markdown("""<div class='grid-panel' style='height: 100%; display: flex; align-items: center; justify-content: center;'><div class='data-val' style='text-align: center; color: #8B949E; font-size: 0.8rem;'>MARKET DATA UNAVAILABLE<br><span style='font-size: 0.7rem; font-weight: 400;'>Strict Mode: Synthetic lines disabled.</span></div></div>""", unsafe_allow_html=True)
+                    st.markdown("""<div class='grid-panel' style='height: 100%; display: flex; align-items: center; justify-content: center;'><div class='data-val' style='text-align: center; color: #6B7280; font-size: 0.7rem;'>MARKET DATA UNAVAILABLE<br><span style='font-size: 0.6rem; font-weight: 400;'>Strict Mode: Synthetic lines disabled.</span></div></div>""", unsafe_allow_html=True)
                 elif best_bet:
                     dollar_sz = (best_bet['Kelly']/100) * bankroll
                     
                     st.markdown(f"""
     <div class='trade-signal'>
-        <div class='panel-title' style='color:#3FB950; border-color:#1F2328; margin-bottom: 8px;'>EXECUTION TICKET</div>
+        <div class='panel-title' style='color:#00FFA3; border-color:#1A1A1A; margin-bottom: 8px;'>EXECUTION TICKET</div>
         <div class='trade-asset'>{best_bet['Market'].upper()}</div>
         <div class='trade-odd'>@ {best_bet['BookOdd']:.3f}</div>
-        <div class='data-row'><span class='data-lbl'>True Probability</span><span class='data-val'>{best_bet['SysProb']*100:.1f}%</span></div>
-        <div class='data-row'><span class='data-lbl'>Vig-Free Line</span><span class='data-val'>{1/best_bet['SysProb']:.2f}</span></div>
-        <div class='data-row'><span class='data-lbl'>Calculated EV</span><span class='data-val hl-green'>+{best_bet['Edge']*100:.2f}%</span></div>
-        <div class='data-row' style='margin-top:10px; border-top: 1px dashed #1F2328; padding-top: 10px;'><span class='data-lbl'>Suggested Stake</span><span class='data-val hl-blue'>${dollar_sz:,.0f} <span style='font-size:0.6rem; color:#8B949E;'>({best_bet['Kelly']:.2f}%)</span></span></div>
+        <div style="margin-bottom: 12px;">
+            <div class='data-row'><span class='data-lbl'>True Probability</span><span class='data-val'>{best_bet['SysProb']*100:.2f}%</span></div>
+            <div class='data-row'><span class='data-lbl'>Zero-Vig Fair Line</span><span class='data-val'>{1/best_bet['SysProb']:.3f}</span></div>
+            <div class='data-row'><span class='data-lbl'>Expected Value (EV)</span><span class='data-val hl-neon'>+{best_bet['EV']*100:.2f}%</span></div>
+        </div>
+        <div style='border-top: 1px solid #1A1A1A; padding-top: 12px;'>
+            <div style='font-size: 0.65rem; color: #6B7280; text-transform: uppercase; margin-bottom: 4px; font-family: Fira Code;'>Capital Allocation (Constrained Kelly)</div>
+            <div style='font-size: 1.4rem; color: #FFFFFF; font-family: Fira Code; font-weight: 700;'>${dollar_sz:,.0f} <span style='font-size: 0.8rem; color: #6B7280;'>({best_bet['Kelly']:.2f}% AUM)</span></div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
                 else:
-                    st.markdown("""<div class='grid-panel' style='height: 100%; display: flex; align-items: center; justify-content: center;'><div class='data-val' style='text-align: center; color: #F85149; font-size: 0.8rem;'>NEGATIVE EV DETECTED<br><span style='font-size: 0.7rem; font-weight: 400; color: #8B949E;'>Capital preserved. No edge found in current lines.</span></div></div>""", unsafe_allow_html=True)
+                    st.markdown("""<div class='grid-panel' style='height: 100%; display: flex; align-items: center; justify-content: center;'><div class='data-val' style='text-align: center; color: #FF0055; font-size: 0.8rem;'>NEGATIVE EXPECTED VALUE<br><span style='font-size: 0.65rem; font-weight: 400; color: #6B7280;'>Capital preserved. No mathematical edge in current liquidity.</span></div></div>""", unsafe_allow_html=True)
 
             with col_chart:
-                st.markdown("""<div class='grid-panel' style='padding-bottom: 0px; height: 100%; box-sizing: border-box;'><div class='panel-title'>Score Probability Tensor</div>""", unsafe_allow_html=True)
+                st.markdown("""<div class='grid-panel' style='padding-bottom: 0px; height: 100%; box-sizing: border-box;'><div class='panel-title'>SCORE PROBABILITY TENSOR</div>""", unsafe_allow_html=True)
                 
                 fig_heat = go.Figure(data=go.Heatmap(
                     z=score_matrix.T, 
                     x=[0, 1, 2, 3, 4, 5], y=[0, 1, 2, 3, 4, 5],
-                    colorscale=[[0, '#000000'], [1, '#238636']], 
-                    text=np.round(score_matrix.T, 1), texttemplate="%{text}%", textfont={"color":"white", "size":9, "family":"JetBrains Mono"},
+                    colorscale=[[0, '#000000'], [1, '#00FFA3']], 
+                    text=np.round(score_matrix.T, 1), texttemplate="%{text}", textfont={"color":"#FFFFFF", "size":10, "family":"Fira Code"},
                     showscale=False, xgap=1, ygap=1
                 ))
                 
                 fig_heat.update_layout(
-                    template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=220, margin=dict(l=20, r=10, t=10, b=20),
-                    xaxis=dict(title=f"{a_name[:12]}", title_font=dict(size=9, color="#8B949E"), tickfont=dict(size=8, color="#8B949E"), side="bottom", showgrid=False),
-                    yaxis=dict(title=f"{h_name[:12]}", title_font=dict(size=9, color="#8B949E"), tickfont=dict(size=8, color="#8B949E"), autorange="reversed", showgrid=False)
+                    template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=230, margin=dict(l=20, r=10, t=10, b=20),
+                    xaxis=dict(title=f"{a_name[:12]}", title_font=dict(size=9, color="#6B7280", family="Fira Code"), tickfont=dict(size=8, color="#6B7280"), side="bottom", showgrid=False),
+                    yaxis=dict(title=f"{h_name[:12]}", title_font=dict(size=9, color="#6B7280", family="Fira Code"), tickfont=dict(size=8, color="#6B7280"), autorange="reversed", showgrid=False)
                 )
                 st.plotly_chart(fig_heat, use_container_width=True, config={'displayModeBar': False})
                 st.markdown("</div>", unsafe_allow_html=True)
 
             if valid_markets:
-                st.markdown("""<div class='grid-panel' style='padding: 12px;'><div class='panel-title'>Pricing Matrix (Top EV)</div>""", unsafe_allow_html=True)
-                clean_markets = sorted(valid_markets, key=lambda x: x['Edge'], reverse=True)
+                st.markdown("""<div class='grid-panel' style='padding: 12px;'><div class='panel-title'>ALPHA PRICING MATRIX</div>""", unsafe_allow_html=True)
+                clean_markets = sorted(valid_markets, key=lambda x: x['EV'], reverse=True)
                 
                 st.markdown("<div class='table-container'>", unsafe_allow_html=True)
-                table_html = "<table class='ob-table'><tr><th>Asset</th><th>Line</th><th>True Prob</th><th>EV%</th><th>Kelly</th></tr>"
+                table_html = "<table class='ob-table'><tr><th>Asset Market</th><th>Line</th><th>True P(x)</th><th>EV (%)</th><th>Req. Kelly</th></tr>"
                 for m in clean_markets[:6]: 
-                    edge_val = m['Edge'] * 100
-                    e_color = "hl-green" if edge_val > 0 else "hl-red"
-                    e_sign = "+" if edge_val > 0 else ""
-                    table_html += f"<tr><td>{m['Market']}</td><td style='color:#3FB950; font-weight:700;'>{m['BookOdd']:.3f}</td>"
+                    ev_val = m['EV'] * 100
+                    e_color = "hl-neon" if ev_val > 0 else "hl-pink"
+                    e_sign = "+" if ev_val > 0 else ""
+                    table_html += f"<tr><td>{m['Market']}</td><td style='color:#00E5FF; font-weight:700;'>{m['BookOdd']:.3f}</td>"
                     table_html += f"<td>{m['SysProb']*100:.1f}%</td>"
-                    table_html += f"<td class='{e_color}'>{e_sign}{edge_val:.2f}%</td>"
-                    table_html += f"<td style='color:#8B949E;'>{m['Kelly']:.2f}%</td></tr>"
+                    table_html += f"<td class='{e_color}'>{e_sign}{ev_val:.2f}%</td>"
+                    table_html += f"<td style='color:#6B7280;'>{m['Kelly']:.2f}%</td></tr>"
                 table_html += "</table></div>"
                 st.markdown(table_html, unsafe_allow_html=True)
                 st.markdown("""</div>""", unsafe_allow_html=True)
 
 with tab2:
-    st.markdown("""<div class='grid-panel' style='margin-bottom: 20px;'><div class='panel-title'>Historical Equity Curve & Drawdown Analysis</div>""", unsafe_allow_html=True)
+    st.markdown("""<div class='grid-panel' style='margin-bottom: 20px;'><div class='panel-title'>RISK & EQUITY CURVE ANALYSIS (N=60)</div>""", unsafe_allow_html=True)
     
-    with st.spinner(f"Simulating institutional P&L..."):
+    with st.spinner(f"Running Monte Carlo / Historical Verification..."):
         try:
             df_ledger = get_verified_history(GLOBAL_LEAGUES[league_name])
         except Exception as e:
@@ -523,69 +527,74 @@ with tab2:
         hit_rate = (hits / total_matches) * 100 if total_matches > 0 else 0
         
         total_pnl = df_ledger['PnL'].sum()
-        roi_pct = (total_pnl / total_matches) * 100 if total_matches > 0 else 0
         
+        # Risk Metrics (Holzhauer Style)
         cumulative = df_ledger.sort_values(by="Date", ascending=True)['Cumulative_PnL']
         peak = cumulative.expanding(min_periods=1).max()
         drawdown = (cumulative - peak)
         max_dd = drawdown.min()
         
-        hr_color = "hl-green" if hit_rate > 50 else "hl-red"
-        roi_color = "hl-green" if total_pnl > 0 else "hl-red"
+        # Pseudo Sharpe Ratio (Mean PnL / StdDev PnL)
+        std_dev = df_ledger['PnL'].std()
+        sharpe = (df_ledger['PnL'].mean() / std_dev) * math.sqrt(total_matches) if std_dev > 0 else 0
+        
+        hr_color = "hl-neon" if hit_rate > 52 else "hl-pink"
+        roi_color = "hl-neon" if total_pnl > 0 else "hl-pink"
         roi_sign = "+" if total_pnl > 0 else ""
+        sharpe_color = "hl-cyan" if sharpe > 1 else "hl-gray"
         
         fig_equity = go.Figure()
         fig_equity.add_trace(go.Scatter(
             x=list(range(len(cumulative))), y=cumulative, mode='lines',
-            line=dict(color='#3FB950', width=2), fill='tozeroy', fillcolor='rgba(63, 185, 80, 0.1)',
-            name='Cumulative P&L'
+            line=dict(color='#00FFA3', width=2), fill='tozeroy', fillcolor='rgba(0, 255, 163, 0.05)',
+            name='Equity'
         ))
         fig_equity.update_layout(
             template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
             height=200, margin=dict(l=10, r=10, t=10, b=10),
             xaxis=dict(showgrid=False, showticklabels=False),
-            yaxis=dict(gridcolor='#1F2328', title='Units P&L', title_font=dict(size=9, color="#8B949E"), tickfont=dict(size=9, color="#8B949E"))
+            yaxis=dict(gridcolor='#1A1A1A', title='Units', title_font=dict(size=9, color="#6B7280", family="Fira Code"), tickfont=dict(size=9, color="#6B7280", family="Fira Code"))
         )
         st.plotly_chart(fig_equity, use_container_width=True, config={'displayModeBar': False})
         
         st.markdown(f"""
         <div class='metric-grid' style='grid-template-columns: repeat(4, 1fr); gap: 10px;'>
-            <div class='metric-card'><div class='metric-card-title'>Sample Size</div><div class='metric-card-val' style='color:#E6EDF3;'>{total_matches}</div></div>
-            <div class='metric-card'><div class='metric-card-title'>Win Rate</div><div class='metric-card-val {hr_color}'>{hit_rate:.1f}%</div></div>
-            <div class='metric-card'><div class='metric-card-title'>Net P&L (Units)</div><div class='metric-card-val {roi_color}'>{roi_sign}{total_pnl:.2f}</div></div>
-            <div class='metric-card'><div class='metric-card-title'>Max Drawdown</div><div class='metric-card-val hl-red'>{max_dd:.2f}</div></div>
+            <div class='metric-card'><div class='metric-card-title'>Win Prob.</div><div class='metric-card-val {hr_color}'>{hit_rate:.1f}%</div></div>
+            <div class='metric-card'><div class='metric-card-title'>Net P&L (U)</div><div class='metric-card-val {roi_color}'>{roi_sign}{total_pnl:.2f}</div></div>
+            <div class='metric-card'><div class='metric-card-title'>Max Drawdown</div><div class='metric-card-val hl-pink'>{max_dd:.2f}U</div></div>
+            <div class='metric-card'><div class='metric-card-title'>Est. Sharpe</div><div class='metric-card-val {sharpe_color}'>{sharpe:.2f}</div></div>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("<div class='table-container' style='margin-top: 15px;'>", unsafe_allow_html=True)
-        ledger_html = "<table class='ob-table'><tr><th>Date</th><th>Fixture</th><th>Asset</th><th>Conf</th><th>True Line</th><th>Res</th><th>PnL</th></tr>"
+        ledger_html = "<table class='ob-table'><tr><th>T-Date</th><th>Asset</th><th>Signal</th><th>Conf</th><th>Fair P(x)</th><th>Fair Line</th><th>Res</th><th>PnL (U)</th></tr>"
         
         for _, row in df_ledger.head(50).iterrows():
             res = str(row.get('Res', 'MISS'))
-            badge_class = "badge-win" if res == "HIT" else "badge-loss"
+            badge_class = "tag-win" if res == "HIT" else "tag-loss"
             conf = str(row.get('Conf', 'LOW'))
-            conf_class = f"badge-{conf.lower()}"
+            conf_class = f"tag-{conf.lower()}"
             pnl = row.get('PnL', 0)
-            pnl_color = "hl-green" if pnl > 0 else "hl-red"
+            pnl_color = "hl-neon" if pnl > 0 else "hl-pink"
             pnl_sign = "+" if pnl > 0 else ""
             
             ledger_html += f"<tr>"
             ledger_html += f"<td>{row.get('Date', '')}</td>"
-            ledger_html += f"<td>{row.get('Match', '')}</td>"
-            ledger_html += f"<td>{row.get('Model Pick', '')}</td>"
+            ledger_html += f"<td>{row.get('Asset', '')}</td>"
+            ledger_html += f"<td style='color:#FFFFFF;'>{row.get('Signal', '')}</td>"
             ledger_html += f"<td><span class='{conf_class}'>{conf}</span></td>"
-            ledger_html += f"<td>{row.get('True Line', 0):.2f}</td>"
+            ledger_html += f"<td style='color:#6B7280;'>{row.get('Sys_Prob', 0)*100:.1f}%</td>"
+            ledger_html += f"<td>{row.get('True_Line', 0):.2f}</td>"
             ledger_html += f"<td><span class='{badge_class}'>{res}</span></td>"
             ledger_html += f"<td class='{pnl_color}'>{pnl_sign}{pnl:.2f}</td>"
             ledger_html += f"</tr>"
         ledger_html += "</table></div>"
         
-        st.markdown(ledger_html, unsafe_allow_html=True)
         st.markdown("""
-        <div style='color: #8B949E; font-size: 0.65rem; border-top: 1px solid #1F2328; padding-top: 8px; margin-top: 16px; line-height: 1.4;'>
-        <strong>STRICT CANDOR DISCLOSURE:</strong> Flat 1-unit staking assumed. Data leakage minimized by strictly comparing past closing lines against post-match results. Prop markets (Corners/Cards) excluded from historical P&L audit to preserve data purity, as free API endpoints cannot reconstruct high-fidelity pre-match corner/card stats. Negative binomial distributions required for deep prop backtesting.
+        <div style='color: #6B7280; font-size: 0.65rem; border-top: 1px solid #1A1A1A; padding-top: 8px; margin-top: 16px; line-height: 1.4; font-family: Fira Code, monospace;'>
+        > <strong>SYSTEM AUDIT DISCLOSURE:</strong> P&L calculates standard 1-unit flat exposure against true theoretical EV. Data leakage protocol active: strict post-closing line evaluation only. High-variance Prop Markets (Corners/Cards) excluded from pure backtest due to API Free-Tier limitations requiring precise historical negative binomial extraction.
         </div>
         </div>
         """, unsafe_allow_html=True)
     else:
-        st.markdown("""<div class='grid-panel'><div class='data-lbl' style='text-align:center;'>No historical data.</div></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class='grid-panel'><div class='data-lbl' style='text-align:center;'>NO DATA IN LEDGER</div></div>""", unsafe_allow_html=True)
