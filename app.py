@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 from datetime import date, datetime
 
 # ==========================================
-# 1. INSTITUTIONAL UX SETUP (V4.0 - PERFECT ENGINE)
+# 1. INSTITUTIONAL UX SETUP (V5.0 - THE PERFECT ENGINE)
 # ==========================================
 st.set_page_config(page_title="APEX QUANT | EXECUTION DESK", layout="wide", initial_sidebar_state="collapsed")
 st.cache_data.clear()
@@ -77,7 +77,7 @@ button[data-baseweb="tab"][aria-selected="true"] { color: #E6EDF3 !important; bo
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. DATA POOL & MATH ENGINE (REGEX PARSER + AH)
+# 2. DATA POOL & MATH ENGINE
 # ==========================================
 API_KEY = st.secrets.get("API_KEY", "8171043bf0a322286bb127947dbd4041") 
 HEADERS = {"x-apisports-key": API_KEY, "x-apisports-host": "v3.football.api-sports.io"}
@@ -124,18 +124,24 @@ def get_real_stats(team_id, league_id):
         }
     except: return default_stats
 
-def calculate_xg_lambdas(h_stats, a_stats):
-    lam_h = max(0.1, (h_stats['gf_h']/1.45) * (a_stats['ga_a']/1.45) * 1.45)
-    lam_a = max(0.1, (a_stats['gf_a']/1.15) * (h_stats['ga_h']/1.15) * 1.15)
+def calculate_xg_lambdas(h_stats, a_stats, smoothing=0.5):
+    """Suavização Bayesiana para anular distorções (Extrapolação de Odds)"""
+    L_GF_H, L_GA_A = 1.45, 1.45
+    L_GF_A, L_GA_H = 1.15, 1.15
+    
+    gf_h_adj = (h_stats['gf_h'] * (1 - smoothing)) + (L_GF_H * smoothing)
+    ga_a_adj = (a_stats['ga_a'] * (1 - smoothing)) + (L_GA_A * smoothing)
+    gf_a_adj = (a_stats['gf_a'] * (1 - smoothing)) + (L_GF_A * smoothing)
+    ga_h_adj = (h_stats['ga_h'] * (1 - smoothing)) + (L_GA_H * smoothing)
+    
+    lam_h = max(0.1, (gf_h_adj / L_GF_H) * (ga_a_adj / L_GA_A) * L_GF_H)
+    lam_a = max(0.1, (gf_a_adj / L_GF_A) * (ga_h_adj / L_GA_H) * L_GF_A)
     return lam_h, lam_a
 
 def poisson_pmf(lam, k):
     return (lam**k * math.exp(-lam)) / math.factorial(k)
 
-# ---- DYNAMIC MATRIX EVALUATORS (THE PERFECT ENGINE) ----
-
 def get_asian_handicap_prob(matrix, line, is_home=True):
-    """Varre a matriz perfeitamente. Lida com Handicaps Asiáticos Inteiros e Quebrados (Push Math)"""
     prob_win, prob_push = 0, 0
     max_g = matrix.shape[0]
     for h in range(max_g):
@@ -143,13 +149,10 @@ def get_asian_handicap_prob(matrix, line, is_home=True):
             diff = (h - a) if is_home else (a - h)
             if diff + line > 0: prob_win += matrix[h, a]
             elif diff + line == 0: prob_push += matrix[h, a]
-    
-    # Probabilidade ajustada ignorando o push (Edge Calculation Standard)
     if prob_push >= 1.0: return 0
     return prob_win / (1 - prob_push)
 
 def get_over_under_prob(matrix, line, is_over=True):
-    """Calcula Over/Under para QUALQUER linha (ex: Over 2.0 devolve push em 1-1)"""
     prob_win, prob_push = 0, 0
     max_g = matrix.shape[0]
     for h in range(max_g):
@@ -161,11 +164,11 @@ def get_over_under_prob(matrix, line, is_over=True):
             else:
                 if total_goals < line: prob_win += matrix[h, a]
                 elif total_goals == line: prob_push += matrix[h, a]
-                
     if prob_push >= 1.0: return 0
     return prob_win / (1 - prob_push)
 
-def exact_poisson_matrix(lam_h, lam_a, max_goals=8):
+def exact_poisson_matrix(lam_h, lam_a, max_goals=10):
+    """Matriz Expandida 10x10 para estabilidade estatística profunda"""
     h_probs = [poisson_pmf(lam_h, i) for i in range(max_goals)]
     a_probs = [poisson_pmf(lam_a, i) for i in range(max_goals)]
     score_matrix = np.outer(h_probs, a_probs)
@@ -179,14 +182,14 @@ def exact_poisson_matrix(lam_h, lam_a, max_goals=8):
         score_matrix /= score_matrix.sum()
     except: pass
     
-    # 1X2 e BTTS estáticos para auditoria rápida
     probs = {
-        "Home Win": np.tril(score_matrix, -1).sum(), "Draw": np.trace(score_matrix), "Away Win": np.triu(score_matrix, 1).sum(), 
+        "Home Win": np.tril(score_matrix, -1).sum(), 
+        "Draw": np.trace(score_matrix), 
+        "Away Win": np.triu(score_matrix, 1).sum(), 
         "BTTS (Yes)": 1 - (sum(score_matrix[0, :]) + sum(score_matrix[:, 0]) - score_matrix[0, 0]),
         "BTTS (No)": sum(score_matrix[0, :]) + sum(score_matrix[:, 0]) - score_matrix[0, 0]
     }
     
-    # Mantido para a Tab 2 (Audit) funcionar sem alterações profundas
     for val in [1.5, 2.5, 3.5]:
         probs[f"Total Goals Over {val}"] = get_over_under_prob(score_matrix, val, is_over=True)
         probs[f"Total Goals Under {val}"] = get_over_under_prob(score_matrix, val, is_over=False)
@@ -221,7 +224,8 @@ def get_verified_history(league_id):
             h_goals, a_goals = f.get('goals', {}).get('home'), f.get('goals', {}).get('away')
             if h_goals is None or a_goals is None: continue
             
-            lam_h, lam_a = calculate_xg_lambdas(get_real_stats(h_id, league_id), get_real_stats(a_id, league_id))
+            # Usar smoothing por defeito na auditoria histórica também
+            lam_h, lam_a = calculate_xg_lambdas(get_real_stats(h_id, league_id), get_real_stats(a_id, league_id), smoothing=0.5)
             sys_probs, _ = exact_poisson_matrix(lam_h, lam_a)
             
             best_market = max(sys_probs.keys(), key=lambda m: sys_probs.get(m, 0))
@@ -256,7 +260,7 @@ st.markdown(f"""
     <div class="nav-group">
         <div class="logo">APEX<span>QUANT</span></div>
         <div class="nav-divider"></div>
-        <div class="nav-subtitle" style="font-size: 0.8rem; font-weight:600;">CORE ENGINE V4.0<br>REGEX PARSER & FULL TENSOR</div>
+        <div class="nav-subtitle" style="font-size: 0.8rem; font-weight:600;">CORE ENGINE V5.0<br>BAYESIAN SMOOTHING & PERFECT TENSOR</div>
     </div>
     <div class="nav-group">
         <div class="status-badge status-live">● API STRICT MODE</div>
@@ -302,9 +306,9 @@ with tab1:
                 h_stats = get_real_stats(m_sel['teams']['home']['id'], league_id)
                 a_stats = get_real_stats(m_sel['teams']['away']['id'], league_id)
                 
-                # Dynamic xG Lambdas
-                lam_h, lam_a = calculate_xg_lambdas(h_stats, a_stats)
-                sys_probs, score_matrix = exact_poisson_matrix(lam_h, lam_a, max_goals=8)
+                # Bayesian Smoothing Lambdas (Nivelamento da Matriz)
+                lam_h, lam_a = calculate_xg_lambdas(h_stats, a_stats, smoothing=0.5)
+                sys_probs, score_matrix = exact_poisson_matrix(lam_h, lam_a, max_goals=10)
                 
                 # Fetch & Parse Odds
                 odds_api = fetch_api_safe("odds", {"fixture": m_sel['fixture']['id'], "bookmaker": 8})
@@ -322,18 +326,15 @@ with tab1:
                             
                             # --- REGULAR EXPRESSIONS MARKET PARSER ---
                             try:
-                                # 1. Match Winner
                                 if b_name == 'Match Winner':
                                     if val_str == 'Home': prob = sys_probs.get("Home Win", 0)
                                     elif val_str == 'Away': prob = sys_probs.get("Away Win", 0)
                                     elif val_str == 'Draw': prob = sys_probs.get("Draw", 0)
                                     
-                                # 2. BTTS
                                 elif b_name == 'Both Teams Score':
                                     if val_str == 'Yes': prob = sys_probs.get("BTTS (Yes)", 0)
                                     elif val_str == 'No': prob = sys_probs.get("BTTS (No)", 0)
                                     
-                                # 3. Dynamic Over/Under (Captura O/U normais e Asian Totals)
                                 elif b_name in ['Goals Over/Under', 'Asian Total', 'Alternative Total Goals']:
                                     match = re.match(r"(Over|Under)\s+([0-9.]+)", val_str, re.IGNORECASE)
                                     if match:
@@ -341,17 +342,14 @@ with tab1:
                                         line = float(match.group(2))
                                         prob = get_over_under_prob(score_matrix, line, is_over)
                                         
-                                # 4. Dynamic Asian Handicap (Captura AH principal e alternativos)
                                 elif b_name in ['Asian Handicap', 'Alternative Asian Handicap']:
                                     match = re.match(r"(Home|Away)\s+([+-]?[0-9.]+)", val_str, re.IGNORECASE)
                                     if match:
                                         is_home = (match.group(1).lower() == 'home')
                                         line = float(match.group(2))
                                         prob = get_asian_handicap_prob(score_matrix, line, is_home)
-                            except:
-                                continue # Ignora silenciosamente linhas que fogem ao padrão (ex: quarters complexos)
+                            except: continue
                             
-                            # Guarda apenas mercados que a matemática conseguiu validar
                             if prob > 0:
                                 edge = (prob * odd) - 1
                                 kelly = calculate_adjusted_kelly(prob, odd, kelly_fraction) if edge > 0 else 0
@@ -367,7 +365,6 @@ with tab1:
                  st.stop()
             
         with col_exec:
-            # 1. xG Projection Metrics
             st.markdown(f"""
             <div class='metric-grid'>
                 <div class='metric-card'><div class='metric-card-title'>{h_name} Eval xG</div><div class='metric-card-val hl-blue'>{lam_h:.2f}</div></div>
@@ -395,13 +392,13 @@ with tab1:
                     st.markdown("""<div class='grid-panel' style='height: 100%; display: flex; align-items: center; justify-content: center;'><div class='data-val' style='text-align: center; color: #8B949E;'>NO MARKET DATA OR NO EDGE.<br>Capital protected.</div></div>""", unsafe_allow_html=True)
 
             with col_chart:
-                st.markdown("""<div class='grid-panel' style='padding-bottom: 0px; height: 100%;'><div class='panel-title'>Exact Score Tensor Matrix (8x8)</div>""", unsafe_allow_html=True)
+                st.markdown("""<div class='grid-panel' style='padding-bottom: 0px; height: 100%;'><div class='panel-title'>Exact Score Tensor Matrix (10x10)</div>""", unsafe_allow_html=True)
                 fig_heat = go.Figure(data=go.Heatmap(
-                    z=(score_matrix * 100).T, x=list(range(8)), y=list(range(8)), colorscale=[[0, '#0D1117'], [1, '#238636']], 
-                    text=np.round((score_matrix * 100).T, 1), texttemplate="%{text}%", textfont={"color":"white", "size":9, "family":"JetBrains Mono"}, showscale=False
+                    z=(score_matrix * 100).T, x=list(range(10)), y=list(range(10)), colorscale=[[0, '#0D1117'], [1, '#238636']], 
+                    text=np.round((score_matrix * 100).T, 1), texttemplate="%{text}%", textfont={"color":"white", "size":8, "family":"JetBrains Mono"}, showscale=False
                 ))
                 fig_heat.update_layout(
-                    template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=260, margin=dict(l=30, r=10, t=10, b=30),
+                    template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=280, margin=dict(l=30, r=10, t=10, b=30),
                     xaxis=dict(title=f"{a_name}", title_font=dict(size=10, color="#8B949E"), tickfont=dict(size=10, color="#8B949E"), side="bottom"),
                     yaxis=dict(title=f"{h_name}", title_font=dict(size=10, color="#8B949E"), tickfont=dict(size=10, color="#8B949E"), autorange="reversed")
                 )
