@@ -64,9 +64,10 @@ header, footer { display: none !important; }
     backdrop-filter: blur(16px);
     border: 1px solid var(--glass-border); 
     border-top: 2px solid rgba(0,255,204,0.3);
-    padding: 25px; margin-bottom: 25px; border-radius: 12px; 
+    padding: 25px; border-radius: 12px; 
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
     position: relative; overflow: hidden;
+    height: 100%;
 }
 .holo-panel::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 2px; background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent); animation: scan 4s linear infinite; }
 @keyframes scan { 100% { left: 200%; } }
@@ -75,10 +76,10 @@ header, footer { display: none !important; }
 .panel-title::after { content: ''; flex-grow: 1; height: 1px; background: linear-gradient(90deg, var(--neon-cyan) 0%, transparent 100%); opacity: 0.3;}
 
 /* Data Grid */
-.data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;}
-.data-node { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; text-align: center;}
+.data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;}
+.data-node { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; text-align: center; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);}
 .node-lbl { font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; font-weight: 600;}
-.node-val { font-family: 'Share Tech Mono', monospace; font-size: 1.8rem; color: #FFF; text-shadow: 0 0 10px rgba(255,255,255,0.2);}
+.node-val { font-family: 'Share Tech Mono', monospace; font-size: 2rem; color: #FFF; text-shadow: 0 0 10px rgba(255,255,255,0.2); line-height: 1;}
 .node-val.cyan { color: var(--neon-cyan); text-shadow: 0 0 15px rgba(0,255,204,0.4); }
 .node-val.purple { color: var(--neon-purple); text-shadow: 0 0 15px rgba(176,38,255,0.4); }
 
@@ -86,24 +87,31 @@ header, footer { display: none !important; }
 .singularity-box {
     background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%);
     border: 1px solid var(--neon-gold);
-    border-radius: 12px; padding: 35px; position: relative;
+    border-radius: 12px; padding: 30px; position: relative; height: 100%;
     box-shadow: 0 0 30px rgba(255, 193, 7, 0.15), inset 0 0 20px rgba(255, 193, 7, 0.05);
     animation: borderGlow 3s infinite alternate;
 }
 @keyframes borderGlow { 0% { box-shadow: 0 0 20px rgba(255,193,7,0.1); } 100% { box-shadow: 0 0 40px rgba(255,193,7,0.3); } }
 .sig-lbl { font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: var(--neon-gold); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 15px; display: inline-block; border-bottom: 1px solid var(--neon-gold); padding-bottom: 5px;}
-.sig-asset { font-family: 'Orbitron', sans-serif; font-size: 2.5rem; font-weight: 700; color: #FFF; margin-bottom: 5px; line-height: 1.1;}
-.sig-odd { font-family: 'Share Tech Mono', monospace; font-size: 2rem; color: var(--neon-gold); margin-bottom: 25px; text-shadow: 0 0 15px rgba(255,193,7,0.5);}
+.sig-asset { font-family: 'Orbitron', sans-serif; font-size: 2.2rem; font-weight: 700; color: #FFF; margin-bottom: 5px; line-height: 1.1;}
+.sig-odd { font-family: 'Share Tech Mono', monospace; font-size: 1.8rem; color: var(--neon-gold); margin-bottom: 20px; text-shadow: 0 0 15px rgba(255,193,7,0.5);}
 
-.sig-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); font-size: 1.1rem; font-weight: 600;}
-.sig-row:last-child { border: none; }
+.sig-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); font-size: 1rem; font-weight: 600;}
+.sig-row:last-child { border: none; padding-bottom: 0;}
 .sig-row span:first-child { color: var(--text-dim); font-weight: 500; font-family: 'Rajdhani', sans-serif;}
 .sig-row span:last-child { font-family: 'Share Tech Mono', monospace; color: #FFF;}
 
-/* Quantum Order Book */
-.q-table { width: 100%; border-collapse: collapse; font-family: 'Rajdhani', sans-serif;}
-.q-table th { padding: 15px; color: var(--neon-cyan); font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid rgba(0,255,204,0.3); text-align: left; background: rgba(0,255,204,0.03);}
-.q-table td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 1.05rem; font-weight: 600;}
+/* Quantum Tables (Order Book & Standings) */
+.table-container { max-height: 350px; overflow-y: auto; overflow-x: hidden; padding-right: 5px; }
+.table-container::-webkit-scrollbar { width: 6px; }
+.table-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 4px; }
+.table-container::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 4px; }
+
+.q-table { width: 100%; border-collapse: collapse; font-family: 'Rajdhani', sans-serif; text-align: center;}
+.q-table th { position: sticky; top: 0; padding: 12px 10px; color: var(--neon-cyan); font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(0,255,204,0.3); background: rgba(4,9,20,0.95); z-index: 10;}
+.q-table th:first-child { text-align: left; }
+.q-table td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 1rem; font-weight: 600;}
+.q-table td:first-child { text-align: left; }
 .q-table tr:hover td { background: rgba(0,255,204,0.05); }
 .mono-val { font-family: 'Share Tech Mono', monospace; }
 
@@ -119,6 +127,7 @@ div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-c
 }
 .stButton > button:hover { background: var(--neon-cyan) !important; color: #000 !important; box-shadow: 0 0 30px rgba(0,255,204,0.5), inset 0 0 20px rgba(255,255,255,0.5) !important; transform: translateY(-2px);}
 .stProgress > div > div > div > div { background: linear-gradient(90deg, #B026FF, #00FFCC) !important; }
+div[data-testid="column"] > div { gap: 1.5rem !important; } /* Fix column spacing */
 </style>
 """, unsafe_allow_html=True)
 
@@ -129,7 +138,6 @@ API_KEY = st.secrets.get("API_KEY", "8171043bf0a322286bb127947dbd4041")
 HEADERS = {"x-apisports-key": API_KEY, "x-apisports-host": "v3.football.api-sports.io"}
 
 def get_dynamic_season():
-    """Motor de Tempo: Calcula a época atual com base na data do sistema (2050-proof)"""
     now = datetime.now()
     return str(now.year - 1) if now.month < 7 else str(now.year)
 
@@ -137,7 +145,7 @@ def fetch_api(endpoint, params):
     try:
         r = requests.get(f"https://{HEADERS['x-apisports-host']}/{endpoint}", headers=HEADERS, params=params, timeout=12)
         return r.json().get('response', [])
-    except Exception as e: return []
+    except Exception: return []
 
 def safe_float(val, default):
     try: return default if val is None else float(val)
@@ -145,16 +153,10 @@ def safe_float(val, default):
 
 @st.cache_data(ttl=120) 
 def get_upcoming_fixtures(league_id): 
-    # REMOVIDO o parâmetro 'season' para forçar a API a devolver sempre os próximos jogos absolutos!
     return fetch_api("fixtures", {"league": league_id, "next": 15})
 
 @st.cache_data(ttl=3600)
 def get_advanced_xg_stats(team_id, league_id, season):
-    """
-    xG SYNTHESIZER: Uma vez que a API padrão devolve golos brutos, 
-    este algoritmo usa métricas secundárias (Clean Sheets, Failed to Score) 
-    para calcular um xG Matemático proprietário.
-    """
     stats = fetch_api("teams/statistics", {"team": team_id, "league": league_id, "season": season})
     default_stats = {"xg_h": 1.45, "xga_h": 1.15, "xg_a": 1.15, "xga_a": 1.45}
     if not stats: return default_stats
@@ -163,28 +165,35 @@ def get_advanced_xg_stats(team_id, league_id, season):
         data = stats if isinstance(stats, dict) else stats[0]
         goals = data.get('goals', {})
         
-        # Golos Brutos
         gf_h = safe_float(goals.get('for', {}).get('average', {}).get('home'), 1.45)
         ga_h = safe_float(goals.get('against', {}).get('average', {}).get('home'), 1.15)
         gf_a = safe_float(goals.get('for', {}).get('average', {}).get('away'), 1.15)
         ga_a = safe_float(goals.get('against', {}).get('average', {}).get('away'), 1.45)
         
-        # Fatores de Ajuste Quantitativo (Forma e Defesa)
-        cs_h = safe_float(data.get('clean_sheet', {}).get('home'), 0) / 10 # Bónus Defensivo Casa
-        fts_a = safe_float(data.get('failed_to_score', {}).get('away'), 0) / 10 # Penalização Ofensiva Fora
+        cs_h = safe_float(data.get('clean_sheet', {}).get('home'), 0) / 10 
+        fts_a = safe_float(data.get('failed_to_score', {}).get('away'), 0) / 10 
         
-        # Síntese do xG
-        xg_h = max(0.2, gf_h + (cs_h * 0.1))
-        xga_h = max(0.2, ga_h - (cs_h * 0.15))
-        xg_a = max(0.2, gf_a - (fts_a * 0.1))
-        xga_a = max(0.2, ga_a + (fts_a * 0.15))
-        
-        return {"xg_h": xg_h, "xga_h": xga_h, "xg_a": xg_a, "xga_a": xga_a}
+        return {
+            "xg_h": max(0.2, gf_h + (cs_h * 0.1)),
+            "xga_h": max(0.2, ga_h - (cs_h * 0.15)),
+            "xg_a": max(0.2, gf_a - (fts_a * 0.1)),
+            "xga_a": max(0.2, ga_a + (fts_a * 0.15))
+        }
     except Exception: return default_stats
+
+@st.cache_data(ttl=3600)
+def get_league_standings(league_id, season):
+    """NOVO: Extrai a tabela classificativa oficial."""
+    data = fetch_api("standings", {"league": league_id, "season": season})
+    try:
+        if data and len(data) > 0:
+            return data[0]['league']['standings'][0]
+    except: pass
+    return []
 
 @st.cache_data(ttl=60)
 def get_real_odds(fixture_id):
-    odds_data = fetch_api("odds", {"fixture": fixture_id, "bookmaker": 8}) # Bet365 Master Feed
+    odds_data = fetch_api("odds", {"fixture": fixture_id, "bookmaker": 8}) 
     market_odds = {}
     if not odds_data or not odds_data[0].get('bookmakers'): return market_odds
     try:
@@ -192,16 +201,12 @@ def get_real_odds(fixture_id):
             name = bet.get('name', '')
             vals = {str(v.get('value', '')): float(v.get('odd', 0.0)) for v in bet.get('values', [])}
             
-            if name == 'Match Winner':
-                market_odds.update({"Home Win": vals.get('Home'), "Draw": vals.get('Draw'), "Away Win": vals.get('Away')})
-            elif name == 'Double Chance':
-                market_odds.update({"Double Chance (1X)": vals.get('Home/Draw'), "Double Chance (X2)": vals.get('Draw/Away')})
-            elif name == 'Draw No Bet':
-                market_odds.update({"Draw No Bet (Home)": vals.get('Home'), "Draw No Bet (Away)": vals.get('Away')})
-            elif name == 'Goals Over/Under':
+            if name == 'Match Winner': market_odds.update({"Home Win": vals.get('Home'), "Draw": vals.get('Draw'), "Away Win": vals.get('Away')})
+            elif name == 'Double Chance': market_odds.update({"Double Chance (1X)": vals.get('Home/Draw'), "Double Chance (X2)": vals.get('Draw/Away')})
+            elif name == 'Draw No Bet': market_odds.update({"Draw No Bet (Home)": vals.get('Home'), "Draw No Bet (Away)": vals.get('Away')})
+            elif name == 'Goals Over/Under': 
                 for k, v in vals.items(): market_odds[f"Total Goals {k}"] = v
-            elif name == 'Both Teams Score':
-                market_odds.update({"BTTS (Yes)": vals.get('Yes'), "BTTS (No)": vals.get('No')})
+            elif name == 'Both Teams Score': market_odds.update({"BTTS (Yes)": vals.get('Yes'), "BTTS (No)": vals.get('No')})
             elif name == 'Asian Handicap':
                 for k, odd in vals.items():
                     if "Home" in k: market_odds[f"Home AH {k.replace('Home', '').strip()}"] = odd
@@ -210,20 +215,24 @@ def get_real_odds(fixture_id):
     return {k: v for k, v in market_odds.items() if v is not None}
 
 def calculate_lambdas(h_stats, a_stats):
-    hfa = 1.12 # Home Field Advantage premium
+    hfa = 1.12 
     lam_h = max(0.1, (h_stats['xg_h'] * hfa) * (a_stats['xga_a']) / 1.45)
     lam_a = max(0.1, (a_stats['xg_a']) * (h_stats['xga_h']) / 1.15)
     return round(lam_h, 3), round(lam_a, 3)
 
 def run_monte_carlo_sim(lam_h, lam_a, sims=100000):
+    """NOVO: Motor Numpy 100% Vetorizado para velocidade extrema (HFT Level)"""
     np.random.seed(int(time.time()))
     h_goals = np.random.poisson(lam_h, sims)
     a_goals = np.random.poisson(lam_a, sims)
     
-    # DIXON-COLES RHO ADJUSTMENT (Correção Científica de Empates)
+    # DIXON-COLES RHO ADJUSTMENT (Correção Científica Vetorizada)
     rho = -0.12 
-    for i in range(sims):
-        if h_goals[i] == 0 and a_goals[i] == 0 and np.random.random() < abs(rho): h_goals[i], a_goals[i] = 1, 1
+    zero_zero_mask = (h_goals == 0) & (a_goals == 0)
+    correction_mask = np.random.random(sims) < abs(rho)
+    final_mask = zero_zero_mask & correction_mask
+    h_goals[final_mask] = 1
+    a_goals[final_mask] = 1
         
     diff, total = h_goals - a_goals, h_goals + a_goals
     hw, dr, aw = np.sum(diff > 0)/sims, np.sum(diff == 0)/sims, np.sum(diff < 0)/sims
@@ -266,7 +275,7 @@ def calculate_kelly(prob, odd, fraction):
 def poisson_pmf(lam, k): return (lam**k * math.exp(-lam)) / math.factorial(k)
 
 # ==========================================
-# 3. INTERFACE DE EXECUÇÃO
+# 3. OMNI-TERMINAL INTERFACE
 # ==========================================
 st.markdown(f"""
 <div class="omni-nav">
@@ -275,18 +284,17 @@ st.markdown(f"""
         <div class="logo-text">APEX<span>QUANT</span></div>
     </div>
     <div style="font-family:'Share Tech Mono'; color:var(--neon-cyan); letter-spacing:2px; font-size:0.85rem;">
-        SECURE SOCKET: ENCRYPTED // NODE: GLOBAL // ALGO: DIXON-COLES HYBRID
+        SECURE SOCKET // VECTOR ALGO ACTIVE // POISSON KERNEL V5
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-col_ctrl, col_exec = st.columns([1.3, 2.7], gap="large")
+col_ctrl, col_exec = st.columns([1.2, 2.8], gap="large")
 
 with col_ctrl:
     st.markdown("<div class='holo-panel'>", unsafe_allow_html=True)
     st.markdown("<div class='panel-title'>LIQUIDITY POOL SELECTOR</div>", unsafe_allow_html=True)
     
-    # Expanded High-Liquidity Leagues
     l_map = {
         "Premier League (ENG)": 39, "Champions League (EUR)": 2, "La Liga (ESP)": 140, 
         "Bundesliga (GER)": 78, "Serie A (ITA)": 135, "Ligue 1 (FRA)": 61,
@@ -302,7 +310,7 @@ with col_ctrl:
     if fixtures:
         def format_match(f):
             dt = datetime.strptime(f['fixture']['date'][:16], "%Y-%m-%dT%H:%M")
-            return f"{dt.strftime('%d/%m %H:%M')} | {f['teams']['home']['name']} v {f['teams']['away']['name']}"
+            return f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}  [{dt.strftime('%d/%m %H:%M')}]"
             
         m_map = {format_match(f): f for f in fixtures}
         m_sel = m_map[st.selectbox("Available Arbitrage Vectors (Next 15)", list(m_map.keys()))]
@@ -327,17 +335,16 @@ if m_sel and btn_run:
     
     steps = [
         "INITIALIZING NEURAL NETWORKS...", 
-        "DOWNLOADING xG DATA FRAGMENTS...", 
-        "RUNNING 100,000 MONTE CARLO TRAJECTORIES...", 
-        "APPLYING DIXON-COLES RHO CORRECTION...",
+        "SYNCING xG AND LEAGUE STANDINGS...", 
+        "RUNNING 100,000 VECTORIZED MC PATHS...", 
         "EXTRACTING PRIME ALPHA..."
     ]
     for i, step in enumerate(steps):
         sys_status.markdown(f"<div style='color:var(--neon-cyan); font-family:\"Share Tech Mono\"; font-size:0.9rem; margin-bottom:15px; text-shadow:0 0 5px rgba(0,255,204,0.5);'>[SYS_LOG]: {step}</div>", unsafe_allow_html=True)
-        time.sleep(0.4)
-        p_bar.progress((i+1)*20)
+        time.sleep(0.3)
+        p_bar.progress((i+1)*25)
     
-    time.sleep(0.5)
+    time.sleep(0.3)
     sys_status.empty()
     p_bar.empty()
     
@@ -350,6 +357,7 @@ if m_sel and btn_run:
     lam_h, lam_a = calculate_lambdas(h_stats, a_stats)
     true_probs = run_monte_carlo_sim(lam_h, lam_a, 100000)
     live_odds = get_real_odds(m_sel['fixture']['id'])
+    standings_data = get_league_standings(l_map[league_name], season_id)
     
     valid_markets, best_bet = [], None
     dyn_margin = calculate_dynamic_margin(live_odds)
@@ -369,7 +377,7 @@ if m_sel and btn_run:
         if prime_bets: best_bet = max(prime_bets, key=lambda x: x['Kelly'])
     
     with col_exec:
-        # Dynamic xG Data Grid
+        # Dynamic xG Data Grid (Topo)
         st.markdown(f"""
         <div class='data-grid'>
             <div class='data-node'>
@@ -383,8 +391,8 @@ if m_sel and btn_run:
         </div>
         """, unsafe_allow_html=True)
 
+        # Row 2: Alpha Signal & Chart
         col_alpha, col_chart = st.columns([1.1, 1], gap="large")
-        
         with col_alpha:
             if best_bet:
                 sz = (best_bet['Kelly']/100) * bankroll
@@ -395,16 +403,16 @@ if m_sel and btn_run:
                     <div class='sig-asset'>{best_bet['Market']}</div>
                     <div class='sig-odd'>@ {best_bet['BookOdd']:.3f}</div>
                     <div class='sig-row'><span>Model Strike Rate</span><span style='color:var(--neon-cyan);'>{best_bet['ModelProb']*100:.2f}%</span></div>
-                    <div class='sig-row'><span>Mathematical Advantage (+EV)</span><span style='color:var(--neon-gold);'>+{best_bet['Edge']*100:.2f}%</span></div>
-                    <div class='sig-row'><span>Optimal Bankroll Allocation</span><span>${sz:,.0f} <span style='font-size:0.8rem; color:var(--text-dim);'>({best_bet['Kelly']:.2f}%)</span></span></div>
-                    <div class='sig-row' style='margin-top:20px; border:none;'><span>System Confidence Index</span><span>{c_idx:.1f} / 100.0</span></div>
+                    <div class='sig-row'><span>Mathematical Edge (+EV)</span><span style='color:var(--neon-gold);'>+{best_bet['Edge']*100:.2f}%</span></div>
+                    <div class='sig-row'><span>Optimal Allocation</span><span>${sz:,.0f} <span style='font-size:0.8rem; color:var(--text-dim);'>({best_bet['Kelly']:.2f}%)</span></span></div>
+                    <div class='sig-row' style='margin-top:15px; border:none;'><span>Confidence Index</span><span>{c_idx:.1f} / 100.0</span></div>
                 </div>
                 """, unsafe_allow_html=True)
             elif live_odds:
                 st.markdown("<div class='holo-panel' style='height:100%; display:flex; align-items:center; justify-content:center; text-align:center;'><div class='panel-title' style='color:var(--neon-red);'>MARKET HIGHLY EFFICIENT. NO EDGES DETECTED. DO NOT DEPLOY CAPITAL.</div></div>", unsafe_allow_html=True)
 
         with col_chart:
-            st.markdown("<div class='holo-panel' style='padding-bottom:0;'><div class='panel-title'>BIVARIATE POISSON KERNEL</div>", unsafe_allow_html=True)
+            st.markdown("<div class='holo-panel'><div class='panel-title'>BIVARIATE POISSON KERNEL</div>", unsafe_allow_html=True)
             g_range = list(range(6))
             h_probs = [poisson_pmf(lam_h, g)*100 for g in g_range]
             a_probs = [poisson_pmf(lam_a, g)*100 for g in g_range]
@@ -415,7 +423,7 @@ if m_sel and btn_run:
             
             fig.update_layout(
                 template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                height=250, margin=dict(l=0, r=0, t=10, b=0),
+                height=220, margin=dict(l=0, r=0, t=10, b=0),
                 legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1, font=dict(family="Rajdhani", size=12)),
                 xaxis=dict(title="Goals", title_font=dict(family="Rajdhani", size=12), gridcolor="rgba(255,255,255,0.05)"),
                 yaxis=dict(title="Probability (%)", title_font=dict(family="Rajdhani", size=12), gridcolor="rgba(255,255,255,0.05)")
@@ -423,11 +431,38 @@ if m_sel and btn_run:
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
             st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown("<div class='holo-panel'><div class='panel-title'>ORDER BOOK ROUTING DEEP SCAN (TOP 10)</div>", unsafe_allow_html=True)
-        if live_odds:
-            clean = sorted([m for m in valid_markets if m['Edge'] < 0.30 and m['BookOdd'] <= 10.0], key=lambda x: x['Kelly'], reverse=True)
-            html = "<table class='q-table'><tr><th>Derivative Asset</th><th>Listed Odd</th><th>Model Prob</th><th>Advantage (+EV)</th><th>Kelly Sizing</th></tr>"
-            for m in clean[:10]: 
-                clr = "color:var(--neon-cyan);" if m['Edge'] > 0 else ""
-                html += f"<tr><td>{m['Market']}</td><td class='mono-val'>{m['BookOdd']:.3f}</td><td class='mono-val'>{m['ModelProb']*100:.1f}%</td><td class='mono-val' style='{clr}'>+{m['Edge']*100:.2f}%</td><td class='mono-val' style='color:var(--text-dim);'>{m['Kelly']:.2f}%</td></tr>"
-            st.markdown(html + "</table></div>", unsafe_allow_html=True)
+        # Row 3: Order Book & Standings Matrix
+        col_ob, col_std = st.columns(2, gap="large")
+        
+        with col_ob:
+            st.markdown("<div class='holo-panel' style='padding:20px;'><div class='panel-title'>ORDER BOOK SCALPER</div>", unsafe_allow_html=True)
+            if live_odds:
+                clean = sorted([m for m in valid_markets if m['Edge'] < 0.30 and m['BookOdd'] <= 10.0], key=lambda x: x['Kelly'], reverse=True)
+                html = "<div class='table-container'><table class='q-table'><tr><th>Asset</th><th>Odd</th><th>Prob</th><th>EV</th></tr>"
+                for m in clean[:8]: 
+                    clr = "color:var(--neon-cyan);" if m['Edge'] > 0 else ""
+                    html += f"<tr><td>{m['Market']}</td><td class='mono-val'>{m['BookOdd']:.2f}</td><td class='mono-val'>{m['ModelProb']*100:.1f}%</td><td class='mono-val' style='{clr}'>+{m['Edge']*100:.2f}%</td></tr>"
+                st.markdown(html + "</table></div></div>", unsafe_allow_html=True)
+            else:
+                st.markdown("<div style='color:var(--text-dim); text-align:center; padding:20px;'>Awaiting Market Data...</div></div>", unsafe_allow_html=True)
+                
+        with col_std:
+            st.markdown(f"<div class='holo-panel' style='padding:20px;'><div class='panel-title'>LEAGUE MATRIX ({season_id})</div>", unsafe_allow_html=True)
+            if standings_data:
+                html = "<div class='table-container'><table class='q-table'><tr><th>#</th><th>Team</th><th>P</th><th>GF:GA</th><th>Pts</th></tr>"
+                for team in standings_data:
+                    rank = team.get('rank', '-')
+                    name = team.get('team', {}).get('name', 'N/A')[:12] # Trim name for UI fitting
+                    pts = team.get('points', '-')
+                    played = team.get('all', {}).get('played', '-')
+                    gf = team.get('all', {}).get('goals', {}).get('for', '-')
+                    ga = team.get('all', {}).get('goals', {}).get('against', '-')
+                    
+                    # Highlight teams currently playing
+                    row_style = "background: rgba(0, 255, 204, 0.15);" if name in h_name or name in a_name else ""
+                    name_style = "color: var(--neon-cyan); font-weight:700;" if name in h_name or name in a_name else ""
+                    
+                    html += f"<tr style='{row_style}'><td>{rank}</td><td style='{name_style}'>{name}</td><td class='mono-val'>{played}</td><td class='mono-val' style='color:var(--text-dim);'>{gf}:{ga}</td><td class='mono-val' style='color:var(--neon-gold);'>{pts}</td></tr>"
+                st.markdown(html + "</table></div></div>", unsafe_allow_html=True)
+            else:
+                st.markdown("<div style='color:var(--text-dim); text-align:center; padding:20px;'>Standings Data Unavailable.</div></div>", unsafe_allow_html=True)
