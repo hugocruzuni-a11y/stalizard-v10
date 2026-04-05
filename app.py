@@ -117,7 +117,7 @@ div[data-testid="column"] > div { gap: 0rem !important; }
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. ALGORITHMIC ENGINE & LOGIC
+# 2. ALGORITHMIC ENGINE & LOGIC (CORRIGIDO E OTIMIZADO)
 # ==========================================
 API_KEY = st.secrets.get("API_KEY", "8171043bf0a322286bb127947dbd4041") 
 HEADERS = {"x-apisports-key": API_KEY, "x-apisports-host": "v3.football.api-sports.io"}
@@ -126,30 +126,43 @@ def fetch_api(endpoint, params):
     try:
         r = requests.get(f"https://{HEADERS['x-apisports-host']}/{endpoint}", headers=HEADERS, params=params, timeout=10)
         return r.json().get('response', [])
-    except Exception:
+    except Exception as e:
         return []
 
+# [CORREÇÃO] Função segura para converter valores da API que possam vir nulos.
+def safe_float(val, default):
+    try:
+        if val is None: return default
+        return float(val)
+    except (TypeError, ValueError):
+        return default
+
 @st.cache_data(ttl=60) 
-def get_live_fixtures(date_str, league_id, season="2025"):
+def get_live_fixtures(date_str, league_id, season="2024"): # Ajustado para season recente
     return fetch_api("fixtures", {"date": date_str, "league": league_id, "season": season})
 
 @st.cache_data(ttl=3600)
-def get_real_stats(team_id, league_id, season="2025"):
+def get_real_stats(team_id, league_id, season="2024"):
     stats = fetch_api("teams/statistics", {"team": team_id, "league": league_id, "season": season})
-    if not stats: return {"gf_h": 1.55, "ga_h": 1.25, "gf_a": 1.25, "ga_a": 1.55}
+    default_stats = {"gf_h": 1.55, "ga_h": 1.25, "gf_a": 1.25, "ga_a": 1.55}
+    
+    if not stats: return default_stats
+    
     try:
         goals = stats.get('goals', {}) if isinstance(stats, dict) else stats[0].get('goals', {})
+        # [CORREÇÃO] Aplicação do safe_float para evitar quebras quando a API retorna Null
         return {
-            "gf_h": float(goals.get('for', {}).get('average', {}).get('home', 1.55)),
-            "ga_h": float(goals.get('against', {}).get('average', {}).get('home', 1.25)),
-            "gf_a": float(goals.get('for', {}).get('average', {}).get('away', 1.25)),
-            "ga_a": float(goals.get('against', {}).get('average', {}).get('away', 1.55))
+            "gf_h": safe_float(goals.get('for', {}).get('average', {}).get('home'), 1.55),
+            "ga_h": safe_float(goals.get('against', {}).get('average', {}).get('home'), 1.25),
+            "gf_a": safe_float(goals.get('for', {}).get('average', {}).get('away'), 1.25),
+            "ga_a": safe_float(goals.get('against', {}).get('average', {}).get('away'), 1.55)
         }
-    except: return {"gf_h": 1.55, "ga_h": 1.25, "gf_a": 1.25, "ga_a": 1.55}
+    except Exception: 
+        return default_stats
 
 @st.cache_data(ttl=60)
 def get_real_odds(fixture_id):
-    odds_data = fetch_api("odds", {"fixture": fixture_id, "bookmaker": 8})
+    odds_data = fetch_api("odds", {"fixture": fixture_id, "bookmaker": 8}) # 8 = Bet365
     market_odds = {}
     if not odds_data or not odds_data[0].get('bookmakers'): return market_odds
     try:
@@ -187,18 +200,19 @@ def get_real_odds(fixture_id):
     return market_odds
 
 def calculate_lambdas(h_stats, a_stats):
-    hfa_multiplier = 1.10 
-    lam_h = round(max(0.1, (h_stats['gf_h']/1.55 * hfa_multiplier) * (a_stats['ga_a']/1.55) * 1.55), 3)
-    lam_a = round(max(0.1, (a_stats['gf_a']/1.25) * (h_stats['ga_h']/1.25) * 1.25), 3)
-    return lam_h, lam_a
+    hfa_multiplier = 1.10 # Vantagem de jogar em casa
+    # [CORREÇÃO] Otimização matemática para o cálculo dos Expected Goals.
+    lam_h = max(0.1, (h_stats['gf_h'] * hfa_multiplier) * (a_stats['ga_a']) / 1.55)
+    lam_a = max(0.1, (a_stats['gf_a']) * (h_stats['ga_h']) / 1.25)
+    return round(lam_h, 3), round(lam_a, 3)
 
 def run_monte_carlo_sim(lam_h, lam_a, sims=50000):
-    np.random.seed(42) 
-    h_goals, a_goals = np.random.poisson(lam_h, sims), np.random.poisson(lam_a, sims)
+    # [CORREÇÃO] Seed temporal para simulações dinâmicas autênticas
+    np.random.seed(int(time.time())) 
+    h_goals = np.random.poisson(lam_h, sims)
+    a_goals = np.random.poisson(lam_a, sims)
     
-    for i in range(sims):
-        if h_goals[i] == 1 and a_goals[i] == 0 and np.random.random() < 0.05: a_goals[i] = 1
-        elif h_goals[i] == 0 and a_goals[i] == 1 and np.random.random() < 0.05: h_goals[i] = 1
+    # [CORREÇÃO] Removido o hack artificial de forçar empates (1-1)
             
     diff, total = h_goals - a_goals, h_goals + a_goals
     hw, dr, aw = np.sum(diff > 0)/sims, np.sum(diff == 0)/sims, np.sum(diff < 0)/sims
@@ -409,6 +423,7 @@ if m_sel and btn_run:
         ]
         
         if prime_bets:
+            # Seleciona rigorosamente a aposta mais forte (melhor Kelly), evitando sobreposição
             best_bet = max(prime_bets, key=lambda x: x['Kelly'])
     
     with col_exec:
