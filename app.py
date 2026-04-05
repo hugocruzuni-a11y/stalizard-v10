@@ -18,13 +18,14 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;500;600;700&family=Share+Tech+Mono&display=swap');
 
 :root {
-    --bg-deep: #010308;
-    --glass-bg: rgba(4, 9, 20, 0.6);
+    --bg-deep: #010205;
+    --glass-bg: rgba(6, 11, 25, 0.65);
     --glass-border: rgba(0, 255, 204, 0.15);
     --neon-cyan: #00FFCC;
     --neon-purple: #B026FF;
     --neon-gold: #FFC107;
     --neon-red: #FF2A55;
+    --neon-green: #00FF66;
     --text-main: #E2E8F0;
     --text-dim: #64748B;
 }
@@ -33,8 +34,11 @@ st.markdown("""
 .stApp { 
     background-color: var(--bg-deep); 
     background-image: 
-        radial-gradient(circle at 10% 20%, rgba(0, 255, 204, 0.05), transparent 30%),
-        radial-gradient(circle at 90% 80%, rgba(176, 38, 255, 0.05), transparent 30%);
+        radial-gradient(circle at 10% 20%, rgba(0, 255, 204, 0.04), transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(176, 38, 255, 0.04), transparent 40%),
+        linear-gradient(rgba(255,255,255,0.01) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.01) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 30px 30px, 30px 30px;
     color: var(--text-main); 
     font-family: 'Rajdhani', sans-serif; 
 }
@@ -42,21 +46,21 @@ header, footer { display: none !important; }
 
 /* Omni-Header */
 .omni-nav { 
-    background: linear-gradient(180deg, rgba(1,3,8,0.9) 0%, rgba(4,9,20,0.8) 100%);
+    background: linear-gradient(180deg, rgba(1,2,5,0.95) 0%, rgba(6,11,25,0.8) 100%);
     backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
     border-bottom: 1px solid var(--glass-border); 
-    padding: 0 40px; height: 80px;
+    padding: 0 40px; height: 75px;
     display: flex; justify-content: space-between; align-items: center; 
     margin: -3rem -3rem 2rem -3rem; position: sticky; top: 0; z-index: 9999;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.9);
 }
 
 .brand-matrix { display: flex; align-items: center; gap: 15px; }
-.logo-text { font-family: 'Orbitron', sans-serif; font-size: 2.2rem; font-weight: 900; color: #FFF; letter-spacing: 2px; text-shadow: 0 0 15px rgba(0,255,204,0.4);}
+.logo-text { font-family: 'Orbitron', sans-serif; font-size: 2rem; font-weight: 900; color: #FFF; letter-spacing: 2px; text-shadow: 0 0 15px rgba(0,255,204,0.4);}
 .logo-text span { color: var(--neon-cyan); }
-.status-pulse { width: 10px; height: 10px; background: var(--neon-cyan); border-radius: 50%; box-shadow: 0 0 10px var(--neon-cyan); animation: pulse 1.5s infinite; }
+.status-pulse { width: 8px; height: 8px; background: var(--neon-cyan); border-radius: 50%; box-shadow: 0 0 10px var(--neon-cyan); animation: pulse 1.5s infinite; }
 
-@keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } 100% { opacity: 1; transform: scale(1); } }
 
 /* Holographic Panels */
 .holo-panel { 
@@ -65,69 +69,71 @@ header, footer { display: none !important; }
     border: 1px solid var(--glass-border); 
     border-top: 2px solid rgba(0,255,204,0.3);
     padding: 25px; border-radius: 12px; 
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    position: relative; overflow: hidden;
-    height: 100%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    position: relative; overflow: hidden; height: 100%;
 }
-.holo-panel::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 2px; background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent); animation: scan 4s linear infinite; }
-@keyframes scan { 100% { left: 200%; } }
-
 .panel-title { font-family: 'Share Tech Mono', monospace; font-size: 0.85rem; color: var(--neon-cyan); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; text-shadow: 0 0 8px rgba(0,255,204,0.3);}
 .panel-title::after { content: ''; flex-grow: 1; height: 1px; background: linear-gradient(90deg, var(--neon-cyan) 0%, transparent 100%); opacity: 0.3;}
 
+/* Form Tracker */
+.form-tracker { display: flex; gap: 4px; justify-content: center; margin-top: 8px;}
+.form-badge { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 3px; font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; font-weight: bold; color: #000; }
+.form-w { background: var(--neon-green); box-shadow: 0 0 8px rgba(0,255,102,0.4); }
+.form-d { background: var(--neon-gold); box-shadow: 0 0 8px rgba(255,193,7,0.4); }
+.form-l { background: var(--neon-red); box-shadow: 0 0 8px rgba(255,42,85,0.4); }
+
 /* Data Grid */
 .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;}
-.data-node { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; text-align: center; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);}
-.node-lbl { font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; font-weight: 600;}
-.node-val { font-family: 'Share Tech Mono', monospace; font-size: 2rem; color: #FFF; text-shadow: 0 0 10px rgba(255,255,255,0.2); line-height: 1;}
-.node-val.cyan { color: var(--neon-cyan); text-shadow: 0 0 15px rgba(0,255,204,0.4); }
-.node-val.purple { color: var(--neon-purple); text-shadow: 0 0 15px rgba(176,38,255,0.4); }
+.data-node { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); padding: 20px 15px; border-radius: 8px; text-align: center; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); position: relative; overflow: hidden;}
+.node-lbl { font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; font-weight: 600;}
+.node-val { font-family: 'Share Tech Mono', monospace; font-size: 2.2rem; color: #FFF; text-shadow: 0 0 10px rgba(255,255,255,0.2); line-height: 1;}
 
-/* The Singularity Signal (Alpha Box) */
+/* The Alpha Matrix Ticket */
 .singularity-box {
-    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%);
-    border: 1px solid var(--neon-gold);
-    border-radius: 12px; padding: 30px; position: relative; height: 100%;
-    box-shadow: 0 0 30px rgba(255, 193, 7, 0.15), inset 0 0 20px rgba(255, 193, 7, 0.05);
-    animation: borderGlow 3s infinite alternate;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.08) 0%, rgba(0, 0, 0, 0.9) 100%);
+    border: 1px solid var(--neon-gold); border-radius: 12px; padding: 30px; position: relative; height: 100%;
+    box-shadow: 0 0 30px rgba(255, 193, 7, 0.1), inset 0 0 20px rgba(255, 193, 7, 0.05);
 }
-@keyframes borderGlow { 0% { box-shadow: 0 0 20px rgba(255,193,7,0.1); } 100% { box-shadow: 0 0 40px rgba(255,193,7,0.3); } }
-.sig-lbl { font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: var(--neon-gold); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 15px; display: inline-block; border-bottom: 1px solid var(--neon-gold); padding-bottom: 5px;}
-.sig-asset { font-family: 'Orbitron', sans-serif; font-size: 2.2rem; font-weight: 700; color: #FFF; margin-bottom: 5px; line-height: 1.1;}
-.sig-odd { font-family: 'Share Tech Mono', monospace; font-size: 1.8rem; color: var(--neon-gold); margin-bottom: 20px; text-shadow: 0 0 15px rgba(255,193,7,0.5);}
+.order-type { position: absolute; top: 25px; right: 25px; background: rgba(0,255,102,0.1); border: 1px solid var(--neon-green); color: var(--neon-green); padding: 4px 10px; border-radius: 4px; font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; letter-spacing: 2px; font-weight: bold; box-shadow: 0 0 10px rgba(0,255,102,0.2);}
+.sig-lbl { font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; color: var(--neon-gold); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 10px; display: inline-block; border-bottom: 1px solid var(--neon-gold); padding-bottom: 5px;}
+.sig-asset { font-family: 'Orbitron', sans-serif; font-size: 2.2rem; font-weight: 700; color: #FFF; margin-bottom: 2px; line-height: 1.1; letter-spacing: -1px;}
+.sig-odd { font-family: 'Share Tech Mono', monospace; font-size: 1.6rem; color: var(--neon-gold); margin-bottom: 25px; text-shadow: 0 0 15px rgba(255,193,7,0.5);}
 
-.sig-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); font-size: 1rem; font-weight: 600;}
+.metric-bar { background: rgba(255,255,255,0.05); border-radius: 4px; height: 6px; width: 100%; margin-top: 5px; overflow: hidden; position: relative;}
+.metric-fill { height: 100%; background: linear-gradient(90deg, var(--neon-purple), var(--neon-cyan)); box-shadow: 0 0 10px var(--neon-cyan);}
+
+.sig-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed rgba(255,255,255,0.05); font-size: 1.05rem; font-weight: 600;}
 .sig-row:last-child { border: none; padding-bottom: 0;}
-.sig-row span:first-child { color: var(--text-dim); font-weight: 500; font-family: 'Rajdhani', sans-serif;}
+.sig-row span:first-child { color: var(--text-dim); font-weight: 500; font-family: 'Rajdhani', sans-serif; letter-spacing: 0.5px;}
 .sig-row span:last-child { font-family: 'Share Tech Mono', monospace; color: #FFF;}
 
-/* Quantum Tables (Order Book & Standings) */
-.table-container { max-height: 350px; overflow-y: auto; overflow-x: hidden; padding-right: 5px; }
-.table-container::-webkit-scrollbar { width: 6px; }
-.table-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 4px; }
+/* Quantum Tables */
+.table-container { max-height: 320px; overflow-y: auto; overflow-x: hidden; padding-right: 5px; }
+.table-container::-webkit-scrollbar { width: 4px; }
+.table-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
 .table-container::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 4px; }
 
 .q-table { width: 100%; border-collapse: collapse; font-family: 'Rajdhani', sans-serif; text-align: center;}
-.q-table th { position: sticky; top: 0; padding: 12px 10px; color: var(--neon-cyan); font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(0,255,204,0.3); background: rgba(4,9,20,0.95); z-index: 10;}
+.q-table th { position: sticky; top: 0; padding: 12px 10px; color: var(--neon-cyan); font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid rgba(0,255,204,0.3); background: rgba(6,11,25,0.95); z-index: 10;}
 .q-table th:first-child { text-align: left; }
-.q-table td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 1rem; font-weight: 600;}
+.q-table td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 1rem; font-weight: 600;}
 .q-table td:first-child { text-align: left; }
 .q-table tr:hover td { background: rgba(0,255,204,0.05); }
 .mono-val { font-family: 'Share Tech Mono', monospace; }
 
 /* Streamlit Overrides */
-div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: rgba(0,0,0,0.6) !important; border: 1px solid rgba(0,255,204,0.3) !important; border-radius: 4px !important; color: #FFF !important; font-family: 'Share Tech Mono', monospace !important;}
+div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: rgba(0,0,0,0.8) !important; border: 1px solid rgba(0,255,204,0.2) !important; border-radius: 6px !important; color: #FFF !important; font-family: 'Share Tech Mono', monospace !important;}
 .stButton > button {
     background: transparent !important; color: var(--neon-cyan) !important; 
     border: 1px solid var(--neon-cyan) !important; font-family: 'Orbitron', sans-serif !important;
     font-weight: 700 !important; font-size: 1.2rem !important; letter-spacing: 3px !important;
-    padding: 25px !important; width: 100%; border-radius: 4px !important;
+    padding: 25px !important; width: 100%; border-radius: 6px !important;
     text-transform: uppercase; transition: all 0.3s ease !important;
-    box-shadow: inset 0 0 10px rgba(0,255,204,0.1) !important;
+    box-shadow: inset 0 0 15px rgba(0,255,204,0.05) !important;
 }
-.stButton > button:hover { background: var(--neon-cyan) !important; color: #000 !important; box-shadow: 0 0 30px rgba(0,255,204,0.5), inset 0 0 20px rgba(255,255,255,0.5) !important; transform: translateY(-2px);}
+.stButton > button:hover { background: var(--neon-cyan) !important; color: #000 !important; box-shadow: 0 0 30px rgba(0,255,204,0.4), inset 0 0 20px rgba(255,255,255,0.5) !important; transform: translateY(-2px);}
 .stProgress > div > div > div > div { background: linear-gradient(90deg, #B026FF, #00FFCC) !important; }
-div[data-testid="column"] > div { gap: 1.5rem !important; } /* Fix column spacing */
+div[data-testid="column"] > div { gap: 1.5rem !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -158,7 +164,7 @@ def get_upcoming_fixtures(league_id):
 @st.cache_data(ttl=3600)
 def get_advanced_xg_stats(team_id, league_id, season):
     stats = fetch_api("teams/statistics", {"team": team_id, "league": league_id, "season": season})
-    default_stats = {"xg_h": 1.45, "xga_h": 1.15, "xg_a": 1.15, "xga_a": 1.45}
+    default_stats = {"xg_h": 1.45, "xga_h": 1.15, "xg_a": 1.15, "xga_a": 1.45, "form": "-----", "played": 0}
     if not stats: return default_stats
     
     try:
@@ -173,21 +179,27 @@ def get_advanced_xg_stats(team_id, league_id, season):
         cs_h = safe_float(data.get('clean_sheet', {}).get('home'), 0) / 10 
         fts_a = safe_float(data.get('failed_to_score', {}).get('away'), 0) / 10 
         
+        # Extrair volume de jogo e forma (momentum)
+        played = safe_float(data.get('fixtures', {}).get('played', {}).get('total'), 0)
+        raw_form = data.get('form', '-----')
+        clean_form = raw_form[-5:] if raw_form and isinstance(raw_form, str) else "-----"
+        clean_form = clean_form.ljust(5, '-')
+        
         return {
             "xg_h": max(0.2, gf_h + (cs_h * 0.1)),
             "xga_h": max(0.2, ga_h - (cs_h * 0.15)),
             "xg_a": max(0.2, gf_a - (fts_a * 0.1)),
-            "xga_a": max(0.2, ga_a + (fts_a * 0.15))
+            "xga_a": max(0.2, ga_a + (fts_a * 0.15)),
+            "form": clean_form,
+            "played": played
         }
     except Exception: return default_stats
 
 @st.cache_data(ttl=3600)
 def get_league_standings(league_id, season):
-    """NOVO: Extrai a tabela classificativa oficial."""
     data = fetch_api("standings", {"league": league_id, "season": season})
     try:
-        if data and len(data) > 0:
-            return data[0]['league']['standings'][0]
+        if data and len(data) > 0: return data[0]['league']['standings'][0]
     except: pass
     return []
 
@@ -221,12 +233,10 @@ def calculate_lambdas(h_stats, a_stats):
     return round(lam_h, 3), round(lam_a, 3)
 
 def run_monte_carlo_sim(lam_h, lam_a, sims=100000):
-    """NOVO: Motor Numpy 100% Vetorizado para velocidade extrema (HFT Level)"""
     np.random.seed(int(time.time()))
     h_goals = np.random.poisson(lam_h, sims)
     a_goals = np.random.poisson(lam_a, sims)
     
-    # DIXON-COLES RHO ADJUSTMENT (Correção Científica Vetorizada)
     rho = -0.12 
     zero_zero_mask = (h_goals == 0) & (a_goals == 0)
     correction_mask = np.random.random(sims) < abs(rho)
@@ -267,12 +277,46 @@ def calculate_dynamic_margin(odds):
     except: pass
     return 0.045
 
-def calculate_kelly(prob, odd, fraction):
+def calculate_quant_metrics(prob, odd, fraction_multiplier, bankroll, games_played, max_risk_cap=0.035):
+    """
+    ALGORITMO QUANTITATIVO PROFISSIONAL (Kelly Otimizado + Índice de Confiança)
+    """
+    edge = (prob * odd) - 1
     b = odd - 1
-    if b <= 0: return 0
-    return max(0, (((b * prob) - (1 - prob)) / b) * fraction * 100)
+    
+    if b <= 0 or edge <= 0:
+        return 0, 0, 0, 0
+        
+    # 1. Optimal Kelly Sizing
+    kelly_full = max(0, edge / b)
+    kelly_adj = kelly_full * fraction_multiplier
+    
+    # Capital Preservation: Hard Cap absolute risk (e.g., max 3.5% of bankroll per trade)
+    final_kelly_pct = min(kelly_adj, max_risk_cap)
+    dollar_allocation = final_kelly_pct * bankroll
+    
+    # 2. Omni-Score (Confidence Index)
+    # Recompensa alto edge, alta probabilidade base, baixa variância (odds mais baixas) e liquidez de dados
+    score_edge = min(edge * 150, 40) # Max 40 pts
+    score_prob = prob * 45           # Max 45 pts
+    penalty_var = (odd / 10) * 10    # Subtrai pts por volatilidade
+    bonus_vol = min(games_played, 15) / 1.5 # Max 10 pts
+    
+    confidence = score_edge + score_prob - penalty_var + bonus_vol
+    confidence = max(12.5, min(99.9, confidence))
+    
+    return edge, final_kelly_pct * 100, dollar_allocation, confidence
 
 def poisson_pmf(lam, k): return (lam**k * math.exp(-lam)) / math.factorial(k)
+
+def render_form_badges(form_str):
+    html = "<div class='form-tracker'>"
+    for char in form_str:
+        if char == 'W': html += "<div class='form-badge form-w'>W</div>"
+        elif char == 'D': html += "<div class='form-badge form-d'>D</div>"
+        elif char == 'L': html += "<div class='form-badge form-l'>L</div>"
+        else: html += "<div class='form-badge' style='background:rgba(255,255,255,0.1); color:#94A3B8;'>-</div>"
+    return html + "</div>"
 
 # ==========================================
 # 3. OMNI-TERMINAL INTERFACE
@@ -284,12 +328,12 @@ st.markdown(f"""
         <div class="logo-text">APEX<span>QUANT</span></div>
     </div>
     <div style="font-family:'Share Tech Mono'; color:var(--neon-cyan); letter-spacing:2px; font-size:0.85rem;">
-        SECURE SOCKET // VECTOR ALGO ACTIVE // POISSON KERNEL V5
+        HEDGE FUND MODE // STRICT RISK CAPS // OMNI-SCORE V2
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-col_ctrl, col_exec = st.columns([1.2, 2.8], gap="large")
+col_ctrl, col_exec = st.columns([1.1, 2.9], gap="large")
 
 with col_ctrl:
     st.markdown("<div class='holo-panel'>", unsafe_allow_html=True)
@@ -299,7 +343,7 @@ with col_ctrl:
         "Premier League (ENG)": 39, "Champions League (EUR)": 2, "La Liga (ESP)": 140, 
         "Bundesliga (GER)": 78, "Serie A (ITA)": 135, "Ligue 1 (FRA)": 61,
         "Primeira Liga (POR)": 94, "Brasileirão Série A (BRA)": 71, 
-        "MLS (USA)": 253, "Eredivisie (NED)": 88, "Europa League (EUR)": 3
+        "MLS (USA)": 253, "Eredivisie (NED)": 88
     }
     league_name = st.selectbox("Target Market", list(l_map.keys()))
     
@@ -313,17 +357,22 @@ with col_ctrl:
             return f"{f['teams']['home']['name']} vs {f['teams']['away']['name']}  [{dt.strftime('%d/%m %H:%M')}]"
             
         m_map = {format_match(f): f for f in fixtures}
-        m_sel = m_map[st.selectbox("Available Arbitrage Vectors (Next 15)", list(m_map.keys()))]
+        m_sel = m_map[st.selectbox("Arbitrage Vectors (Next 15)", list(m_map.keys()))]
     else:
-        st.error("MARKET CLOSED: No liquidity found for this sector.")
+        st.error("MARKET CLOSED: No liquidity found.")
         
-    st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
-    st.markdown("<div class='panel-title'>RISK & CAPITAL MANAGEMENT</div>", unsafe_allow_html=True)
-    bankroll = st.number_input("Vault Capital ($)", value=1000000, step=50000, format="%d")
-    kelly_fraction = st.slider("Kelly Fractional Sizing (Bias)", min_value=0.1, max_value=1.0, value=0.25, step=0.05)
+    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='panel-title'>CAPITAL MANAGEMENT</div>", unsafe_allow_html=True)
+    bankroll = st.number_input("Vault Capital ($)", value=250000, step=10000, format="%d")
+    
+    k_map = {"Quarter Kelly (0.25x)": 0.25, "Half Kelly (0.50x)": 0.50, "Full Kelly (1.00x - Aggressive)": 1.0}
+    k_sel = st.selectbox("Kelly Sizing Strategy", list(k_map.keys()), index=1)
+    kelly_fraction = k_map[k_sel]
+    
+    max_risk = st.slider("Strict Risk Cap (% Bankroll)", min_value=1.0, max_value=5.0, value=3.0, step=0.5) / 100
     
     if m_sel:
-        st.markdown("<div style='margin-top: 35px;'>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 25px;'>", unsafe_allow_html=True)
         btn_run = st.button("EXECUTE QUANTUM MODEL")
         st.markdown("</div>", unsafe_allow_html=True)
         
@@ -333,18 +382,13 @@ if m_sel and btn_run:
     sys_status = st.empty()
     p_bar = st.progress(0)
     
-    steps = [
-        "INITIALIZING NEURAL NETWORKS...", 
-        "SYNCING xG AND LEAGUE STANDINGS...", 
-        "RUNNING 100,000 VECTORIZED MC PATHS...", 
-        "EXTRACTING PRIME ALPHA..."
-    ]
+    steps = ["INITIALIZING NEURAL NETWORKS...", "EXTRACTING FORM MOMENTUM & STANDINGS...", "CALCULATING OMNI-SCORE & STRICT KELLY...", "EXTRACTING PRIME ALPHA..."]
     for i, step in enumerate(steps):
-        sys_status.markdown(f"<div style='color:var(--neon-cyan); font-family:\"Share Tech Mono\"; font-size:0.9rem; margin-bottom:15px; text-shadow:0 0 5px rgba(0,255,204,0.5);'>[SYS_LOG]: {step}</div>", unsafe_allow_html=True)
+        sys_status.markdown(f"<div style='color:var(--neon-cyan); font-family:\"Share Tech Mono\"; font-size:0.8rem; margin-bottom:10px; text-shadow:0 0 5px rgba(0,255,204,0.5);'>[SYS_LOG]: {step}</div>", unsafe_allow_html=True)
         time.sleep(0.3)
         p_bar.progress((i+1)*25)
     
-    time.sleep(0.3)
+    time.sleep(0.2)
     sys_status.empty()
     p_bar.empty()
     
@@ -359,6 +403,8 @@ if m_sel and btn_run:
     live_odds = get_real_odds(m_sel['fixture']['id'])
     standings_data = get_league_standings(l_map[league_name], season_id)
     
+    avg_games_played = (h_stats['played'] + a_stats['played']) / 2
+    
     valid_markets, best_bet = [], None
     dyn_margin = calculate_dynamic_margin(live_odds)
     
@@ -366,69 +412,88 @@ if m_sel and btn_run:
         for mkt, odd in live_odds.items():
             prob = true_probs.get(mkt, 0)
             if odd > 1.05 and prob > 0:
-                f_prob = (1 / odd) / (1 + dyn_margin)
-                edge = (prob * odd) - 1
-                k_val = min(calculate_kelly(prob, odd, kelly_fraction), 10.0) if edge > 0 else 0
+                edge, k_pct, k_alloc, conf = calculate_quant_metrics(prob, odd, kelly_fraction, bankroll, avg_games_played, max_risk_cap=max_risk)
                 
-                ui_mkt = mkt.replace("Home Win", f"{h_name} Win").replace("Away Win", f"{a_name} Win").replace("Draw No Bet (Home)", f"{h_name} (DNB)").replace("Draw No Bet (Away)", f"{a_name} (DNB)")
-                valid_markets.append({"Market": ui_mkt, "BookOdd": odd, "ModelProb": prob, "Edge": edge, "Kelly": k_val})
+                if edge > 0:
+                    ui_mkt = mkt.replace("Home Win", f"{h_name} Win").replace("Away Win", f"{a_name} Win").replace("Draw No Bet (Home)", f"{h_name} (DNB)").replace("Draw No Bet (Away)", f"{a_name} (DNB)")
+                    valid_markets.append({"Market": ui_mkt, "BookOdd": odd, "ModelProb": prob, "Edge": edge, "KellyPct": k_pct, "Allocation": k_alloc, "Confidence": conf})
         
-        prime_bets = [m for m in valid_markets if 0.01 < m['Edge'] < 0.30 and m['ModelProb'] >= 0.35 and m['BookOdd'] <= 4.0]
-        if prime_bets: best_bet = max(prime_bets, key=lambda x: x['Kelly'])
+        prime_bets = [m for m in valid_markets if 0.01 < m['Edge'] < 0.35 and m['ModelProb'] >= 0.30]
+        if prime_bets: best_bet = max(prime_bets, key=lambda x: (x['Confidence'] * 0.7) + (x['KellyPct'] * 0.3)) # Pondera confiança vs alocação
     
     with col_exec:
-        # Dynamic xG Data Grid (Topo)
+        # Row 1: Dados Head-to-Head (xG + Forma)
         st.markdown(f"""
         <div class='data-grid'>
             <div class='data-node'>
-                <div class='node-lbl'>Synthesized xG [{h_name}]</div>
+                <div class='node-lbl'>[{h_name}] Synthesized xG</div>
                 <div class='node-val cyan'>{lam_h:.2f}</div>
+                {render_form_badges(h_stats['form'])}
             </div>
             <div class='data-node'>
-                <div class='node-lbl'>Synthesized xG [{a_name}]</div>
+                <div class='node-lbl'>[{a_name}] Synthesized xG</div>
                 <div class='node-val purple'>{lam_a:.2f}</div>
+                {render_form_badges(a_stats['form'])}
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-        # Row 2: Alpha Signal & Chart
-        col_alpha, col_chart = st.columns([1.1, 1], gap="large")
+        # Row 2: Alpha Signal & Gráfico EV Sim
+        col_alpha, col_ev = st.columns([1.1, 1], gap="large")
         with col_alpha:
             if best_bet:
-                sz = (best_bet['Kelly']/100) * bankroll
-                c_idx = min(99.9, (best_bet['ModelProb'] * 100) + (best_bet['Edge'] * 60))
+                yld = (best_bet['Edge'] * best_bet['Allocation'])
                 st.markdown(f"""
                 <div class='singularity-box'>
-                    <div class='sig-lbl'>VERIFIED ALPHA ISOLATED</div>
+                    <div class='order-type'>BUY ORDER</div>
+                    <div class='sig-lbl'>PRIME ALPHA DETECTED</div>
                     <div class='sig-asset'>{best_bet['Market']}</div>
                     <div class='sig-odd'>@ {best_bet['BookOdd']:.3f}</div>
+                    
                     <div class='sig-row'><span>Model Strike Rate</span><span style='color:var(--neon-cyan);'>{best_bet['ModelProb']*100:.2f}%</span></div>
                     <div class='sig-row'><span>Mathematical Edge (+EV)</span><span style='color:var(--neon-gold);'>+{best_bet['Edge']*100:.2f}%</span></div>
-                    <div class='sig-row'><span>Optimal Allocation</span><span>${sz:,.0f} <span style='font-size:0.8rem; color:var(--text-dim);'>({best_bet['Kelly']:.2f}%)</span></span></div>
-                    <div class='sig-row' style='margin-top:15px; border:none;'><span>Confidence Index</span><span>{c_idx:.1f} / 100.0</span></div>
+                    <div class='sig-row'><span>Optimal Allocation (Cap)</span><span>${best_bet['Allocation']:,.0f} <span style='font-size:0.8rem; color:var(--text-dim);'>({best_bet['KellyPct']:.2f}%)</span></span></div>
+                    <div class='sig-row'><span>Expected Yield per Trade</span><span style='color:var(--neon-green);'>+${yld:,.0f}</span></div>
+                    
+                    <div style='margin-top:20px;'>
+                        <div style='display:flex; justify-content:space-between; font-family:"Share Tech Mono"; font-size:0.8rem; color:var(--text-dim); margin-bottom:4px;'>
+                            <span>Omni-Score (Confidence)</span><span>{best_bet['Confidence']:.1f} / 100</span>
+                        </div>
+                        <div class='metric-bar'><div class='metric-fill' style='width:{best_bet['Confidence']}%;'></div></div>
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
             elif live_odds:
-                st.markdown("<div class='holo-panel' style='height:100%; display:flex; align-items:center; justify-content:center; text-align:center;'><div class='panel-title' style='color:var(--neon-red);'>MARKET HIGHLY EFFICIENT. NO EDGES DETECTED. DO NOT DEPLOY CAPITAL.</div></div>", unsafe_allow_html=True)
+                st.markdown("<div class='holo-panel' style='display:flex; align-items:center; justify-content:center; text-align:center;'><div class='panel-title' style='color:var(--neon-red); margin:0;'>MARKET HIGHLY EFFICIENT.<br>NO EDGES DETECTED. DO NOT DEPLOY CAPITAL.</div></div>", unsafe_allow_html=True)
 
-        with col_chart:
-            st.markdown("<div class='holo-panel'><div class='panel-title'>BIVARIATE POISSON KERNEL</div>", unsafe_allow_html=True)
-            g_range = list(range(6))
-            h_probs = [poisson_pmf(lam_h, g)*100 for g in g_range]
-            a_probs = [poisson_pmf(lam_a, g)*100 for g in g_range]
-
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=g_range, y=h_probs, fill='tozeroy', name=h_name, line=dict(color='#00FFCC', width=3), fillcolor='rgba(0, 255, 204, 0.2)'))
-            fig.add_trace(go.Scatter(x=g_range, y=a_probs, fill='tozeroy', name=a_name, line=dict(color='#B026FF', width=3), fillcolor='rgba(176, 38, 255, 0.2)'))
-            
-            fig.update_layout(
-                template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                height=220, margin=dict(l=0, r=0, t=10, b=0),
-                legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1, font=dict(family="Rajdhani", size=12)),
-                xaxis=dict(title="Goals", title_font=dict(family="Rajdhani", size=12), gridcolor="rgba(255,255,255,0.05)"),
-                yaxis=dict(title="Probability (%)", title_font=dict(family="Rajdhani", size=12), gridcolor="rgba(255,255,255,0.05)")
-            )
-            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+        with col_ev:
+            st.markdown("<div class='holo-panel'><div class='panel-title'>EV PROJECTION CURVE (500 TRADES)</div>", unsafe_allow_html=True)
+            if best_bet:
+                # Simulador de Trajetória Monte Carlo do Valor Esperado
+                sim_trades = 500
+                p = best_bet['ModelProb']
+                o = best_bet['BookOdd']
+                b_size = best_bet['Allocation']
+                
+                # Gera uma curva teórica de crescimento com ruído
+                expected_growth = np.array([max(0, (i * b_size * ((p * o) - 1))) for i in range(sim_trades)])
+                noise = np.random.normal(0, b_size * 1.5, sim_trades).cumsum() 
+                simulated_path = expected_growth + noise
+                
+                fig_ev = go.Figure()
+                fig_ev.add_trace(go.Scatter(y=simulated_path, name="Simulated Realization", line=dict(color='rgba(255,193,7,0.4)', width=1)))
+                fig_ev.add_trace(go.Scatter(y=expected_growth, name="Theoretical +EV", line=dict(color='#00FFCC', width=3, dash='solid')))
+                
+                fig_ev.update_layout(
+                    template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+                    height=240, margin=dict(l=0, r=0, t=5, b=0),
+                    showlegend=False,
+                    xaxis=dict(title="Number of Trades", title_font=dict(family="Share Tech Mono", size=10), gridcolor="rgba(255,255,255,0.05)", showline=True, linewidth=1, linecolor='rgba(255,255,255,0.1)'),
+                    yaxis=dict(title="Cumulative P&L ($)", title_font=dict(family="Share Tech Mono", size=10), gridcolor="rgba(255,255,255,0.05)", zeroline=True, zerolinecolor='rgba(255,42,85,0.3)')
+                )
+                st.plotly_chart(fig_ev, use_container_width=True, config={'displayModeBar': False})
+            else:
+                st.markdown("<div style='color:var(--text-dim); text-align:center; padding-top:40px;'>No signal to simulate.</div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
         # Row 3: Order Book & Standings Matrix
@@ -437,7 +502,7 @@ if m_sel and btn_run:
         with col_ob:
             st.markdown("<div class='holo-panel' style='padding:20px;'><div class='panel-title'>ORDER BOOK SCALPER</div>", unsafe_allow_html=True)
             if live_odds:
-                clean = sorted([m for m in valid_markets if m['Edge'] < 0.30 and m['BookOdd'] <= 10.0], key=lambda x: x['Kelly'], reverse=True)
+                clean = sorted([m for m in valid_markets if m['Edge'] < 0.35 and m['BookOdd'] <= 8.0], key=lambda x: x['Confidence'], reverse=True)
                 html = "<div class='table-container'><table class='q-table'><tr><th>Asset</th><th>Odd</th><th>Prob</th><th>EV</th></tr>"
                 for m in clean[:8]: 
                     clr = "color:var(--neon-cyan);" if m['Edge'] > 0 else ""
@@ -452,13 +517,12 @@ if m_sel and btn_run:
                 html = "<div class='table-container'><table class='q-table'><tr><th>#</th><th>Team</th><th>P</th><th>GF:GA</th><th>Pts</th></tr>"
                 for team in standings_data:
                     rank = team.get('rank', '-')
-                    name = team.get('team', {}).get('name', 'N/A')[:12] # Trim name for UI fitting
+                    name = team.get('team', {}).get('name', 'N/A')[:12]
                     pts = team.get('points', '-')
                     played = team.get('all', {}).get('played', '-')
                     gf = team.get('all', {}).get('goals', {}).get('for', '-')
                     ga = team.get('all', {}).get('goals', {}).get('against', '-')
                     
-                    # Highlight teams currently playing
                     row_style = "background: rgba(0, 255, 204, 0.15);" if name in h_name or name in a_name else ""
                     name_style = "color: var(--neon-cyan); font-weight:700;" if name in h_name or name in a_name else ""
                     
