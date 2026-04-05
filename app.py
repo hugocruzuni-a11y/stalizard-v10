@@ -278,29 +278,22 @@ def calculate_dynamic_margin(odds):
     return 0.045
 
 def calculate_quant_metrics(prob, odd, fraction_multiplier, bankroll, games_played, max_risk_cap=0.035):
-    """
-    ALGORITMO QUANTITATIVO PROFISSIONAL (Kelly Otimizado + Índice de Confiança)
-    """
     edge = (prob * odd) - 1
     b = odd - 1
     
     if b <= 0 or edge <= 0:
         return 0, 0, 0, 0
         
-    # 1. Optimal Kelly Sizing
     kelly_full = max(0, edge / b)
     kelly_adj = kelly_full * fraction_multiplier
     
-    # Capital Preservation: Hard Cap absolute risk (e.g., max 3.5% of bankroll per trade)
     final_kelly_pct = min(kelly_adj, max_risk_cap)
     dollar_allocation = final_kelly_pct * bankroll
     
-    # 2. Omni-Score (Confidence Index)
-    # Recompensa alto edge, alta probabilidade base, baixa variância (odds mais baixas) e liquidez de dados
-    score_edge = min(edge * 150, 40) # Max 40 pts
-    score_prob = prob * 45           # Max 45 pts
-    penalty_var = (odd / 10) * 10    # Subtrai pts por volatilidade
-    bonus_vol = min(games_played, 15) / 1.5 # Max 10 pts
+    score_edge = min(edge * 150, 40)
+    score_prob = prob * 45           
+    penalty_var = (odd / 10) * 10    
+    bonus_vol = min(games_played, 15) / 1.5 
     
     confidence = score_edge + score_prob - penalty_var + bonus_vol
     confidence = max(12.5, min(99.9, confidence))
@@ -422,7 +415,6 @@ if m_sel and btn_run:
         if prime_bets: best_bet = max(prime_bets, key=lambda x: (x['Confidence'] * 0.7) + (x['KellyPct'] * 0.3)) 
     
     with col_exec:
-        # Row 1: Dados Head-to-Head (xG + Forma)
         st.markdown(f"""
         <div class='data-grid'>
             <div class='data-node'>
@@ -438,7 +430,6 @@ if m_sel and btn_run:
         </div>
         """, unsafe_allow_html=True)
 
-        # Row 2: Alpha Signal & Gráfico EV Sim
         col_alpha, col_ev = st.columns([1.1, 1], gap="large")
         with col_alpha:
             if best_bet:
@@ -449,12 +440,10 @@ if m_sel and btn_run:
                     <div class='sig-lbl'>PRIME ALPHA DETECTED</div>
                     <div class='sig-asset'>{best_bet['Market']}</div>
                     <div class='sig-odd'>@ {best_bet['BookOdd']:.3f}</div>
-                    
                     <div class='sig-row'><span>Model Strike Rate</span><span style='color:var(--neon-cyan);'>{best_bet['ModelProb']*100:.2f}%</span></div>
                     <div class='sig-row'><span>Mathematical Edge (+EV)</span><span style='color:var(--neon-gold);'>+{best_bet['Edge']*100:.2f}%</span></div>
                     <div class='sig-row'><span>Optimal Allocation (Cap)</span><span>${best_bet['Allocation']:,.0f} <span style='font-size:0.8rem; color:var(--text-dim);'>({best_bet['KellyPct']:.2f}%)</span></span></div>
                     <div class='sig-row'><span>Expected Yield per Trade</span><span style='color:var(--neon-green);'>+${yld:,.0f}</span></div>
-                    
                     <div style='margin-top:20px;'>
                         <div style='display:flex; justify-content:space-between; font-family:"Share Tech Mono"; font-size:0.8rem; color:var(--text-dim); margin-bottom:4px;'>
                             <span>Omni-Score (Confidence)</span><span>{best_bet['Confidence']:.1f} / 100</span>
@@ -494,7 +483,6 @@ if m_sel and btn_run:
                 st.markdown("<div style='color:var(--text-dim); text-align:center; padding-top:40px;'>No signal to simulate.</div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
-        # Row 3: Order Book & Standings Matrix
         col_ob, col_std = st.columns(2, gap="large")
         
         with col_ob:
