@@ -419,7 +419,7 @@ if m_sel and btn_run:
                     valid_markets.append({"Market": ui_mkt, "BookOdd": odd, "ModelProb": prob, "Edge": edge, "KellyPct": k_pct, "Allocation": k_alloc, "Confidence": conf})
         
         prime_bets = [m for m in valid_markets if 0.01 < m['Edge'] < 0.35 and m['ModelProb'] >= 0.30]
-        if prime_bets: best_bet = max(prime_bets, key=lambda x: (x['Confidence'] * 0.7) + (x['KellyPct'] * 0.3)) # Pondera confiança vs alocação
+        if prime_bets: best_bet = max(prime_bets, key=lambda x: (x['Confidence'] * 0.7) + (x['KellyPct'] * 0.3)) 
     
     with col_exec:
         # Row 1: Dados Head-to-Head (xG + Forma)
@@ -459,7 +459,7 @@ if m_sel and btn_run:
                         <div style='display:flex; justify-content:space-between; font-family:"Share Tech Mono"; font-size:0.8rem; color:var(--text-dim); margin-bottom:4px;'>
                             <span>Omni-Score (Confidence)</span><span>{best_bet['Confidence']:.1f} / 100</span>
                         </div>
-                        <div class='metric-bar'><div class='metric-fill' style='width:{best_bet['Confidence']}%;'></div></div>
+                        <div class='metric-bar'><div class='metric-fill' style='width:{best_bet["Confidence"]}%;'></div></div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -469,13 +469,11 @@ if m_sel and btn_run:
         with col_ev:
             st.markdown("<div class='holo-panel'><div class='panel-title'>EV PROJECTION CURVE (500 TRADES)</div>", unsafe_allow_html=True)
             if best_bet:
-                # Simulador de Trajetória Monte Carlo do Valor Esperado
                 sim_trades = 500
                 p = best_bet['ModelProb']
                 o = best_bet['BookOdd']
                 b_size = best_bet['Allocation']
                 
-                # Gera uma curva teórica de crescimento com ruído
                 expected_growth = np.array([max(0, (i * b_size * ((p * o) - 1))) for i in range(sim_trades)])
                 noise = np.random.normal(0, b_size * 1.5, sim_trades).cumsum() 
                 simulated_path = expected_growth + noise
