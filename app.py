@@ -85,7 +85,7 @@ header, footer { display: none !important; }
 .form-d { background: var(--neon-gold); box-shadow: 0 0 10px rgba(255,196,0,0.4); }
 .form-l { background: var(--neon-red); box-shadow: 0 0 10px rgba(255,23,68,0.4); }
 
-/* The Alpha Matrix Ticket (Blindado contra bugs de HTML do Streamlit) */
+/* The Alpha Matrix Ticket */
 .singularity-box {
     background: linear-gradient(135deg, rgba(255, 196, 0, 0.08) 0%, rgba(0, 0, 0, 0.95) 100%);
     border: 1px solid var(--neon-gold); border-radius: 12px; padding: 25px; position: relative; height: 100%;
@@ -104,18 +104,21 @@ header, footer { display: none !important; }
 .sig-row span:first-child { color: var(--text-dim); font-weight: 500; font-family: 'Rajdhani', sans-serif; letter-spacing: 0.5px;}
 .sig-row span:last-child { font-family: 'Share Tech Mono', monospace; color: #FFF;}
 
-/* Quantum Tables */
-.table-container { max-height: 340px; overflow-y: auto; overflow-x: hidden; padding-right: 5px; }
+/* Quantum Tables - ALINHAMENTO ESTRITO 2050 */
+.table-container { max-height: 340px; overflow-y: auto; overflow-x: hidden; padding-right: 5px; margin-top: 10px; }
 .table-container::-webkit-scrollbar { width: 4px; }
-.table-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.4); }
+.table-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.4); border-radius: 4px; }
 .table-container::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 4px; }
 
-.q-table { width: 100%; border-collapse: collapse; font-family: 'Rajdhani', sans-serif; text-align: center;}
-.q-table th { position: sticky; top: 0; padding: 12px 10px; color: var(--neon-cyan); font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid rgba(0,229,255,0.3); background: rgba(8,14,28,0.95); z-index: 10;}
-.q-table th:first-child { text-align: left; }
-.q-table td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 1rem; font-weight: 600;}
-.q-table td:first-child { text-align: left; }
+.q-table { width: 100%; border-collapse: collapse; font-family: 'Rajdhani', sans-serif; table-layout: auto; }
+.q-table th { position: sticky; top: 0; padding: 12px 8px; color: var(--neon-cyan); font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(0,229,255,0.3); background: rgba(8,14,28,0.95); z-index: 10; }
+.q-table td { padding: 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 1rem; font-weight: 600; }
 .q-table tr:hover td { background: rgba(0,229,255,0.08); }
+
+/* Classes de alinhamento preciso */
+.col-left { text-align: left; }
+.col-center { text-align: center; }
+.col-right { text-align: right; }
 .mono-val { font-family: 'Share Tech Mono', monospace; }
 
 /* Streamlit Overrides */
@@ -141,16 +144,9 @@ API_KEY = st.secrets.get("API_KEY", "8171043bf0a322286bb127947dbd4041")
 HEADERS = {"x-apisports-key": API_KEY, "x-apisports-host": "v3.football.api-sports.io"}
 
 def get_dynamic_season(league_id):
-    """
-    [CORREÇÃO 2050]: Motor Temporal Híbrido. 
-    Distingue calendários anuais (ex: Brasil/MLS) de calendários europeus.
-    """
     now = datetime.now()
-    # IDs de Ligas que operam em ano civil (Janeiro-Dezembro)
-    calendar_year_leagues = [71, 253, 268] # Brasileirão, MLS, Allsvenskan, etc.
-    if league_id in calendar_year_leagues:
-        return str(now.year)
-    # Ligas Europeias (Agosto-Maio)
+    calendar_year_leagues = [71, 253, 268] # Ex: Brasileirão, MLS
+    if league_id in calendar_year_leagues: return str(now.year)
     return str(now.year - 1) if now.month < 7 else str(now.year)
 
 def fetch_api(endpoint, params):
@@ -190,12 +186,8 @@ def get_advanced_xg_stats(team_id, league_id, season):
         clean_form = raw_form[-5:] if raw_form and isinstance(raw_form, str) else "-----"
         clean_form = clean_form.ljust(5, '-')
         
-        # Quantificar o Momentum para o Radar Chart (W=3, D=1, L=0)
-        form_score = 0
-        for char in clean_form:
-            if char == 'W': form_score += 3
-            elif char == 'D': form_score += 1
-        normalized_form = (form_score / 15) * 100 # Escala 0 a 100
+        form_score = sum([3 if char == 'W' else 1 if char == 'D' else 0 for char in clean_form])
+        normalized_form = (form_score / 15) * 100 
         
         return {
             "xg_h": max(0.2, gf_h + (cs_h * 0.1)),
@@ -297,12 +289,13 @@ def calculate_quant_metrics(prob, odd, fraction_multiplier, bankroll, games_play
     final_kelly_pct = min(kelly_adj, max_risk_cap)
     dollar_allocation = final_kelly_pct * bankroll
     
-    score_edge = min(edge * 150, 40)
-    score_prob = prob * 45           
-    penalty_var = (odd / 10) * 10    
+    # OMNI-SCORE REFINADO: Foca-se em penalizar odds muito baixas (favoritos ilusórios)
+    score_edge = min(edge * 200, 45) 
+    score_prob = prob * 35           
+    penalty_odds = 20 if odd < 1.40 else 15 if odd > 5.0 else 0 
     bonus_vol = min(games_played, 15) / 1.5 
     
-    confidence = score_edge + score_prob - penalty_var + bonus_vol
+    confidence = score_edge + score_prob - penalty_odds + bonus_vol
     return edge, final_kelly_pct * 100, dollar_allocation, max(12.5, min(99.9, confidence))
 
 def poisson_pmf(lam, k): return (lam**k * math.exp(-lam)) / math.factorial(k)
@@ -326,7 +319,7 @@ st.markdown(f"""
         <div class="logo-text">APEX<span>QUANT</span></div>
     </div>
     <div style="font-family:'Share Tech Mono'; color:var(--neon-cyan); letter-spacing:2px; font-size:0.85rem;">
-        HEDGE FUND MODE // CALENDAR ENGINE SYNCED // OMNI-SCORE V2
+        SYNDICATE MODE // PRO VALUE BETTING ALGO // UI ALIGNED
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -380,7 +373,7 @@ if m_sel and btn_run:
     sys_status = st.empty()
     p_bar = st.progress(0)
     
-    steps = ["SYNCING CALENDAR METRICS...", "EXTRACTING FORM MOMENTUM & STANDINGS...", "CALCULATING OMNI-SCORE & STRICT KELLY...", "EXTRACTING PRIME ALPHA..."]
+    steps = ["SYNCING CALENDAR METRICS...", "EXTRACTING FORM MOMENTUM & STANDINGS...", "CALCULATING OMNI-SCORE & STRICT KELLY...", "ISOLATING DEEP VALUE ALPHA..."]
     for i, step in enumerate(steps):
         sys_status.markdown(f"<div style='color:var(--neon-cyan); font-family:\"Share Tech Mono\"; font-size:0.8rem; margin-bottom:10px; text-shadow:0 0 5px rgba(0,229,255,0.5);'>[SYS_LOG]: {step}</div>", unsafe_allow_html=True)
         time.sleep(0.3)
@@ -415,11 +408,17 @@ if m_sel and btn_run:
                     ui_mkt = mkt.replace("Home Win", f"{h_name} Win").replace("Away Win", f"{a_name} Win").replace("Draw No Bet (Home)", f"{h_name} (DNB)").replace("Draw No Bet (Away)", f"{a_name} (DNB)")
                     valid_markets.append({"Market": ui_mkt, "BookOdd": odd, "ModelProb": prob, "Edge": edge, "KellyPct": k_pct, "Allocation": k_alloc, "Confidence": conf})
         
-        prime_bets = [m for m in valid_markets if 0.01 < m['Edge'] < 0.35 and m['ModelProb'] >= 0.30]
-        if prime_bets: best_bet = max(prime_bets, key=lambda x: (x['Confidence'] * 0.7) + (x['KellyPct'] * 0.3)) 
+        # [ALGORITMO PRO-BETTORS] - Ignora odds amadoras (abaixo de 1.50) e exige EV real (> 2.0%)
+        pro_bets = [m for m in valid_markets if m['Edge'] >= 0.02 and m['BookOdd'] >= 1.50]
+        
+        # Fallback de segurança: Se as casas estiverem muito eficientes, mostra a melhor aposta existente (+EV puro)
+        if not pro_bets: pro_bets = [m for m in valid_markets if m['Edge'] > 0]
+        
+        if pro_bets:
+            # Maximiza o Crescimento Real da Banca (EV puro ponderado pela probabilidade de acerto)
+            best_bet = max(pro_bets, key=lambda x: x['Edge'] * x['KellyPct'])
     
     with col_exec:
-        # Row 1: Dados Head-to-Head + Radar Quântico
         col_h2h, col_radar = st.columns([1.5, 1], gap="large")
         with col_h2h:
             st.markdown(f"""
@@ -438,11 +437,9 @@ if m_sel and btn_run:
             """, unsafe_allow_html=True)
             
         with col_radar:
-            # Gráfico Spider/Radar de Comparação Tática
             fig_radar = go.Figure()
             categories = ['Attack Form (xG)', 'Defense Solid (xGA)', 'Momentum (Form)']
             
-            # Normalizar métricas para o Radar (Escala 0-100)
             h_atk = min(100, (h_stats['xg_h'] / 2.5) * 100)
             h_def = min(100, (1.5 / max(0.1, h_stats['xga_h'])) * 50)
             a_atk = min(100, (a_stats['xg_a'] / 2.5) * 100)
@@ -462,16 +459,14 @@ if m_sel and btn_run:
 
         st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 
-        # Row 2: Alpha Signal & Gráfico EV Sim (O HTML seguro que pediste)
         col_alpha, col_ev = st.columns([1.1, 1], gap="large")
         with col_alpha:
             if best_bet:
                 yld = (best_bet['Edge'] * best_bet['Allocation'])
-                # F-String HTML blindada sem quebras de linha nocivas
                 html_box = f"""
                 <div class='singularity-box'>
                     <div class='order-type'>BUY ORDER</div>
-                    <div class='sig-lbl'>PRIME ALPHA DETECTED</div>
+                    <div class='sig-lbl'>DEEP VALUE DETECTED</div>
                     <div class='sig-asset'>{best_bet['Market']}</div>
                     <div class='sig-odd'>@ {best_bet['BookOdd']:.3f}</div>
                     <div class='sig-row'><span>Model Strike Rate</span><span style='color:var(--neon-cyan);'>{best_bet['ModelProb']*100:.2f}%</span></div>
@@ -480,7 +475,7 @@ if m_sel and btn_run:
                     <div class='sig-row'><span>Expected Yield per Trade</span><span style='color:var(--neon-green);'>+${yld:,.0f}</span></div>
                     <div style='margin-top:20px;'>
                         <div style='display:flex; justify-content:space-between; font-family:"Share Tech Mono"; font-size:0.8rem; color:var(--text-dim); margin-bottom:4px;'>
-                            <span>Omni-Score (Confidence)</span><span>{best_bet['Confidence']:.1f} / 100</span>
+                            <span>Omni-Score (Pro Confidence)</span><span>{best_bet['Confidence']:.1f} / 100</span>
                         </div>
                         <div class='metric-bar'><div class='metric-fill' style='width:{best_bet["Confidence"]:.2f}%;'></div></div>
                     </div>
@@ -488,7 +483,7 @@ if m_sel and btn_run:
                 """
                 st.markdown(html_box, unsafe_allow_html=True)
             elif live_odds:
-                st.markdown("<div class='holo-panel' style='display:flex; align-items:center; justify-content:center; text-align:center;'><div class='panel-title' style='color:var(--neon-red); margin:0;'>MARKET HIGHLY EFFICIENT.<br>NO EDGES DETECTED.</div></div>", unsafe_allow_html=True)
+                st.markdown("<div class='holo-panel' style='display:flex; align-items:center; justify-content:center; text-align:center;'><div class='panel-title' style='color:var(--neon-red); margin:0;'>MARKET HIGHLY EFFICIENT.<br>NO PRO EDGES DETECTED.</div></div>", unsafe_allow_html=True)
 
         with col_ev:
             st.markdown("<div class='holo-panel'><div class='panel-title'>EV PROJECTION CURVE (500 TRADES)</div>", unsafe_allow_html=True)
@@ -515,17 +510,16 @@ if m_sel and btn_run:
                 st.markdown("<div style='color:var(--text-dim); text-align:center; padding-top:40px;'>No signal to simulate.</div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
-        # Row 3: Order Book & Standings Matrix
         col_ob, col_std = st.columns(2, gap="large")
         
         with col_ob:
             st.markdown("<div class='holo-panel' style='padding:20px;'><div class='panel-title'>ORDER BOOK SCALPER</div>", unsafe_allow_html=True)
             if live_odds:
-                clean = sorted([m for m in valid_markets if m['Edge'] < 0.35 and m['BookOdd'] <= 8.0], key=lambda x: x['Confidence'], reverse=True)
-                html = "<div class='table-container'><table class='q-table'><tr><th>Asset</th><th>Odd</th><th>Prob</th><th>EV</th></tr>"
+                clean = sorted([m for m in valid_markets if m['Edge'] > 0 and m['BookOdd'] <= 10.0], key=lambda x: x['Edge'], reverse=True)
+                html = "<div class='table-container'><table class='q-table'><tr><th class='col-left'>Asset</th><th class='col-right'>Odd</th><th class='col-right'>Prob</th><th class='col-right'>EV</th></tr>"
                 for m in clean[:8]: 
                     clr = "color:var(--neon-cyan);" if m['Edge'] > 0 else ""
-                    html += f"<tr><td>{m['Market']}</td><td class='mono-val'>{m['BookOdd']:.2f}</td><td class='mono-val'>{m['ModelProb']*100:.1f}%</td><td class='mono-val' style='{clr}'>+{m['Edge']*100:.2f}%</td></tr>"
+                    html += f"<tr><td class='col-left'>{m['Market']}</td><td class='col-right mono-val'>{m['BookOdd']:.2f}</td><td class='col-right mono-val'>{m['ModelProb']*100:.1f}%</td><td class='col-right mono-val' style='{clr}'>+{m['Edge']*100:.2f}%</td></tr>"
                 st.markdown(html + "</table></div></div>", unsafe_allow_html=True)
             else:
                 st.markdown("<div style='color:var(--text-dim); text-align:center; padding:20px;'>Awaiting Market Data...</div></div>", unsafe_allow_html=True)
@@ -533,7 +527,7 @@ if m_sel and btn_run:
         with col_std:
             st.markdown(f"<div class='holo-panel' style='padding:20px;'><div class='panel-title'>LEAGUE MATRIX ({season_id})</div>", unsafe_allow_html=True)
             if standings_data:
-                html = "<div class='table-container'><table class='q-table'><tr><th>#</th><th>Team</th><th>P</th><th>GF:GA</th><th>Pts</th></tr>"
+                html = "<div class='table-container'><table class='q-table'><tr><th class='col-center'>#</th><th class='col-left'>Team</th><th class='col-center'>P</th><th class='col-center'>GF:GA</th><th class='col-center'>Pts</th></tr>"
                 for team in standings_data:
                     rank = team.get('rank', '-')
                     name = team.get('team', {}).get('name', 'N/A')[:12]
@@ -545,7 +539,7 @@ if m_sel and btn_run:
                     row_style = "background: rgba(0, 229, 255, 0.15);" if name in h_name or name in a_name else ""
                     name_style = "color: var(--neon-cyan); font-weight:700;" if name in h_name or name in a_name else ""
                     
-                    html += f"<tr style='{row_style}'><td>{rank}</td><td style='{name_style}'>{name}</td><td class='mono-val'>{played}</td><td class='mono-val' style='color:var(--text-dim);'>{gf}:{ga}</td><td class='mono-val' style='color:var(--neon-gold);'>{pts}</td></tr>"
+                    html += f"<tr style='{row_style}'><td class='col-center'>{rank}</td><td class='col-left' style='{name_style}'>{name}</td><td class='col-center mono-val'>{played}</td><td class='col-center mono-val' style='color:var(--text-dim);'>{gf}:{ga}</td><td class='col-center mono-val' style='color:var(--neon-gold);'>{pts}</td></tr>"
                 st.markdown(html + "</table></div></div>", unsafe_allow_html=True)
             else:
                 st.markdown("<div style='color:var(--text-dim); text-align:center; padding:20px;'>Standings Data Unavailable.</div></div>", unsafe_allow_html=True)
