@@ -1,4 +1,81 @@
 import streamlit as st
+from supabase import create_client, Client
+# ... (restantes imports que já tens: numpy, pandas, plotly, etc.)
+
+# ==========================================
+# 0. INICIALIZAÇÃO E AUTENTICAÇÃO (SUPABASE)
+# ==========================================
+# Inicializar ligação ao Supabase
+@st.cache_resource
+def init_connection():
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_KEY"]
+    return create_client(url, key)
+
+supabase = init_connection()
+
+# Inicializar variáveis de sessão
+if "user" not in st.session_state:
+    st.session_state.user = None
+
+def login_user(email, password):
+    try:
+        response = supabase.auth.sign_in_with_password({"email": email, "password": password})
+        st.session_state.user = response.user
+        st.rerun()
+    except Exception as e:
+        st.error("Erro no login: Verifica as tuas credenciais.")
+
+def register_user(email, password):
+    try:
+        response = supabase.auth.sign_up({"email": email, "password": password})
+        st.success("Registo com sucesso! Podes fazer login agora.")
+    except Exception as e:
+        st.error(f"Erro no registo: {e}")
+
+def logout_user():
+    supabase.auth.sign_out()
+    st.session_state.user = None
+    st.rerun()
+
+# ==========================================
+# TELA DE LOGIN / REGISTO
+# ==========================================
+if st.session_state.user is None:
+    # Um design rápido e limpo para combinar com o teu tema
+    st.markdown("<h1 style='text-align: center; color: #00E5FF; font-family: Orbitron;'>APEX QUANT</h1>", unsafe_allow_html=True)
+    st.markdown("<h4 style='text-align: center; color: #94A3B8;'>TERMINAL DE ACESSO RESTRITO</h4>", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        tab1, tab2 = st.tabs(["ENTRAR", "REGISTAR"])
+        
+        with tab1:
+            log_email = st.text_input("Email", key="log_email")
+            log_pass = st.text_input("Password", type="password", key="log_pass")
+            if st.button("INICIAR SESSÃO", use_container_width=True):
+                login_user(log_email, log_pass)
+                
+        with tab2:
+            reg_email = st.text_input("Novo Email", key="reg_email")
+            reg_pass = st.text_input("Nova Password (mín. 6 chars)", type="password", key="reg_pass")
+            if st.button("CRIAR CONTA VIP", use_container_width=True):
+                register_user(reg_email, reg_pass)
+    
+    # Paramos a execução do script aqui para não mostrar o resto da UI
+    st.stop()
+
+# ==========================================
+# 1. QUANTUM CYBERNETICS UI (2050 ENGINE V.HEX)
+# ==========================================
+# (Daqui para a frente fica o teu código original, mas com um botão extra para Sair)
+
+st.sidebar.button("Terminar Sessão", on_click=logout_user)
+
+# O RESTO DO TEU CÓDIGO COMEÇA AQUI...
+# st.set_page_config(...) -> Lembra-te de colocar o set_page_config no topo de todo o ficheiro, antes de tudo!
+
+import streamlit as st
 import numpy as np
 import pandas as pd
 import requests
