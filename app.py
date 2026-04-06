@@ -6,10 +6,9 @@ import math
 import plotly.graph_objects as go
 from datetime import datetime
 import time
-import random
 
 # ==========================================
-# 1. QUANTUM CYBERNETICS UI (2050 ENGINE V.HEX)
+# 1. QUANTUM CYBERNETICS UI (2050 ENGINE V.EXACT)
 # ==========================================
 st.set_page_config(page_title="APEX QUANT | OMNI-TERMINAL", layout="wide", initial_sidebar_state="collapsed")
 
@@ -18,9 +17,9 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;500;600;700&family=Share+Tech+Mono&display=swap');
 
 :root {
-    --bg-deep: #030508;
-    --glass-bg: rgba(8, 14, 28, 0.75);
-    --glass-border: rgba(0, 229, 255, 0.15);
+    --bg-deep: #030407;
+    --glass-bg: rgba(6, 10, 20, 0.85);
+    --glass-border: rgba(0, 229, 255, 0.2);
     --neon-cyan: #00E5FF;
     --neon-purple: #D500F9;
     --neon-gold: #FFC400;
@@ -30,15 +29,9 @@ st.markdown("""
     --text-dim: #94A3B8;
 }
 
-/* Background & Core */
 .stApp { 
     background-color: var(--bg-deep); 
-    background-image: 
-        radial-gradient(circle at 15% 25%, rgba(0, 229, 255, 0.05), transparent 40%),
-        radial-gradient(circle at 85% 75%, rgba(213, 0, 249, 0.05), transparent 40%),
-        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+    background-image: radial-gradient(circle at 10% 20%, rgba(0, 229, 255, 0.03), transparent 30%), radial-gradient(circle at 90% 80%, rgba(213, 0, 249, 0.03), transparent 30%);
     color: var(--text-main); 
     font-family: 'Rajdhani', sans-serif; 
 }
@@ -46,92 +39,72 @@ header, footer { display: none !important; }
 
 /* Omni-Header */
 .omni-nav { 
-    background: linear-gradient(180deg, rgba(3,5,8,0.95) 0%, rgba(8,14,28,0.85) 100%);
-    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-    border-bottom: 1px solid var(--glass-border); 
-    padding: 0 40px; height: 70px;
-    display: flex; justify-content: space-between; align-items: center; 
+    background: linear-gradient(180deg, rgba(3,4,7,0.98) 0%, rgba(6,10,20,0.9) 100%);
+    backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); 
+    padding: 0 40px; height: 70px; display: flex; justify-content: space-between; align-items: center; 
     margin: -3rem -3rem 2rem -3rem; position: sticky; top: 0; z-index: 9999;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
 }
-
 .brand-matrix { display: flex; align-items: center; gap: 15px; }
-.logo-text { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 900; color: #FFF; letter-spacing: 2px; text-shadow: 0 0 15px rgba(0,229,255,0.5);}
+.logo-text { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 900; color: #FFF; letter-spacing: 2px;}
 .logo-text span { color: var(--neon-cyan); }
-.status-pulse { width: 8px; height: 8px; background: var(--neon-cyan); border-radius: 50%; box-shadow: 0 0 12px var(--neon-cyan); animation: pulse 2s infinite; }
+.status-pulse { width: 8px; height: 8px; background: var(--neon-cyan); border-radius: 50%; box-shadow: 0 0 10px var(--neon-cyan); animation: pulse 2s infinite; }
 @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(1.4); } 100% { opacity: 1; transform: scale(1); } }
 
 /* Holographic Panels */
 .holo-panel { 
-    background: var(--glass-bg); 
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border); 
-    border-top: 2px solid rgba(0,229,255,0.4);
-    padding: 24px; border-radius: 12px; 
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
-    height: 100%; position: relative;
+    background: var(--glass-bg); backdrop-filter: blur(15px); border: 1px solid var(--glass-border); 
+    border-top: 2px solid rgba(0,229,255,0.5); padding: 25px; border-radius: 12px; height: 100%; position: relative;
 }
-.panel-title { font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: var(--neon-cyan); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+.panel-title { font-family: 'Share Tech Mono', monospace; font-size: 0.85rem; color: var(--neon-cyan); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
 .panel-title::after { content: ''; flex-grow: 1; height: 1px; background: linear-gradient(90deg, var(--neon-cyan) 0%, transparent 100%); opacity: 0.2;}
 
 /* Data Grid & Form */
-.data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;}
-.data-node { background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.05); padding: 20px 15px; border-radius: 8px; text-align: center; box-shadow: inset 0 0 25px rgba(0,0,0,0.9); }
+.data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;}
+.data-node { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; text-align: center; }
 .node-lbl { font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; font-weight: 600;}
-.node-val { font-family: 'Share Tech Mono', monospace; font-size: 2.4rem; color: #FFF; text-shadow: 0 0 12px rgba(255,255,255,0.2); line-height: 1;}
+.node-val { font-family: 'Share Tech Mono', monospace; font-size: 2.2rem; color: #FFF; line-height: 1;}
 .form-tracker { display: flex; gap: 5px; justify-content: center; margin-top: 10px;}
 .form-badge { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; font-weight: 700; color: #000; }
-.form-w { background: var(--neon-green); box-shadow: 0 0 10px rgba(0,230,118,0.4); }
-.form-d { background: var(--neon-gold); box-shadow: 0 0 10px rgba(255,196,0,0.4); }
-.form-l { background: var(--neon-red); box-shadow: 0 0 10px rgba(255,23,68,0.4); }
+.form-w { background: var(--neon-green); box-shadow: 0 0 8px rgba(0,230,118,0.4); }
+.form-d { background: var(--neon-gold); box-shadow: 0 0 8px rgba(255,196,0,0.4); }
+.form-l { background: var(--neon-red); box-shadow: 0 0 8px rgba(255,23,68,0.4); }
 
-/* The Alpha Matrix Ticket */
+/* The Alpha Matrix Ticket (Blindado) */
 .singularity-box {
     background: linear-gradient(135deg, rgba(255, 196, 0, 0.08) 0%, rgba(0, 0, 0, 0.95) 100%);
     border: 1px solid var(--neon-gold); border-radius: 12px; padding: 25px; position: relative; height: 100%;
-    box-shadow: 0 0 30px rgba(255, 196, 0, 0.1), inset 0 0 20px rgba(255, 196, 0, 0.05);
 }
-.order-type { position: absolute; top: 20px; right: 20px; background: rgba(0,230,118,0.1); border: 1px solid var(--neon-green); color: var(--neon-green); padding: 4px 12px; border-radius: 4px; font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; letter-spacing: 2px; font-weight: bold; box-shadow: 0 0 12px rgba(0,230,118,0.2);}
-.sig-lbl { font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; color: var(--neon-gold); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 12px; display: inline-block; border-bottom: 1px solid var(--neon-gold); padding-bottom: 4px;}
-.sig-asset { font-family: 'Orbitron', sans-serif; font-size: 2rem; font-weight: 700; color: #FFF; margin-bottom: 4px; line-height: 1.1; letter-spacing: -1px;}
-.sig-odd { font-family: 'Share Tech Mono', monospace; font-size: 1.8rem; color: var(--neon-gold); margin-bottom: 20px; text-shadow: 0 0 15px rgba(255,196,0,0.5);}
-
-.metric-bar { background: rgba(255,255,255,0.05); border-radius: 4px; height: 6px; width: 100%; margin-top: 6px; overflow: hidden; position: relative;}
+.order-type { position: absolute; top: 20px; right: 20px; background: rgba(0,230,118,0.15); border: 1px solid var(--neon-green); color: var(--neon-green); padding: 4px 12px; border-radius: 4px; font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; letter-spacing: 2px; font-weight: bold;}
+.sig-lbl { font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; color: var(--neon-gold); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid var(--neon-gold); padding-bottom: 4px; display: inline-block;}
+.sig-asset { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 700; color: #FFF; margin-bottom: 4px; line-height: 1.1;}
+.sig-odd { font-family: 'Share Tech Mono', monospace; font-size: 1.6rem; color: var(--neon-gold); margin-bottom: 20px;}
+.metric-bar { background: rgba(255,255,255,0.05); border-radius: 4px; height: 6px; width: 100%; margin-top: 6px; overflow: hidden; }
 .metric-fill { height: 100%; background: linear-gradient(90deg, var(--neon-purple), var(--neon-cyan)); box-shadow: 0 0 10px var(--neon-cyan);}
-
-.sig-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed rgba(255,255,255,0.08); font-size: 1rem; font-weight: 600;}
+.sig-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed rgba(255,255,255,0.08); font-size: 1rem; font-weight: 600;}
 .sig-row:last-child { border: none; padding-bottom: 0;}
-.sig-row span:first-child { color: var(--text-dim); font-weight: 500; font-family: 'Rajdhani', sans-serif; letter-spacing: 0.5px;}
+.sig-row span:first-child { color: var(--text-dim); font-weight: 500; }
 .sig-row span:last-child { font-family: 'Share Tech Mono', monospace; color: #FFF;}
 
-/* Quantum Tables - ALINHAMENTO ESTRITO 2050 */
-.table-container { max-height: 340px; overflow-y: auto; overflow-x: hidden; padding-right: 5px; margin-top: 10px; }
+/* Quantum Tables Estritas */
+.table-container { max-height: 340px; overflow-y: auto; padding-right: 5px; margin-top: 10px; }
 .table-container::-webkit-scrollbar { width: 4px; }
-.table-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.4); border-radius: 4px; }
+.table-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.4); }
 .table-container::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 4px; }
+.q-table { width: 100%; border-collapse: collapse; font-family: 'Rajdhani', sans-serif; }
+.q-table th { position: sticky; top: 0; padding: 12px; color: var(--neon-cyan); font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(0,229,255,0.3); background: rgba(8,14,28,0.95); z-index: 10; }
+.q-table td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 1rem; font-weight: 600; }
+.q-table tr:hover td { background: rgba(0,229,255,0.05); }
 
-.q-table { width: 100%; border-collapse: collapse; font-family: 'Rajdhani', sans-serif; table-layout: auto; }
-.q-table th { position: sticky; top: 0; padding: 12px 8px; color: var(--neon-cyan); font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(0,229,255,0.3); background: rgba(8,14,28,0.95); z-index: 10; }
-.q-table td { padding: 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 1rem; font-weight: 600; }
-.q-table tr:hover td { background: rgba(0,229,255,0.08); }
-
-/* Classes de alinhamento preciso */
-.col-left { text-align: left; }
-.col-center { text-align: center; }
-.col-right { text-align: right; }
+/* Alinhamento Forçado */
+.t-left { text-align: left; }
+.t-center { text-align: center; }
+.t-right { text-align: right; }
 .mono-val { font-family: 'Share Tech Mono', monospace; }
 
-/* Streamlit Overrides */
-div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: rgba(0,0,0,0.8) !important; border: 1px solid rgba(0,229,255,0.25) !important; border-radius: 6px !important; color: #FFF !important; font-family: 'Share Tech Mono', monospace !important;}
-.stButton > button {
-    background: transparent !important; color: var(--neon-cyan) !important; 
-    border: 1px solid var(--neon-cyan) !important; font-family: 'Orbitron', sans-serif !important;
-    font-weight: 700 !important; font-size: 1.1rem !important; letter-spacing: 2px !important;
-    padding: 24px !important; width: 100%; border-radius: 6px !important;
-    text-transform: uppercase; transition: all 0.3s ease !important;
-    box-shadow: inset 0 0 15px rgba(0,229,255,0.05) !important;
-}
-.stButton > button:hover { background: var(--neon-cyan) !important; color: #000 !important; box-shadow: 0 0 30px rgba(0,229,255,0.4), inset 0 0 20px rgba(255,255,255,0.5) !important; transform: translateY(-2px);}
+/* Overrides Streamlit Widgets */
+div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: rgba(0,0,0,0.8) !important; border: 1px solid rgba(0,229,255,0.2) !important; border-radius: 6px !important; color: #FFF !important; font-family: 'Share Tech Mono', monospace !important;}
+.stButton > button { background: transparent !important; color: var(--neon-cyan) !important; border: 1px solid var(--neon-cyan) !important; font-family: 'Orbitron', sans-serif !important; font-weight: 700 !important; font-size: 1.1rem !important; letter-spacing: 2px !important; padding: 24px !important; width: 100%; border-radius: 6px !important; transition: all 0.3s ease !important; }
+.stButton > button:hover { background: var(--neon-cyan) !important; color: #000 !important; transform: translateY(-2px);}
 .stProgress > div > div > div > div { background: linear-gradient(90deg, #D500F9, #00E5FF) !important; }
 div[data-testid="column"] > div { gap: 1.5rem !important; }
 </style>
@@ -145,7 +118,7 @@ HEADERS = {"x-apisports-key": API_KEY, "x-apisports-host": "v3.football.api-spor
 
 def get_dynamic_season(league_id):
     now = datetime.now()
-    calendar_year_leagues = [71, 253, 268] # Ex: Brasileirão, MLS
+    calendar_year_leagues = [71, 253, 268] 
     if league_id in calendar_year_leagues: return str(now.year)
     return str(now.year - 1) if now.month < 7 else str(now.year)
 
@@ -172,31 +145,24 @@ def get_advanced_xg_stats(team_id, league_id, season):
     try:
         data = stats if isinstance(stats, dict) else stats[0]
         goals = data.get('goals', {})
-        
         gf_h = safe_float(goals.get('for', {}).get('average', {}).get('home'), 1.45)
         ga_h = safe_float(goals.get('against', {}).get('average', {}).get('home'), 1.15)
         gf_a = safe_float(goals.get('for', {}).get('average', {}).get('away'), 1.15)
         ga_a = safe_float(goals.get('against', {}).get('average', {}).get('away'), 1.45)
-        
         cs_h = safe_float(data.get('clean_sheet', {}).get('home'), 0) / 10 
         fts_a = safe_float(data.get('failed_to_score', {}).get('away'), 0) / 10 
-        
         played = safe_float(data.get('fixtures', {}).get('played', {}).get('total'), 0)
         raw_form = data.get('form', '-----')
         clean_form = raw_form[-5:] if raw_form and isinstance(raw_form, str) else "-----"
         clean_form = clean_form.ljust(5, '-')
-        
         form_score = sum([3 if char == 'W' else 1 if char == 'D' else 0 for char in clean_form])
-        normalized_form = (form_score / 15) * 100 
         
         return {
             "xg_h": max(0.2, gf_h + (cs_h * 0.1)),
             "xga_h": max(0.2, ga_h - (cs_h * 0.15)),
             "xg_a": max(0.2, gf_a - (fts_a * 0.1)),
             "xga_a": max(0.2, ga_a + (fts_a * 0.15)),
-            "form": clean_form,
-            "played": played,
-            "form_score": normalized_form
+            "form": clean_form, "played": played, "form_score": (form_score / 15) * 100 
         }
     except Exception: return default_stats
 
@@ -217,59 +183,98 @@ def get_real_odds(fixture_id):
         for bet in odds_data[0]['bookmakers'][0].get('bets', []):
             name = bet.get('name', '')
             vals = {str(v.get('value', '')): float(v.get('odd', 0.0)) for v in bet.get('values', [])}
-            if name == 'Match Winner': market_odds.update({"Home Win": vals.get('Home'), "Draw": vals.get('Draw'), "Away Win": vals.get('Away')})
-            elif name == 'Double Chance': market_odds.update({"Double Chance (1X)": vals.get('Home/Draw'), "Double Chance (X2)": vals.get('Draw/Away')})
-            elif name == 'Draw No Bet': market_odds.update({"Draw No Bet (Home)": vals.get('Home'), "Draw No Bet (Away)": vals.get('Away')})
+            
+            if name == 'Match Winner': 
+                market_odds.update({"Home Win": vals.get('Home'), "Draw": vals.get('Draw'), "Away Win": vals.get('Away')})
+            elif name == 'Double Chance': 
+                market_odds.update({"Double Chance (1X)": vals.get('Home/Draw'), "Double Chance (X2)": vals.get('Draw/Away')})
+            elif name == 'Draw No Bet': 
+                market_odds.update({"Draw No Bet (Home)": vals.get('Home'), "Draw No Bet (Away)": vals.get('Away')})
             elif name == 'Goals Over/Under': 
-                for k, v in vals.items(): market_odds[f"Total Goals {k}"] = v
-            elif name == 'Both Teams Score': market_odds.update({"BTTS (Yes)": vals.get('Yes'), "BTTS (No)": vals.get('No')})
+                for k, v in vals.items():
+                    parts = k.split()
+                    if len(parts) == 2:
+                        try:
+                            # Filtra apenas linhas puras (.5)
+                            if float(parts[1]) % 0.5 == 0 and float(parts[1]) % 1 != 0:
+                                market_odds[f"Total Goals {parts[0]} {float(parts[1]):.1f}"] = float(v)
+                        except: pass
+            elif name == 'Both Teams Score': 
+                market_odds.update({"BTTS (Yes)": vals.get('Yes'), "BTTS (No)": vals.get('No')})
             elif name == 'Asian Handicap':
                 for k, odd in vals.items():
-                    if "Home" in k: market_odds[f"Home AH {k.replace('Home', '').strip()}"] = odd
-                    elif "Away" in k: market_odds[f"Away AH {k.replace('Away', '').strip()}"] = odd
+                    parts = k.split()
+                    if len(parts) == 2:
+                        try:
+                            val_float = float(parts[1])
+                            # Bloqueio Quântico de Erros: Ignora quarter-balls (0.25, 0.75) e força formatação Exata
+                            if val_float % 0.5 != 0: continue 
+                            market_odds[f"{parts[0]} AH {val_float:+.1f}"] = float(odd)
+                        except: pass
     except: pass 
     return {k: v for k, v in market_odds.items() if v is not None}
 
 def calculate_lambdas(h_stats, a_stats):
-    hfa = 1.12 
-    lam_h = max(0.1, (h_stats['xg_h'] * hfa) * (a_stats['xga_a']) / 1.45)
+    lam_h = max(0.1, (h_stats['xg_h'] * 1.12) * (a_stats['xga_a']) / 1.45)
     lam_a = max(0.1, (a_stats['xg_a']) * (h_stats['xga_h']) / 1.15)
     return round(lam_h, 3), round(lam_a, 3)
 
-def run_monte_carlo_sim(lam_h, lam_a, sims=100000):
-    np.random.seed(int(time.time()))
-    h_goals = np.random.poisson(lam_h, sims)
-    a_goals = np.random.poisson(lam_a, sims)
+def poisson_pmf(lam, k): return (lam**k * math.exp(-lam)) / math.factorial(k)
+
+# ==========================================
+# MOTOR BIVARIADO EXATO (O Fim do Monte Carlo)
+# ==========================================
+def run_exact_bivariate_poisson(lam_h, lam_a, rho=-0.12, max_g=10):
+    P = np.zeros((max_g+1, max_g+1))
+    for i in range(max_g+1):
+        for j in range(max_g+1):
+            P[i, j] = poisson_pmf(lam_h, i) * poisson_pmf(lam_a, j)
+            
+    # Ajuste Dixon-Coles Puro
+    P[0,0] = max(0, P[0,0] * (1 - lam_h * lam_a * rho))
+    P[1,0] = max(0, P[1,0] * (1 + lam_h * rho))
+    P[0,1] = max(0, P[0,1] * (1 + lam_a * rho))
+    P[1,1] = max(0, P[1,1] * (1 - rho))
+    P = P / np.sum(P) # Normaliza a 100%
     
-    rho = -0.12 
-    zero_zero_mask = (h_goals == 0) & (a_goals == 0)
-    correction_mask = np.random.random(sims) < abs(rho)
-    final_mask = zero_zero_mask & correction_mask
-    h_goals[final_mask] = 1
-    a_goals[final_mask] = 1
-        
-    diff, total = h_goals - a_goals, h_goals + a_goals
-    hw, dr, aw = np.sum(diff > 0)/sims, np.sum(diff == 0)/sims, np.sum(diff < 0)/sims
+    hw = np.sum(np.tril(P, -1))
+    aw = np.sum(np.triu(P, 1))
+    dr = np.sum(np.diag(P))
+    btts_no = np.sum(P[0, :]) + np.sum(P[:, 0]) - P[0, 0]
+    btts_yes = 1 - btts_no
     
     probs = {
         "Home Win": hw, "Draw": dr, "Away Win": aw,
         "Double Chance (1X)": hw + dr, "Double Chance (X2)": aw + dr,
-        "Draw No Bet (Home)": hw / (hw + aw) if (hw + aw) > 0 else 0, 
+        "Draw No Bet (Home)": hw / (hw + aw) if (hw + aw) > 0 else 0,
         "Draw No Bet (Away)": aw / (hw + aw) if (hw + aw) > 0 else 0,
-        "BTTS (Yes)": np.sum((h_goals > 0) & (a_goals > 0))/sims, 
-        "BTTS (No)": np.sum((h_goals == 0) | (a_goals == 0))/sims
+        "BTTS (Yes)": btts_yes, "BTTS (No)": btts_no
     }
-    for limit in [1.5, 2.5, 3.5]:
-        probs[f"Total Goals Over {limit}"] = np.sum(total > limit)/sims
-        probs[f"Total Goals Under {limit}"] = np.sum(total < limit)/sims
-    for limit in [-1.5, -1.0, -0.5, +0.5, +1.0, +1.5]:
-        if limit in [-1.0, +1.0]:
-            push_h, push_a = np.sum(diff == -limit)/sims, np.sum(-diff == limit)/sims
-            probs[f"Home AH {limit:+}"] = (np.sum(diff > -limit)/sims) / (1-push_h) if (1-push_h) > 0 else 0
-            probs[f"Away AH {-limit:+}"] = (np.sum(-diff > limit)/sims) / (1-push_a) if (1-push_a) > 0 else 0
+    
+    for limit in [0.5, 1.5, 2.5, 3.5, 4.5, 5.5]:
+        over_prob = sum(P[i, j] for i in range(max_g+1) for j in range(max_g+1) if i + j > limit)
+        probs[f"Total Goals Over {limit:.1f}"] = over_prob
+        probs[f"Total Goals Under {limit:.1f}"] = 1 - over_prob
+        
+    for limit in np.arange(-3.5, 4.0, 0.5):
+        if limit == 0.0: continue
+        is_whole = (limit % 1 == 0)
+        h_prob, a_prob, push_prob = 0, 0, 0
+        
+        for i in range(max_g+1):
+            for j in range(max_g+1):
+                diff = i - j
+                if diff > -limit: h_prob += P[i, j]
+                elif diff == -limit: push_prob += P[i, j]
+                if -diff > limit: a_prob += P[i, j]
+                
+        if is_whole:
+            probs[f"Home AH {limit:+.1f}"] = h_prob / (1 - push_prob) if (1 - push_prob) > 0 else 0
+            probs[f"Away AH {-limit:+.1f}"] = a_prob / (1 - push_prob) if (1 - push_prob) > 0 else 0
         else:
-            probs[f"Home AH {limit:+}"] = np.sum(diff > -limit)/sims
-            probs[f"Away AH {-limit:+}"] = np.sum(-diff > limit)/sims
+            probs[f"Home AH {limit:+.1f}"] = h_prob
+            probs[f"Away AH {-limit:+.1f}"] = a_prob
+            
     return probs
 
 def calculate_dynamic_margin(odds):
@@ -289,16 +294,13 @@ def calculate_quant_metrics(prob, odd, fraction_multiplier, bankroll, games_play
     final_kelly_pct = min(kelly_adj, max_risk_cap)
     dollar_allocation = final_kelly_pct * bankroll
     
-    # OMNI-SCORE REFINADO: Foca-se em penalizar odds muito baixas (favoritos ilusórios)
     score_edge = min(edge * 200, 45) 
     score_prob = prob * 35           
-    penalty_odds = 20 if odd < 1.40 else 15 if odd > 5.0 else 0 
+    penalty_odds = 30 if odd < 1.50 else 15 if odd > 5.0 else 0 
     bonus_vol = min(games_played, 15) / 1.5 
     
     confidence = score_edge + score_prob - penalty_odds + bonus_vol
     return edge, final_kelly_pct * 100, dollar_allocation, max(12.5, min(99.9, confidence))
-
-def poisson_pmf(lam, k): return (lam**k * math.exp(-lam)) / math.factorial(k)
 
 def render_form_badges(form_str):
     html = "<div class='form-tracker'>"
@@ -319,7 +321,7 @@ st.markdown(f"""
         <div class="logo-text">APEX<span>QUANT</span></div>
     </div>
     <div style="font-family:'Share Tech Mono'; color:var(--neon-cyan); letter-spacing:2px; font-size:0.85rem;">
-        SYNDICATE MODE // PRO VALUE BETTING ALGO // UI ALIGNED
+        EXACT BIVARIATE POISSON // DEEP VALUE FILTER // UI LOCKED
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -357,7 +359,7 @@ with col_ctrl:
     st.markdown("<div class='panel-title'>CAPITAL MANAGEMENT</div>", unsafe_allow_html=True)
     bankroll = st.number_input("Vault Capital ($)", value=250000, step=10000, format="%d")
     
-    k_map = {"Quarter Kelly (0.25x)": 0.25, "Half Kelly (0.50x)": 0.50, "Full Kelly (1.00x - Aggressive)": 1.0}
+    k_map = {"Quarter Kelly (0.25x)": 0.25, "Half Kelly (0.50x)": 0.50, "Full Kelly (1.00x)": 1.0}
     k_sel = st.selectbox("Kelly Sizing Strategy", list(k_map.keys()), index=1)
     kelly_fraction = k_map[k_sel]
     max_risk = st.slider("Strict Risk Cap (% Bankroll)", min_value=1.0, max_value=5.0, value=3.0, step=0.5) / 100
@@ -373,10 +375,10 @@ if m_sel and btn_run:
     sys_status = st.empty()
     p_bar = st.progress(0)
     
-    steps = ["SYNCING CALENDAR METRICS...", "EXTRACTING FORM MOMENTUM & STANDINGS...", "CALCULATING OMNI-SCORE & STRICT KELLY...", "ISOLATING DEEP VALUE ALPHA..."]
+    steps = ["SYNCING CALENDAR METRICS...", "EXTRACTING FORM & STANDINGS...", "CALCULATING EXACT BIVARIATE POISSON...", "ISOLATING DEEP VALUE ALPHA..."]
     for i, step in enumerate(steps):
-        sys_status.markdown(f"<div style='color:var(--neon-cyan); font-family:\"Share Tech Mono\"; font-size:0.8rem; margin-bottom:10px; text-shadow:0 0 5px rgba(0,229,255,0.5);'>[SYS_LOG]: {step}</div>", unsafe_allow_html=True)
-        time.sleep(0.3)
+        sys_status.markdown(f"<div style='color:var(--neon-cyan); font-family:\"Share Tech Mono\"; font-size:0.8rem; margin-bottom:10px;'>[SYS_LOG]: {step}</div>", unsafe_allow_html=True)
+        time.sleep(0.2)
         p_bar.progress((i+1)*25)
     
     time.sleep(0.2)
@@ -390,7 +392,7 @@ if m_sel and btn_run:
     a_stats = get_advanced_xg_stats(m_sel['teams']['away']['id'], league_id_selected, season_id)
     
     lam_h, lam_a = calculate_lambdas(h_stats, a_stats)
-    true_probs = run_monte_carlo_sim(lam_h, lam_a, 100000)
+    true_probs = run_exact_bivariate_poisson(lam_h, lam_a) # CALCULO EXATO MATEMATICO
     live_odds = get_real_odds(m_sel['fixture']['id'])
     standings_data = get_league_standings(league_id_selected, season_id)
     
@@ -408,14 +410,14 @@ if m_sel and btn_run:
                     ui_mkt = mkt.replace("Home Win", f"{h_name} Win").replace("Away Win", f"{a_name} Win").replace("Draw No Bet (Home)", f"{h_name} (DNB)").replace("Draw No Bet (Away)", f"{a_name} (DNB)")
                     valid_markets.append({"Market": ui_mkt, "BookOdd": odd, "ModelProb": prob, "Edge": edge, "KellyPct": k_pct, "Allocation": k_alloc, "Confidence": conf})
         
-        # [ALGORITMO PRO-BETTORS] - Ignora odds amadoras (abaixo de 1.50) e exige EV real (> 2.0%)
-        pro_bets = [m for m in valid_markets if m['Edge'] >= 0.02 and m['BookOdd'] >= 1.50]
+        # [ALGORITMO PRO-BETTORS] - Apenas valor profundo: Odds >= 1.50 e Edge >= 2.5%
+        pro_bets = [m for m in valid_markets if m['Edge'] >= 0.025 and 1.50 <= m['BookOdd'] <= 5.0]
         
-        # Fallback de segurança: Se as casas estiverem muito eficientes, mostra a melhor aposta existente (+EV puro)
-        if not pro_bets: pro_bets = [m for m in valid_markets if m['Edge'] > 0]
+        if not pro_bets: # Fallback se mercado extremamente eficiente
+            pro_bets = [m for m in valid_markets if m['Edge'] > 0 and m['BookOdd'] >= 1.30]
         
         if pro_bets:
-            # Maximiza o Crescimento Real da Banca (EV puro ponderado pela probabilidade de acerto)
+            # Maximiza o Crescimento: EV Mínimo combinado com a alocação de banca
             best_bet = max(pro_bets, key=lambda x: x['Edge'] * x['KellyPct'])
     
     with col_exec:
@@ -438,8 +440,7 @@ if m_sel and btn_run:
             
         with col_radar:
             fig_radar = go.Figure()
-            categories = ['Attack Form (xG)', 'Defense Solid (xGA)', 'Momentum (Form)']
-            
+            categories = ['Attack Form', 'Defense Solid', 'Momentum']
             h_atk = min(100, (h_stats['xg_h'] / 2.5) * 100)
             h_def = min(100, (1.5 / max(0.1, h_stats['xga_h'])) * 50)
             a_atk = min(100, (a_stats['xg_a'] / 2.5) * 100)
@@ -447,12 +448,8 @@ if m_sel and btn_run:
 
             fig_radar.add_trace(go.Scatterpolar(r=[h_atk, h_def, h_stats['form_score']], theta=categories, fill='toself', name=h_name, line=dict(color='#00E5FF'), fillcolor='rgba(0,229,255,0.2)'))
             fig_radar.add_trace(go.Scatterpolar(r=[a_atk, a_def, a_stats['form_score']], theta=categories, fill='toself', name=a_name, line=dict(color='#D500F9'), fillcolor='rgba(213,0,249,0.2)'))
-
-            fig_radar.update_layout(
-                polar=dict(radialaxis=dict(visible=False, range=[0, 100]), bgcolor='rgba(0,0,0,0)'),
-                showlegend=False, template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                height=180, margin=dict(l=20, r=20, t=15, b=15)
-            )
+            fig_radar.update_layout(polar=dict(radialaxis=dict(visible=False, range=[0, 100]), bgcolor='rgba(0,0,0,0)'), showlegend=False, template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=180, margin=dict(l=20, r=20, t=15, b=15))
+            
             st.markdown("<div class='holo-panel' style='padding:10px;'><div class='panel-title' style='margin-bottom:0; font-size:0.6rem;'>TACTICAL RADAR</div>", unsafe_allow_html=True)
             st.plotly_chart(fig_radar, use_container_width=True, config={'displayModeBar': False})
             st.markdown("</div>", unsafe_allow_html=True)
@@ -465,7 +462,7 @@ if m_sel and btn_run:
                 yld = (best_bet['Edge'] * best_bet['Allocation'])
                 html_box = f"""
                 <div class='singularity-box'>
-                    <div class='order-type'>BUY ORDER</div>
+                    <div class='order-type'>PRO ORDER</div>
                     <div class='sig-lbl'>DEEP VALUE DETECTED</div>
                     <div class='sig-asset'>{best_bet['Market']}</div>
                     <div class='sig-odd'>@ {best_bet['BookOdd']:.3f}</div>
@@ -490,7 +487,6 @@ if m_sel and btn_run:
             if best_bet:
                 sim_trades = 500
                 p, o, b_size = best_bet['ModelProb'], best_bet['BookOdd'], best_bet['Allocation']
-                
                 expected_growth = np.array([max(0, (i * b_size * ((p * o) - 1))) for i in range(sim_trades)])
                 noise = np.random.normal(0, b_size * 1.5, sim_trades).cumsum() 
                 simulated_path = expected_growth + noise
@@ -498,13 +494,7 @@ if m_sel and btn_run:
                 fig_ev = go.Figure()
                 fig_ev.add_trace(go.Scatter(y=simulated_path, name="Realization", line=dict(color='rgba(255,196,0,0.4)', width=1)))
                 fig_ev.add_trace(go.Scatter(y=expected_growth, name="Theoretical", line=dict(color='#00E5FF', width=3, dash='solid')))
-                
-                fig_ev.update_layout(
-                    template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                    height=240, margin=dict(l=0, r=0, t=5, b=0), showlegend=False,
-                    xaxis=dict(title="Trades", title_font=dict(family="Share Tech Mono", size=10), gridcolor="rgba(255,255,255,0.05)"),
-                    yaxis=dict(title="Cum. P&L ($)", title_font=dict(family="Share Tech Mono", size=10), gridcolor="rgba(255,255,255,0.05)")
-                )
+                fig_ev.update_layout(template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=240, margin=dict(l=0, r=0, t=5, b=0), showlegend=False, xaxis=dict(title="Trades", title_font=dict(family="Share Tech Mono", size=10), gridcolor="rgba(255,255,255,0.05)"), yaxis=dict(title="Cum. P&L ($)", title_font=dict(family="Share Tech Mono", size=10), gridcolor="rgba(255,255,255,0.05)"))
                 st.plotly_chart(fig_ev, use_container_width=True, config={'displayModeBar': False})
             else:
                 st.markdown("<div style='color:var(--text-dim); text-align:center; padding-top:40px;'>No signal to simulate.</div>", unsafe_allow_html=True)
@@ -516,10 +506,10 @@ if m_sel and btn_run:
             st.markdown("<div class='holo-panel' style='padding:20px;'><div class='panel-title'>ORDER BOOK SCALPER</div>", unsafe_allow_html=True)
             if live_odds:
                 clean = sorted([m for m in valid_markets if m['Edge'] > 0 and m['BookOdd'] <= 10.0], key=lambda x: x['Edge'], reverse=True)
-                html = "<div class='table-container'><table class='q-table'><tr><th class='col-left'>Asset</th><th class='col-right'>Odd</th><th class='col-right'>Prob</th><th class='col-right'>EV</th></tr>"
+                html = "<div class='table-container'><table class='q-table'><tr><th class='t-left'>Asset</th><th class='t-right'>Odd</th><th class='t-right'>Prob</th><th class='t-right'>EV</th></tr>"
                 for m in clean[:8]: 
                     clr = "color:var(--neon-cyan);" if m['Edge'] > 0 else ""
-                    html += f"<tr><td class='col-left'>{m['Market']}</td><td class='col-right mono-val'>{m['BookOdd']:.2f}</td><td class='col-right mono-val'>{m['ModelProb']*100:.1f}%</td><td class='col-right mono-val' style='{clr}'>+{m['Edge']*100:.2f}%</td></tr>"
+                    html += f"<tr><td class='t-left'>{m['Market']}</td><td class='t-right mono-val'>{m['BookOdd']:.2f}</td><td class='t-right mono-val'>{m['ModelProb']*100:.1f}%</td><td class='t-right mono-val' style='{clr}'>+{m['Edge']*100:.2f}%</td></tr>"
                 st.markdown(html + "</table></div></div>", unsafe_allow_html=True)
             else:
                 st.markdown("<div style='color:var(--text-dim); text-align:center; padding:20px;'>Awaiting Market Data...</div></div>", unsafe_allow_html=True)
@@ -527,7 +517,7 @@ if m_sel and btn_run:
         with col_std:
             st.markdown(f"<div class='holo-panel' style='padding:20px;'><div class='panel-title'>LEAGUE MATRIX ({season_id})</div>", unsafe_allow_html=True)
             if standings_data:
-                html = "<div class='table-container'><table class='q-table'><tr><th class='col-center'>#</th><th class='col-left'>Team</th><th class='col-center'>P</th><th class='col-center'>GF:GA</th><th class='col-center'>Pts</th></tr>"
+                html = "<div class='table-container'><table class='q-table'><tr><th class='t-center'>#</th><th class='t-left'>Team</th><th class='t-center'>P</th><th class='t-center'>GF:GA</th><th class='t-center'>Pts</th></tr>"
                 for team in standings_data:
                     rank = team.get('rank', '-')
                     name = team.get('team', {}).get('name', 'N/A')[:12]
@@ -536,10 +526,10 @@ if m_sel and btn_run:
                     gf = team.get('all', {}).get('goals', {}).get('for', '-')
                     ga = team.get('all', {}).get('goals', {}).get('against', '-')
                     
-                    row_style = "background: rgba(0, 229, 255, 0.15);" if name in h_name or name in a_name else ""
+                    row_style = "background: rgba(0, 229, 255, 0.12);" if name in h_name or name in a_name else ""
                     name_style = "color: var(--neon-cyan); font-weight:700;" if name in h_name or name in a_name else ""
                     
-                    html += f"<tr style='{row_style}'><td class='col-center'>{rank}</td><td class='col-left' style='{name_style}'>{name}</td><td class='col-center mono-val'>{played}</td><td class='col-center mono-val' style='color:var(--text-dim);'>{gf}:{ga}</td><td class='col-center mono-val' style='color:var(--neon-gold);'>{pts}</td></tr>"
+                    html += f"<tr style='{row_style}'><td class='t-center'>{rank}</td><td class='t-left' style='{name_style}'>{name}</td><td class='t-center mono-val'>{played}</td><td class='t-center mono-val' style='color:var(--text-dim);'>{gf}:{ga}</td><td class='t-center mono-val' style='color:var(--neon-gold);'>{pts}</td></tr>"
                 st.markdown(html + "</table></div></div>", unsafe_allow_html=True)
             else:
                 st.markdown("<div style='color:var(--text-dim); text-align:center; padding:20px;'>Standings Data Unavailable.</div></div>", unsafe_allow_html=True)
